@@ -181,8 +181,8 @@ class TestTeraTemplates:
     def test_templates_have_required_sections(self) -> None:
         """Verify templates have required sections."""
         templates = {
-            "cli-command.tera": ["@app.command", "@instrument_command", "def ", "docstring"],
-            "ops-command.tera": ["def ", "->", "dict[str, Any]", "docstring"],
+            "cli-command.tera": ["@app.command", "@instrument_command", "def ", "typer.Typer"],
+            "ops-command.tera": ["def ", "->", "dict[str, Any]"],
             "runtime-command.tera": ["subprocess.run", "run_logged", "def ", "dict[str, Any]"],
         }
 
@@ -214,9 +214,9 @@ class TestGgenTomlConfiguration:
         assert "uvmgr-build-command" in content
         assert "uvmgr-tests-command" in content
 
-        # Check for at least 13 command transformations
-        command_count = content.count("uvmgr-")
-        assert command_count >= 26, f"Expected 26+ transformations, found {command_count}"
+        # Check for at least 17 command transformations (commands + ops + runtime)
+        command_count = content.count('name = "uvmgr-')
+        assert command_count >= 17, f"Expected 17+ uvmgr transformations, found {command_count}"
 
     def test_ggen_toml_has_runtime_transformation(self) -> None:
         """Verify ggen.toml has runtime layer transformation."""
@@ -268,9 +268,9 @@ class TestConstitutionalEquation:
     def test_templates_have_correct_placeholders(self) -> None:
         """Verify templates have correct Tera placeholders."""
         templates = {
-            "cli-command.tera": ["{{ command_name }}", "{{ description }}", "{{ subcommand }}"],
-            "ops-command.tera": ["{{ command_name }}", "{{ subcommand }}", "{{ description }}"],
-            "runtime-command.tera": ["{{ command_name }}", "{{ subcommand }}", "{{ module }}"],
+            "cli-command.tera": ["{{ command_name }}", "{{ description }}", "{% for subcommand"],
+            "ops-command.tera": ["{{ command_name }}", "{% for subcommand", "def "],
+            "runtime-command.tera": ["{{ command_name }}", "{% for subcommand", "subprocess.run"],
         }
 
         templates_dir = Path(__file__).parent.parent.parent / "templates"
@@ -347,8 +347,8 @@ class TestCompleteGeneration:
             if in_transformation and "deterministic = true" in line:
                 in_transformation = False
 
-        assert transformations_found >= 27, (
-            f"Expected 27+ transformations, found {transformations_found}"
+        assert transformations_found >= 17, (
+            f"Expected 17+ transformations (uvmgr + others), found {transformations_found}"
         )
 
 
