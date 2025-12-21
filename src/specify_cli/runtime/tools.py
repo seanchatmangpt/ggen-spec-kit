@@ -47,6 +47,7 @@ __all__ = [
     "REQUIRED_TOOLS",
     "check_required_tools",
     "check_tool",
+    "check_tool_installed",  # Alias for check_tool
     "get_ggen_version",
     "get_tool_versions",
     "which_tool",
@@ -188,6 +189,10 @@ def get_ggen_version() -> str | None:
             return None
 
         return None
+
+
+# Alias for backwards compatibility
+check_tool_installed = check_tool
 
 
 def get_tool_versions() -> dict[str, str | None]:

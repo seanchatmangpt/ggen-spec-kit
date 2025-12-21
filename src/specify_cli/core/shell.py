@@ -139,7 +139,10 @@ def colour_stderr(text: str, style: str = "green", *, nl: bool = True) -> None:
 
 def dump_json(obj: Any) -> None:
     """
-    Pretty-print a Python object as syntax-highlighted JSON with telemetry.
+    Pretty-print a Python object as JSON with telemetry.
+
+    Uses plain JSON output for machine-readable output (no TTY).
+    Uses syntax-highlighted JSON for interactive terminals.
 
     Parameters
     ----------
@@ -153,7 +156,12 @@ def dump_json(obj: Any) -> None:
             json_str = json.dumps(obj, default=str, indent=2)
             json_size = len(json_str)
 
-            _console.print(RichJSON(json_str))
+            # Use plain print for non-TTY (machine-readable, tests, pipes)
+            # Use Rich syntax highlighting only for interactive terminals
+            if _console.is_terminal:
+                _console.print(RichJSON(json_str))
+            else:
+                print(json_str)
 
             duration = time.time() - start_time
 

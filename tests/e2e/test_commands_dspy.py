@@ -34,8 +34,11 @@ class TestOptimizeSpec:
         assert result.metrics["coverage"] == 0.9
         assert result.improvement == 10.0
 
-    def test_missing_spec_file(self, tmp_path):
+    def test_missing_spec_file(self, tmp_path, monkeypatch):
         """Test handling of missing spec file."""
+        import specify_cli._dspy_optimize_impl as impl_module
+        monkeypatch.setattr(impl_module, "DSPY_AVAILABLE", True)
+
         spec_file = tmp_path / "nonexistent.ttl"
         result = optimize_spec(spec_file=spec_file)
 
@@ -43,8 +46,11 @@ class TestOptimizeSpec:
         assert len(result.errors) > 0
         assert "not found" in result.errors[0].lower()
 
-    def test_invalid_metric(self, tmp_path):
+    def test_invalid_metric(self, tmp_path, monkeypatch):
         """Test handling of invalid metric."""
+        import specify_cli._dspy_optimize_impl as impl_module
+        monkeypatch.setattr(impl_module, "DSPY_AVAILABLE", True)
+
         spec_file = tmp_path / "test.ttl"
         spec_file.write_text("# Test spec")
 
@@ -57,8 +63,11 @@ class TestOptimizeSpec:
         assert len(result.errors) > 0
         assert "invalid metric" in result.errors[0].lower()
 
-    def test_invalid_iterations(self, tmp_path):
+    def test_invalid_iterations(self, tmp_path, monkeypatch):
         """Test handling of invalid iterations."""
+        import specify_cli._dspy_optimize_impl as impl_module
+        monkeypatch.setattr(impl_module, "DSPY_AVAILABLE", True)
+
         spec_file = tmp_path / "test.ttl"
         spec_file.write_text("# Test spec")
 
@@ -71,8 +80,11 @@ class TestOptimizeSpec:
         assert len(result.errors) > 0
         assert "iterations" in result.errors[0].lower()
 
-    def test_invalid_temperature(self, tmp_path):
+    def test_invalid_temperature(self, tmp_path, monkeypatch):
         """Test handling of invalid temperature."""
+        import specify_cli._dspy_optimize_impl as impl_module
+        monkeypatch.setattr(impl_module, "DSPY_AVAILABLE", True)
+
         spec_file = tmp_path / "test.ttl"
         spec_file.write_text("# Test spec")
 

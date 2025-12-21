@@ -9,8 +9,13 @@
 # - Code: commands/*.py = μ(cli-commands.ttl)
 # - Tests: test_*.py = μ(cli-commands.ttl)
 #
-# Usage: ggen sync --config docs/ggen.toml
+# Usage: ggen sync --manifest docs/ggen.toml
 # ============================================================================
+
+[project]
+name = "spec-kit"
+version = "0.1.0"
+description = "RDF-first specification development toolkit"
 
 [metadata]
 name = "spec-kit-transformations"

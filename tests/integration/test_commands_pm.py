@@ -17,6 +17,7 @@ Examples:
 from __future__ import annotations
 
 import json
+import re
 from pathlib import Path
 from typing import Any
 from unittest.mock import MagicMock, Mock, patch
@@ -25,6 +26,12 @@ import pytest
 from typer.testing import CliRunner
 
 from specify_cli.app import app
+
+
+def strip_ansi(text: str) -> str:
+    """Remove ANSI escape codes from text."""
+    ansi_escape = re.compile(r"\x1B(?:[@-Z\\-_]|\[[0-?]*[ -/]*[@-~])")
+    return ansi_escape.sub("", text)
 
 # ============================================================================
 # Fixtures
@@ -234,7 +241,7 @@ def test_pm_discover_json_output(
         )
 
         assert result.exit_code == 0
-        output_data = json.loads(result.stdout)
+        output_data = json.loads(strip_ansi(result.stdout))
         assert output_data["success"] is True
         assert "algorithm" in output_data
         assert "model_type" in output_data
@@ -311,8 +318,8 @@ def test_pm_conform_basic(
     """
     conformance_result = {
         "fitness": 0.95,
-        "precision": 0.88,
-        "f1_score": 0.91,
+        "precision": 0.92,  # Both >= 0.9 for Excellent conformance
+        "f1_score": 0.93,
         "method": "token",
         "num_traces": 100,
         "results": [],
@@ -409,7 +416,7 @@ def test_pm_conform_json_output(
         )
 
         assert result.exit_code == 0
-        output_data = json.loads(result.stdout)
+        output_data = json.loads(strip_ansi(result.stdout))
         assert output_data["success"] is True
         assert output_data["fitness"] == 0.80
         assert output_data["precision"] == 0.75
@@ -504,7 +511,7 @@ def test_pm_stats_json_output(
         )
 
         assert result.exit_code == 0
-        output_data = json.loads(result.stdout)
+        output_data = json.loads(strip_ansi(result.stdout))
         assert output_data["num_cases"] == 100
         assert output_data["num_events"] == 450
         assert output_data["avg_trace_length"] == 4.5
@@ -534,7 +541,7 @@ def test_pm_filter_by_activity(
 
     with patch("specify_cli.ops.process_mining.load_event_log") as mock_load, \
          patch("specify_cli.ops.process_mining.filter_log") as mock_filter, \
-         patch("pm4py.write_csv") as mock_write:
+         patch("specify_cli.ops.process_mining.save_log") as mock_write:
 
         mock_load.return_value = mock_event_log
         mock_filter.return_value = filtered_log
@@ -569,7 +576,7 @@ def test_pm_filter_by_length(
 
     with patch("specify_cli.ops.process_mining.load_event_log") as mock_load, \
          patch("specify_cli.ops.process_mining.filter_log") as mock_filter, \
-         patch("pm4py.write_csv") as mock_write:
+         patch("specify_cli.ops.process_mining.save_log") as mock_write:
 
         mock_load.return_value = mock_event_log
         mock_filter.return_value = filtered_log
@@ -610,7 +617,7 @@ def test_pm_sample_by_traces(
 
     with patch("specify_cli.ops.process_mining.load_event_log") as mock_load, \
          patch("specify_cli.ops.process_mining.sample_log") as mock_sample, \
-         patch("pm4py.write_csv") as mock_write:
+         patch("specify_cli.ops.process_mining.save_log") as mock_write:
 
         mock_load.return_value = mock_event_log
         mock_sample.return_value = sampled_log
@@ -662,7 +669,7 @@ def test_pm_sample_json_output(
 
     with patch("specify_cli.ops.process_mining.load_event_log") as mock_load, \
          patch("specify_cli.ops.process_mining.sample_log") as mock_sample, \
-         patch("pm4py.write_csv") as mock_write:
+         patch("specify_cli.ops.process_mining.save_log") as mock_write:
 
         mock_load.return_value = mock_event_log
         mock_sample.return_value = sampled_log
@@ -674,7 +681,7 @@ def test_pm_sample_json_output(
         )
 
         assert result.exit_code == 0
-        output_data = json.loads(result.stdout)
+        output_data = json.loads(strip_ansi(result.stdout))
         assert output_data["success"] is True
         assert output_data["sampled_cases"] == 25
         assert "25.0%" in output_data["sample_rate"]

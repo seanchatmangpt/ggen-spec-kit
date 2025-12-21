@@ -148,6 +148,7 @@ def test_dspy_optimize_basic(
         - Optimized module is saved
         - Metrics are reported
     """
+    pytest.importorskip("dspy")  # Skip if dspy not installed
     output_file = tmp_path / "optimized_module.pkl"
 
     with patch("dspy.BootstrapFewShot") as mock_optimizer:
@@ -179,6 +180,7 @@ def test_dspy_optimize_with_metric(
         - Custom metric is applied
         - Optimization uses specified metric
     """
+    pytest.importorskip("dspy")
     output_file = tmp_path / "optimized_module.pkl"
 
     with patch("dspy.BootstrapFewShot") as mock_optimizer:
@@ -208,6 +210,7 @@ def test_dspy_optimize_max_rounds(
         - Max rounds parameter is respected
         - Optimization stops after limit
     """
+    pytest.importorskip("dspy")
     output_file = tmp_path / "optimized_module.pkl"
 
     with patch("dspy.BootstrapFewShot") as mock_optimizer:
@@ -243,6 +246,7 @@ def test_dspy_generate_from_spec(
         - LLM generates implementation
         - Output is formatted properly
     """
+    pytest.importorskip("dspy")
     with patch("dspy.ChainOfThought") as mock_cot:
         mock_module = MagicMock()
         mock_module.forward.return_value = mock_llm_response["completion"]
@@ -271,6 +275,7 @@ def test_dspy_generate_with_model(
         - Model parameter is used
         - Correct LLM is invoked
     """
+    pytest.importorskip("dspy")
     with patch("dspy.OpenAI") as mock_llm, \
          patch("dspy.ChainOfThought") as mock_cot:
 
@@ -301,6 +306,7 @@ def test_dspy_generate_with_temperature(
         - Temperature parameter is applied
         - Affects LLM randomness
     """
+    pytest.importorskip("dspy")
     with patch("dspy.OpenAI") as mock_llm, \
          patch("dspy.ChainOfThought") as mock_cot:
 
@@ -331,6 +337,7 @@ def test_dspy_generate_json_output(
         - JSON output is valid
         - Contains completion and metadata
     """
+    pytest.importorskip("dspy")
     with patch("dspy.ChainOfThought") as mock_cot:
         mock_module = MagicMock()
         mock_module.forward.return_value = mock_llm_response["completion"]
@@ -370,6 +377,7 @@ def test_dspy_analyze_module_performance(
         - Module is analyzed
         - Performance metrics are reported
     """
+    pytest.importorskip("dspy")
     module_file = tmp_path / "module.pkl"
     # Create a mock pickle file
     module_file.write_bytes(b"mock_pickle_data")
@@ -405,6 +413,7 @@ def test_dspy_analyze_with_test_data(
         - Evaluation is performed
         - Metrics are calculated
     """
+    pytest.importorskip("dspy")
     module_file = tmp_path / "module.pkl"
     module_file.write_bytes(b"mock_pickle_data")
 
@@ -490,6 +499,7 @@ def test_dspy_generate_llm_error(
         - LLM errors are handled gracefully
         - Error message is displayed
     """
+    pytest.importorskip("dspy")
     with patch("dspy.ChainOfThought") as mock_cot:
         mock_cot.side_effect = Exception("LLM API error: rate limit exceeded")
 

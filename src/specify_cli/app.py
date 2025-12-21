@@ -124,6 +124,32 @@ except ImportError:
     pass  # dspy not installed
 
 
+# uvmgr commands - 13 core commands for project management
+# These are optional and fail gracefully if not fully implemented
+_UVMGR_COMMANDS = [
+    ("deps", "Dependency management with uv"),
+    ("build", "Package building (wheel/sdist/exe)"),
+    ("tests", "Test execution with pytest"),
+    ("cache", "Cache management operations"),
+    ("lint", "Code quality (ruff, mypy)"),
+    ("otel", "OpenTelemetry validation"),
+    ("guides", "Development guides"),
+    ("worktree", "Git worktree management"),
+    ("infodesign", "Information design support"),
+    ("mermaid", "Mermaid diagram generation"),
+    ("dod", "Definition of Done automation"),
+    ("docs", "API documentation generation"),
+    ("terraform", "Infrastructure as code"),
+]
+
+for cmd_name, cmd_help in _UVMGR_COMMANDS:
+    try:
+        module = __import__(f"specify_cli.commands.{cmd_name}", fromlist=["app"])
+        app.add_typer(module.app, name=cmd_name, help=cmd_help)
+    except (ImportError, AttributeError):
+        pass  # Command not available
+
+
 @app.callback()
 def callback(
     ctx: typer.Context,

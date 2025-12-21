@@ -8,9 +8,13 @@ Tests the RDF-first architecture:
 - Idempotence: μ∘μ = μ
 """
 
-import pytest
 from pathlib import Path
-from testcontainers.core.container import DockerContainer
+
+import pytest
+
+# Skip entire module if testcontainers not installed
+pytest.importorskip("testcontainers")
+from testcontainers.core.container import DockerContainer  # noqa: E402
 
 
 @pytest.fixture(scope="module")

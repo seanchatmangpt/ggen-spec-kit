@@ -590,14 +590,7 @@ def filter_log(
             console.print(f"[cyan]Filtered cases:[/cyan] {filtered_count}")
 
         # Save filtered log
-        import pm4py
-
-        if output_file.suffix.lower() == ".csv":
-            pm4py.write_csv(filtered_log, str(output_file))
-        elif output_file.suffix.lower() == ".xes":
-            pm4py.write_xes(filtered_log, str(output_file))
-        else:
-            raise ValueError(f"Unsupported output format: {output_file.suffix}")
+        pm_ops.save_log(filtered_log, output_file)
 
         if json_output:
             output = {
@@ -758,14 +751,7 @@ def sample(
             console.print(f"[cyan]Sampled cases:[/cyan] {sampled_count}")
 
         # Save sampled log
-        import pm4py
-
-        if output_file.suffix.lower() == ".csv":
-            pm4py.write_csv(sampled_log, str(output_file))
-        elif output_file.suffix.lower() == ".xes":
-            pm4py.write_xes(sampled_log, str(output_file))
-        else:
-            raise ValueError(f"Unsupported output format: {output_file.suffix}")
+        pm_ops.save_log(sampled_log, output_file)
 
         if json_output:
             output = {

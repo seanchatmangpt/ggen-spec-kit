@@ -123,11 +123,11 @@ class TestGgenSyncCommand:
         """Verify sync --help lists all expected options."""
         stdout, _stderr, _returncode = run_ggen_command(["sync", "--help"])
 
-        # Actual options in ggen v5.0.2 (discovered from tests)
+        # Actual options in ggen v5.0.2 (using underscore format in CLI)
         expected_options = [
-            "--from",  # Source ontology directory
-            "--to",  # Target output directory
-            "--dry-run",  # Preview changes without writing
+            "--manifest",  # Manifest file path
+            "--output_dir",  # Target output directory
+            "--dry_run",  # Preview changes without writing
             "--force",  # Override conflicts
             "--verbose",  # Verbose output
             "--watch",  # Watch for file changes

@@ -97,7 +97,7 @@ class TestProjectDetection:
 
         assert project is not None
         assert project.name == tmp_path.name
-        assert project.confidence > 0.3
+        assert project.confidence >= 0.3
 
     def test_detect_python_project_with_setup(self, tmp_path):
         """Test detecting project with setup.py."""

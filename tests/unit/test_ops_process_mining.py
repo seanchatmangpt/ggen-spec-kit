@@ -125,6 +125,8 @@ def test_load_event_log_csv(sample_csv_file: Path, mock_event_log: MagicMock) ->
         - DataFrame is formatted
         - Event log is created
     """
+    pytest.importorskip("pm4py")
+
     with patch("pm4py.read_xes") as mock_read_xes, \
          patch("pm4py.format_dataframe") as mock_format, \
          patch("pm4py.convert_to_event_log") as mock_convert, \
@@ -152,6 +154,8 @@ def test_load_event_log_xes(sample_xes_file: Path, mock_event_log: MagicMock) ->
         - XES is read correctly
         - Event log is returned
     """
+    pytest.importorskip("pm4py")
+
     with patch("pm4py.read_xes") as mock_read_xes:
         mock_read_xes.return_value = mock_event_log
 
@@ -169,6 +173,7 @@ def test_load_event_log_file_not_found(tmp_path: Path) -> None:
     Verifies:
         - FileNotFoundError is raised
     """
+    pytest.importorskip("pm4py")
     nonexistent_file = tmp_path / "nonexistent.csv"
 
     with pytest.raises(FileNotFoundError, match="Input file not found"):
@@ -183,6 +188,7 @@ def test_load_event_log_unsupported_format(tmp_path: Path) -> None:
     Verifies:
         - ValueError is raised for unsupported formats
     """
+    pytest.importorskip("pm4py")
     unsupported_file = tmp_path / "log.txt"
     unsupported_file.write_text("unsupported format")
 
@@ -207,6 +213,7 @@ def test_discover_process_model_alpha(
         - Alpha algorithm is called
         - Petri net is returned
     """
+    pytest.importorskip("pm4py")
     with patch("pm4py.discover_petri_net_alpha") as mock_alpha:
         mock_alpha.return_value = mock_petri_net
 
@@ -229,6 +236,7 @@ def test_discover_process_model_inductive(
         - Inductive algorithm is called
         - Noise threshold is applied
     """
+    pytest.importorskip("pm4py")
     with patch("pm4py.discover_petri_net_inductive") as mock_inductive:
         mock_inductive.return_value = mock_petri_net
 
@@ -252,6 +260,7 @@ def test_discover_process_model_unknown_algorithm(mock_event_log: MagicMock) -> 
         - ValueError is raised
         - Error message includes algorithm name
     """
+    pytest.importorskip("pm4py")
     with pytest.raises(ValueError, match="Unknown discovery algorithm: unknown"):
         pm_ops.discover_process_model(mock_event_log, algorithm="unknown")
 
@@ -275,6 +284,7 @@ def test_conform_trace_token_replay(
         - Fitness and precision are calculated
         - F1 score is computed
     """
+    pytest.importorskip("pm4py")
     model_file = tmp_path / "model.pnml"
     model_file.write_text('<?xml version="1.0" encoding="UTF-8"?><pnml></pnml>')
 
@@ -310,6 +320,7 @@ def test_conform_trace_alignment(
         - Alignment method is used
         - Results are computed
     """
+    pytest.importorskip("pm4py")
     model_file = tmp_path / "model.pnml"
     model_file.write_text('<?xml version="1.0" encoding="UTF-8"?><pnml></pnml>')
 
@@ -338,6 +349,7 @@ def test_conform_trace_model_not_found(mock_event_log: MagicMock, tmp_path: Path
     Verifies:
         - FileNotFoundError is raised
     """
+    pytest.importorskip("pm4py")
     nonexistent_model = tmp_path / "nonexistent.pnml"
 
     with pytest.raises(FileNotFoundError, match="Model file not found"):
@@ -358,6 +370,7 @@ def test_get_log_statistics(mock_event_log: MagicMock) -> None:
         - All statistics are computed
         - Structure is correct
     """
+    pytest.importorskip("pm4py")
     # Mock activities
     mock_activities = {"Start": 50, "Review": 40, "End": 50}
 
@@ -406,6 +419,7 @@ def test_filter_log_by_activity(mock_event_log: MagicMock) -> None:
         - Activity filter is applied
         - Filtered log is returned
     """
+    pytest.importorskip("pm4py")
     filtered_log = MagicMock()
 
     with patch("pm4py.filter_event_attribute_values") as mock_filter:
@@ -426,6 +440,7 @@ def test_filter_log_by_length(mock_event_log: MagicMock) -> None:
         - Length filter is applied
         - Min and max are respected
     """
+    pytest.importorskip("pm4py")
     filtered_log = MagicMock()
 
     with patch("pm4py.filter_trace_length") as mock_filter:
@@ -445,6 +460,7 @@ def test_filter_log_invalid_parameters(mock_event_log: MagicMock) -> None:
     Verifies:
         - ValueError is raised
     """
+    pytest.importorskip("pm4py")
     with pytest.raises(ValueError, match="Invalid filter type"):
         pm_ops.filter_log(mock_event_log, filter_type="invalid")
 
@@ -463,6 +479,7 @@ def test_sample_log_by_traces(mock_event_log: MagicMock) -> None:
         - Sampling is applied
         - Correct number of traces
     """
+    pytest.importorskip("pm4py")
     sampled_log = MagicMock()
 
     with patch("pm4py.sample_log") as mock_sample:
@@ -482,6 +499,7 @@ def test_sample_log_missing_parameters(mock_event_log: MagicMock) -> None:
     Verifies:
         - ValueError is raised
     """
+    pytest.importorskip("pm4py")
     with pytest.raises(ValueError, match="Either num_traces or num_events must be specified"):
         pm_ops.sample_log(mock_event_log)
 
@@ -494,5 +512,6 @@ def test_sample_log_unknown_method(mock_event_log: MagicMock) -> None:
     Verifies:
         - ValueError is raised
     """
+    pytest.importorskip("pm4py")
     with pytest.raises(ValueError, match="Unknown sampling method"):
         pm_ops.sample_log(mock_event_log, num_traces=10, method="unknown")

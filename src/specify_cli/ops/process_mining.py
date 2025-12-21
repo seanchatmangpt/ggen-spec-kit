@@ -91,6 +91,29 @@ def save_model(model: Any, output_path: Path, model_type: str = "petri") -> None
             raise ValueError(f"Unsupported output format for process tree: {suffix}")
 
 
+def save_log(log: Any, output_path: Path) -> None:
+    """
+    Save an event log to file.
+
+    Args:
+        log: Event log to save
+        output_path: Output file path (CSV or XES)
+
+    Raises:
+        ValueError: If output format is unsupported
+    """
+    import pm4py
+
+    suffix = output_path.suffix.lower()
+
+    if suffix == ".csv":
+        pm4py.write_csv(log, str(output_path))
+    elif suffix == ".xes":
+        pm4py.write_xes(log, str(output_path))
+    else:
+        raise ValueError(f"Unsupported output format for event log: {suffix}")
+
+
 def discover_process_model(
     log,
     algorithm: str = "inductive",
