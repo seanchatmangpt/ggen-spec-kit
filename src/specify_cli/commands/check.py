@@ -21,8 +21,6 @@ See Also
 
 from __future__ import annotations
 
-from typing import Optional
-
 import typer
 from rich.console import Console
 from rich.table import Table
@@ -114,6 +112,7 @@ def check(
         table.add_column("Status")
         table.add_column("Required")
         if verbose:
+            table.add_column("Version")
             table.add_column("Path / Error")
 
         # Available tools
@@ -126,6 +125,7 @@ def check(
                     tool.name,
                     status,
                     required,
+                    tool.version or "unknown",
                     tool.path or "",
                 )
             else:
@@ -141,6 +141,7 @@ def check(
                     tool.name,
                     status,
                     required,
+                    "-",
                     tool.error or "Not found in PATH",
                 )
             else:
@@ -151,7 +152,7 @@ def check(
 
         # Summary
         counts = result.tool_count
-        console.print(f"[bold]Summary:[/bold]")
+        console.print("[bold]Summary:[/bold]")
         console.print(f"  Available: {counts['available']}")
         console.print(f"  Missing: {counts['missing']}")
 
@@ -161,17 +162,27 @@ def check(
             console.print()
             console.print("[yellow]Please install missing required tools to use Specify.[/yellow]")
             raise typer.Exit(1)
-        else:
-            console.print()
-            colour("[green]✓ All required tools are available[/green]", "green")
+        console.print()
+        colour("[green]✓ All required tools are available[/green]", "green")
 
         if verbose:
+            # Show ggen-specific information if available
+            ggen_status = next((t for t in result.available if t.name == "ggen"), None)
+            if ggen_status:
+                console.print()
+                console.print("[bold]ggen:[/bold] RDF-first code generation")
+                console.print(f"  Version: {ggen_status.version or 'unknown'}")
+                console.print(f"  Path: {ggen_status.path or 'unknown'}")
+                console.print("  Purpose: Required for RDF ontology compilation (optional)")
+
             # Show environment info
             console.print()
             console.print("[bold]Environment:[/bold]")
             env_info = check_ops.get_environment_info()
             console.print(f"  Python: {env_info['python']['version'].split()[0]}")
-            console.print(f"  Platform: {env_info['platform']['system']} {env_info['platform']['release']}")
+            console.print(
+                f"  Platform: {env_info['platform']['system']} {env_info['platform']['release']}"
+            )
 
     except KeyboardInterrupt:
         console.print()

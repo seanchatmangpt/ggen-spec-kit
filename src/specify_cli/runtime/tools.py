@@ -42,12 +42,14 @@ from specify_cli.core.instrumentation import add_span_attributes
 from specify_cli.core.telemetry import metric_counter, span
 
 __all__ = [
-    "check_tool",
-    "which_tool",
-    "check_required_tools",
     "CLAUDE_LOCAL_PATH",
-    "REQUIRED_TOOLS",
     "OPTIONAL_TOOLS",
+    "REQUIRED_TOOLS",
+    "check_required_tools",
+    "check_tool",
+    "get_ggen_version",
+    "get_tool_versions",
+    "which_tool",
 ]
 
 # Claude CLI path after migrate-installer
@@ -154,6 +156,38 @@ def check_required_tools() -> tuple[list[str], list[str]]:
         )
 
         return available, missing
+
+
+def get_ggen_version() -> str | None:
+    """Get installed ggen version.
+
+    Returns
+    -------
+    str | None
+        Version string (e.g., "5.0.2") or None if not found.
+    """
+    with span("tools.get_ggen_version"):
+        try:
+            from specify_cli.core.process import run
+
+            if not check_tool("ggen"):
+                add_span_attributes(ggen_available=False)
+                return None
+
+            output = run(["ggen", "--version"], capture=True, check=False)
+            if output:
+                # Parse "ggen 5.0.2" → "5.0.2"
+                parts = output.strip().split()
+                version = parts[-1] if parts else None
+                add_span_attributes(ggen_version=version, ggen_available=True)
+                metric_counter("tools.ggen_version.detected")(1)
+                return version
+        except Exception as e:
+            add_span_attributes(ggen_error=str(e))
+            metric_counter("tools.ggen_version.error")(1)
+            return None
+
+        return None
 
 
 def get_tool_versions() -> dict[str, str | None]:

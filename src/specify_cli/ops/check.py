@@ -45,11 +45,11 @@ from specify_cli.core.telemetry import metric_counter, metric_histogram, span
 from specify_cli.runtime import tools
 
 __all__ = [
+    "CheckResult",
+    "ToolStatus",
     "check_all_tools",
     "check_tool",
     "get_tool_status",
-    "CheckResult",
-    "ToolStatus",
 ]
 
 
@@ -193,9 +193,16 @@ def check_all_tools(
 
         add_span_event("check.starting", {"tools_count": len(tools_to_check)})
 
+        # Get versions for all tools in one call
+        versions = tools.get_tool_versions()
+
         # Check each tool
         for name, required in tools_to_check:
             status = check_tool(name, required=required)
+
+            # Add version information if available
+            if status.available and name in versions:
+                status.version = versions[name]
 
             if status.available:
                 result.available.append(status)

@@ -94,12 +94,24 @@ def init(
         help="AI assistant to use: claude, gemini, copilot, cursor-agent, qwen, opencode, codex, windsurf, kilocode, auggie, codebuddy, amp, shai, q, bob, or qoder ",
     ),
     script_type: str = typer.Option(None, "--script", help="Script type to use: sh or ps"),
-    ignore_agent_tools: bool = typer.Option(False, "--ignore-agent-tools", help="Skip checks for AI agent tools like Claude Code"),
+    ignore_agent_tools: bool = typer.Option(
+        False, "--ignore-agent-tools", help="Skip checks for AI agent tools like Claude Code"
+    ),
     no_git: bool = typer.Option(False, "--no-git", help="Skip git repository initialization"),
-    here: bool = typer.Option(False, "--here", help="Initialize project in the current directory instead of creating a new one"),
-    force: bool = typer.Option(False, "--force", help="Force merge/overwrite when using --here (skip confirmation)"),
-    skip_tls: bool = typer.Option(False, "--skip-tls", help="Skip SSL/TLS verification (not recommended)"),
-    debug: bool = typer.Option(False, "--debug", help="Show verbose diagnostic output for network and extraction failures"),
+    here: bool = typer.Option(
+        False,
+        "--here",
+        help="Initialize project in the current directory instead of creating a new one",
+    ),
+    force: bool = typer.Option(
+        False, "--force", help="Force merge/overwrite when using --here (skip confirmation)"
+    ),
+    skip_tls: bool = typer.Option(
+        False, "--skip-tls", help="Skip SSL/TLS verification (not recommended)"
+    ),
+    debug: bool = typer.Option(
+        False, "--debug", help="Show verbose diagnostic output for network and extraction failures"
+    ),
     github_token: str = typer.Option(
         None,
         "--github-token",
@@ -142,7 +154,9 @@ def init(
         raise typer.Exit(1)
 
     if not here and not project_name:
-        console.print("[red]Error:[/red] Must specify either a project name, use '.' for current directory, or use --here flag")
+        console.print(
+            "[red]Error:[/red] Must specify either a project name, use '.' for current directory, or use --here flag"
+        )
         raise typer.Exit(1)
 
     if here:
@@ -151,10 +165,16 @@ def init(
 
         existing_items = list(project_path.iterdir())
         if existing_items:
-            console.print(f"[yellow]Warning:[/yellow] Current directory is not empty ({len(existing_items)} items)")
-            console.print("[yellow]Template files will be merged with existing content and may overwrite existing files[/yellow]")
+            console.print(
+                f"[yellow]Warning:[/yellow] Current directory is not empty ({len(existing_items)} items)"
+            )
+            console.print(
+                "[yellow]Template files will be merged with existing content and may overwrite existing files[/yellow]"
+            )
             if force:
-                console.print("[cyan]--force supplied: skipping confirmation and proceeding with merge[/cyan]")
+                console.print(
+                    "[cyan]--force supplied: skipping confirmation and proceeding with merge[/cyan]"
+                )
             else:
                 response = typer.confirm("Do you want to continue?")
                 if not response:
@@ -196,7 +216,9 @@ def init(
 
     if ai_assistant:
         if ai_assistant not in AGENT_CONFIG:
-            console.print(f"[red]Error:[/red] Invalid AI assistant '{ai_assistant}'. Choose from: {', '.join(AGENT_CONFIG.keys())}")
+            console.print(
+                f"[red]Error:[/red] Invalid AI assistant '{ai_assistant}'. Choose from: {', '.join(AGENT_CONFIG.keys())}"
+            )
             raise typer.Exit(1)
         selected_ai = ai_assistant
     else:
@@ -224,14 +246,18 @@ def init(
 
     if script_type:
         if script_type not in SCRIPT_TYPE_CHOICES:
-            console.print(f"[red]Error:[/red] Invalid script type '{script_type}'. Choose from: {', '.join(SCRIPT_TYPE_CHOICES.keys())}")
+            console.print(
+                f"[red]Error:[/red] Invalid script type '{script_type}'. Choose from: {', '.join(SCRIPT_TYPE_CHOICES.keys())}"
+            )
             raise typer.Exit(1)
         selected_script = script_type
     else:
         default_script = "ps" if os.name == "nt" else "sh"
 
         if sys.stdin.isatty():
-            selected_script = select_with_arrows(SCRIPT_TYPE_CHOICES, "Choose script type (or press Enter)", default_script)
+            selected_script = select_with_arrows(
+                SCRIPT_TYPE_CHOICES, "Choose script type (or press Enter)", default_script
+            )
         else:
             selected_script = default_script
 
@@ -312,8 +338,13 @@ def init(
                     ("CWD", str(Path.cwd())),
                 ]
                 _label_width = max(len(k) for k, _ in _env_pairs)
-                env_lines = [f"{k.ljust(_label_width)} → [bright_black]{v}[/bright_black]" for k, v in _env_pairs]
-                console.print(Panel("\n".join(env_lines), title="Debug Environment", border_style="magenta"))
+                env_lines = [
+                    f"{k.ljust(_label_width)} → [bright_black]{v}[/bright_black]"
+                    for k, v in _env_pairs
+                ]
+                console.print(
+                    Panel("\n".join(env_lines), title="Debug Environment", border_style="magenta")
+                )
             if not here and project_path.exists():
                 shutil.rmtree(project_path)
             raise typer.Exit(1)
@@ -333,7 +364,7 @@ def init(
             f"[cyan]cd {project_path if not here else '.'}[/cyan]\n"
             f"[cyan]git init[/cyan]\n"
             f"[cyan]git add .[/cyan]\n"
-            f"[cyan]git commit -m \"Initial commit\"[/cyan]",
+            f'[cyan]git commit -m "Initial commit"[/cyan]',
             title="[red]Git Initialization Failed[/red]",
             border_style="red",
             padding=(1, 2),
@@ -373,7 +404,9 @@ def init(
         else:  # Unix-like systems
             cmd = f"export CODEX_HOME={quoted_path}"
 
-        steps_lines.append(f"{step_num}. Set [cyan]CODEX_HOME[/cyan] environment variable before running Codex: [cyan]{cmd}[/cyan]")
+        steps_lines.append(
+            f"{step_num}. Set [cyan]CODEX_HOME[/cyan] environment variable before running Codex: [cyan]{cmd}[/cyan]"
+        )
         step_num += 1
 
     steps_lines.append(f"{step_num}. Start using slash commands with your AI agent:")
@@ -384,77 +417,34 @@ def init(
     steps_lines.append("   2.4 [cyan]/speckit.tasks[/] - Generate actionable tasks")
     steps_lines.append("   2.5 [cyan]/speckit.implement[/] - Execute implementation")
 
-    steps_panel = Panel("\n".join(steps_lines), title="Next Steps", border_style="cyan", padding=(1, 2))
+    steps_panel = Panel(
+        "\n".join(steps_lines), title="Next Steps", border_style="cyan", padding=(1, 2)
+    )
     console.print()
     console.print(steps_panel)
 
     enhancement_lines = [
         "Optional commands that you can use for your specs [bright_black](improve quality & confidence)[/bright_black]",
         "",
-        f"○ [cyan]/speckit.clarify[/] [bright_black](optional)[/bright_black] - Ask structured questions to de-risk ambiguous areas before planning (run before [cyan]/speckit.plan[/] if used)",
-        f"○ [cyan]/speckit.analyze[/] [bright_black](optional)[/bright_black] - Cross-artifact consistency & alignment report (after [cyan]/speckit.tasks[/], before [cyan]/speckit.implement[/])",
-        f"○ [cyan]/speckit.checklist[/] [bright_black](optional)[/bright_black] - Generate quality checklists to validate requirements completeness, clarity, and consistency (after [cyan]/speckit.plan[/])",
+        "○ [cyan]/speckit.clarify[/] [bright_black](optional)[/bright_black] - Ask structured questions to de-risk ambiguous areas before planning (run before [cyan]/speckit.plan[/] if used)",
+        "○ [cyan]/speckit.analyze[/] [bright_black](optional)[/bright_black] - Cross-artifact consistency & alignment report (after [cyan]/speckit.tasks[/], before [cyan]/speckit.implement[/])",
+        "○ [cyan]/speckit.checklist[/] [bright_black](optional)[/bright_black] - Generate quality checklists to validate requirements completeness, clarity, and consistency (after [cyan]/speckit.plan[/])",
     ]
-    enhancements_panel = Panel("\n".join(enhancement_lines), title="Enhancement Commands", border_style="cyan", padding=(1, 2))
+    enhancements_panel = Panel(
+        "\n".join(enhancement_lines),
+        title="Enhancement Commands",
+        border_style="cyan",
+        padding=(1, 2),
+    )
     console.print()
     console.print(enhancements_panel)
 
 
-@app.command()
-def check():
-    """Check that required tools are installed."""
-    show_banner()
-
-    tracker = StepTracker("Tool Verification")
-
-    tools_to_check = ["git"] + list(AGENT_CONFIG.keys())
-
-    for tool in tools_to_check:
-        label = AGENT_CONFIG.get(tool, {}).get("name", tool)
-        tracker.add(tool, label)
-
-    with Live(tracker.render(), console=console, refresh_per_second=4, transient=True) as live:
-        tracker.attach_refresh(lambda: live.update(tracker.render()))
-
-        for tool in tools_to_check:
-            check_tool(tool, tracker)
-
-    # Check build tools
-    tracker.add("cargo", "Rust package manager (cargo)")
-    cargo_ok = check_tool("cargo", tracker=tracker)
-
-    tracker.add("ggen", "Ontology-driven code generator (ggen)")
-    ggen_ok = check_tool("ggen", tracker=tracker)
-
-    console.print(tracker.render())
-    console.print()
-
-    # Summary
-    available_tools = [tool for tool in tools_to_check if check_tool(tool)]
-    unavailable_tools = [tool for tool in tools_to_check if not check_tool(tool)]
-
-    summary_lines = [f"Available: {len(available_tools)}/{len(tools_to_check)}", ""]
-
-    if available_tools:
-        summary_lines.append("[green]Available:[/green]")
-        for tool in available_tools:
-            label = AGENT_CONFIG.get(tool, {}).get("name", tool)
-            summary_lines.append(f"  [green]●[/green] {label}")
-
-    if unavailable_tools:
-        summary_lines.append("")
-        summary_lines.append("[yellow]Not Available:[/yellow]")
-        for tool in unavailable_tools:
-            label = AGENT_CONFIG.get(tool, {}).get("name", tool)
-            config = AGENT_CONFIG.get(tool, {})
-            install_info = ""
-            if config.get("install_url"):
-                install_info = f" - Install: {config['install_url']}"
-            summary_lines.append(f"  [yellow]○[/yellow] {label}{install_info}")
-
-    summary_panel = Panel("\n".join(summary_lines), title="Tool Check Summary", border_style="cyan", padding=(1, 2))
-    console.print()
-    console.print(summary_panel)
+# NOTE: Old check command removed - now using refactored version from commands/check.py
+# The refactored check command provides:
+# - --verbose/-v flag for detailed output
+# - --json flag for JSON output
+# - Better separation of concerns (commands/ops/runtime layers)
 
 
 # =============================================================================
@@ -471,24 +461,31 @@ app.add_typer(pm_app, name="pm")
 # Add SpiffWorkflow self-automation commands (optional)
 try:
     from specify_cli.spiff_automation import create_self_automating_cli
+
     automate_app = create_self_automating_cli()
     app.add_typer(automate_app, name="automate")
 except ImportError:
     pass  # SpiffWorkflow not installed
 
 
-def _load_event_log(file_path: Path, case_id: str = "case:concept:name", activity: str = "concept:name", timestamp: str = "time:timestamp"):
+def _load_event_log(
+    file_path: Path,
+    case_id: str = "case:concept:name",
+    activity: str = "concept:name",
+    timestamp: str = "time:timestamp",
+):
     """Load event log from CSV/XES file."""
     try:
         import pm4py
 
         if file_path.suffix.lower() == ".xes":
             return pm4py.read_xes(str(file_path))
-        elif file_path.suffix.lower() == ".csv":
+        if file_path.suffix.lower() == ".csv":
             df = pm4py.read_csv(str(file_path))
-            return pm4py.convert_to_event_log(df, case_id=case_id, activity_key=activity, timestamp_key=timestamp)
-        else:
-            raise ValueError(f"Unsupported file format: {file_path.suffix}")
+            return pm4py.convert_to_event_log(
+                df, case_id=case_id, activity_key=activity, timestamp_key=timestamp
+            )
+        raise ValueError(f"Unsupported file format: {file_path.suffix}")
     except ImportError:
         raise RuntimeError("pm4py is not installed. Install it with: pip install pm4py")
 
@@ -514,11 +511,18 @@ def _save_model(model, output_path: Path, model_type: str = "petri"):
 @pm_app.command("discover")
 def pm_discover(
     input_file: Path = typer.Argument(..., help="Input event log file (CSV or XES)"),
-    output_file: Path = typer.Option(None, "--output", "-o", help="Output file for discovered model (default: input_name_model.pnml)"),
+    output_file: Path = typer.Option(
+        None,
+        "--output",
+        "-o",
+        help="Output file for discovered model (default: input_name_model.pnml)",
+    ),
     model_type: str = typer.Option("petri", "--type", "-t", help="Model type: petri or tree"),
     case_id: str = typer.Option("case:concept:name", "--case-id", help="Column name for case ID"),
     activity: str = typer.Option("concept:name", "--activity", help="Column name for activity"),
-    timestamp: str = typer.Option("time:timestamp", "--timestamp", help="Column name for timestamp"),
+    timestamp: str = typer.Option(
+        "time:timestamp", "--timestamp", help="Column name for timestamp"
+    ),
 ):
     """Discover a process model from an event log using the Inductive Miner."""
     try:
@@ -529,9 +533,13 @@ def pm_discover(
             raise typer.Exit(1)
 
         console.print(f"[cyan]Loading event log from:[/cyan] {input_file}")
-        event_log = _load_event_log(input_file, case_id=case_id, activity=activity, timestamp=timestamp)
+        event_log = _load_event_log(
+            input_file, case_id=case_id, activity=activity, timestamp=timestamp
+        )
 
-        console.print(f"[cyan]Event log loaded:[/cyan] {len(event_log)} cases, {len(event_log.get_events())} events")
+        console.print(
+            f"[cyan]Event log loaded:[/cyan] {len(event_log)} cases, {len(event_log.get_events())} events"
+        )
 
         tracker = StepTracker("Process Discovery")
         tracker.add("discover", "Discover model using Inductive Miner")
@@ -557,7 +565,9 @@ def pm_discover(
             tracker.complete("save", str(output_file))
 
         console.print(tracker.render())
-        console.print(f"\n[bold green]Model discovered and saved to:[/bold green] [cyan]{output_file}[/cyan]")
+        console.print(
+            f"\n[bold green]Model discovered and saved to:[/bold green] [cyan]{output_file}[/cyan]"
+        )
 
     except Exception as e:
         console.print(f"[red]Error:[/red] {e}")
@@ -570,7 +580,9 @@ def pm_conform(
     model_file: Path = typer.Argument(..., help="Process model file (PNML)"),
     case_id: str = typer.Option("case:concept:name", "--case-id", help="Column name for case ID"),
     activity: str = typer.Option("concept:name", "--activity", help="Column name for activity"),
-    timestamp: str = typer.Option("time:timestamp", "--timestamp", help="Column name for timestamp"),
+    timestamp: str = typer.Option(
+        "time:timestamp", "--timestamp", help="Column name for timestamp"
+    ),
 ):
     """Check log conformance against a process model."""
     try:
@@ -585,7 +597,9 @@ def pm_conform(
             raise typer.Exit(1)
 
         console.print(f"[cyan]Loading event log:[/cyan] {input_file}")
-        event_log = _load_event_log(input_file, case_id=case_id, activity=activity, timestamp=timestamp)
+        event_log = _load_event_log(
+            input_file, case_id=case_id, activity=activity, timestamp=timestamp
+        )
 
         console.print(f"[cyan]Loading model:[/cyan] {model_file}")
         net, im, fm = pm4py.read_petri_net(str(model_file))
@@ -606,7 +620,9 @@ def pm_conform(
         console.print()
 
         # Show results
-        result_table = Table(title="Conformance Results", show_header=True, header_style="bold cyan")
+        result_table = Table(
+            title="Conformance Results", show_header=True, header_style="bold cyan"
+        )
         result_table.add_column("Metric", style="cyan")
         result_table.add_column("Value", style="white")
 
@@ -625,19 +641,24 @@ def pm_stats(
     input_file: Path = typer.Argument(..., help="Input event log file (CSV or XES)"),
     case_id: str = typer.Option("case:concept:name", "--case-id", help="Column name for case ID"),
     activity: str = typer.Option("concept:name", "--activity", help="Column name for activity"),
-    timestamp: str = typer.Option("time:timestamp", "--timestamp", help="Column name for timestamp"),
+    timestamp: str = typer.Option(
+        "time:timestamp", "--timestamp", help="Column name for timestamp"
+    ),
 ):
     """Analyze event log statistics."""
     try:
-        import pm4py
         import statistics
+
+        import pm4py
 
         if not input_file.exists():
             console.print(f"[red]Error:[/red] Input file not found: {input_file}")
             raise typer.Exit(1)
 
         console.print(f"[cyan]Loading event log:[/cyan] {input_file}")
-        event_log = _load_event_log(input_file, case_id=case_id, activity=activity, timestamp=timestamp)
+        event_log = _load_event_log(
+            input_file, case_id=case_id, activity=activity, timestamp=timestamp
+        )
 
         tracker = StepTracker("Event Log Analysis")
         tracker.add("stats", "Calculate statistics")
@@ -667,7 +688,9 @@ def pm_stats(
         console.print()
 
         # Show results
-        stats_table = Table(title="Event Log Statistics", show_header=True, header_style="bold cyan")
+        stats_table = Table(
+            title="Event Log Statistics", show_header=True, header_style="bold cyan"
+        )
         stats_table.add_column("Metric", style="cyan")
         stats_table.add_column("Value", style="white")
 
@@ -691,7 +714,9 @@ def pm_convert(
     output_file: Path = typer.Argument(..., help="Output file (CSV, XES, or PNML)"),
     case_id: str = typer.Option("case:concept:name", "--case-id", help="Column name for case ID"),
     activity: str = typer.Option("concept:name", "--activity", help="Column name for activity"),
-    timestamp: str = typer.Option("time:timestamp", "--timestamp", help="Column name for timestamp"),
+    timestamp: str = typer.Option(
+        "time:timestamp", "--timestamp", help="Column name for timestamp"
+    ),
 ):
     """Convert between event log and model formats."""
     try:
@@ -716,7 +741,9 @@ def pm_convert(
                 net, im, fm = pm4py.read_petri_net(str(input_file))
                 tracker.complete("load", "Petri net")
             else:
-                event_log = _load_event_log(input_file, case_id=case_id, activity=activity, timestamp=timestamp)
+                event_log = _load_event_log(
+                    input_file, case_id=case_id, activity=activity, timestamp=timestamp
+                )
                 tracker.complete("load", f"Event log ({input_file.suffix})")
 
             tracker.start("convert")
@@ -748,7 +775,7 @@ def pm_convert(
             tracker.complete("save", output_file.name)
 
         console.print(tracker.render())
-        console.print(f"\n[bold green]Conversion complete.[/bold green]")
+        console.print("\n[bold green]Conversion complete.[/bold green]")
         console.print(f"Output: [cyan]{output_file}[/cyan]")
 
     except Exception as e:
@@ -759,10 +786,14 @@ def pm_convert(
 @pm_app.command("visualize")
 def pm_visualize(
     input_file: Path = typer.Argument(..., help="Input file (event log CSV/XES or model PNML)"),
-    output_file: Path = typer.Option(None, "--output", "-o", help="Output image file (PNG, SVG, etc.)"),
+    output_file: Path = typer.Option(
+        None, "--output", "-o", help="Output image file (PNG, SVG, etc.)"
+    ),
     case_id: str = typer.Option("case:concept:name", "--case-id", help="Column name for case ID"),
     activity: str = typer.Option("concept:name", "--activity", help="Column name for activity"),
-    timestamp: str = typer.Option("time:timestamp", "--timestamp", help="Column name for timestamp"),
+    timestamp: str = typer.Option(
+        "time:timestamp", "--timestamp", help="Column name for timestamp"
+    ),
 ):
     """Visualize a process model or event log."""
     try:
@@ -790,7 +821,9 @@ def pm_visualize(
                 gviz = pm4py.vis_petri_net(net, im, fm)
                 tracker.complete("visualize", "Petri net diagram")
             else:
-                event_log = _load_event_log(input_file, case_id=case_id, activity=activity, timestamp=timestamp)
+                event_log = _load_event_log(
+                    input_file, case_id=case_id, activity=activity, timestamp=timestamp
+                )
                 tracker.complete("load", f"Event log ({input_file.suffix})")
 
                 tracker.start("visualize")
@@ -804,7 +837,9 @@ def pm_visualize(
             gviz.render(str(output_file), format="png", cleanup=True)
 
         console.print(tracker.render())
-        console.print(f"\n[bold green]Visualization saved:[/bold green] [cyan]{output_file}.png[/cyan]")
+        console.print(
+            f"\n[bold green]Visualization saved:[/bold green] [cyan]{output_file}.png[/cyan]"
+        )
 
     except Exception as e:
         console.print(f"[red]Error:[/red] {e}")
@@ -814,12 +849,20 @@ def pm_visualize(
 @pm_app.command("filter")
 def pm_filter(
     input_file: Path = typer.Argument(..., help="Input event log file (CSV or XES)"),
-    output_file: Path = typer.Option(None, "--output", "-o", help="Output file (default: input_name_filtered.csv)"),
-    min_support: float = typer.Option(0.1, "--min-support", "-s", help="Minimum support threshold (0.0-1.0)"),
-    max_duration: int = typer.Option(None, "--max-duration", "-d", help="Maximum trace duration in seconds"),
+    output_file: Path = typer.Option(
+        None, "--output", "-o", help="Output file (default: input_name_filtered.csv)"
+    ),
+    min_support: float = typer.Option(
+        0.1, "--min-support", "-s", help="Minimum support threshold (0.0-1.0)"
+    ),
+    max_duration: int = typer.Option(
+        None, "--max-duration", "-d", help="Maximum trace duration in seconds"
+    ),
     case_id: str = typer.Option("case:concept:name", "--case-id", help="Column name for case ID"),
     activity: str = typer.Option("concept:name", "--activity", help="Column name for activity"),
-    timestamp: str = typer.Option("time:timestamp", "--timestamp", help="Column name for timestamp"),
+    timestamp: str = typer.Option(
+        "time:timestamp", "--timestamp", help="Column name for timestamp"
+    ),
 ):
     """Filter an event log by support and other criteria."""
     try:
@@ -830,7 +873,9 @@ def pm_filter(
             raise typer.Exit(1)
 
         console.print(f"[cyan]Loading event log:[/cyan] {input_file}")
-        event_log = _load_event_log(input_file, case_id=case_id, activity=activity, timestamp=timestamp)
+        event_log = _load_event_log(
+            input_file, case_id=case_id, activity=activity, timestamp=timestamp
+        )
 
         tracker = StepTracker("Event Log Filtering")
         tracker.add("filter", "Filter event log")
@@ -861,7 +906,7 @@ def pm_filter(
             tracker.complete("save", output_file.name)
 
         console.print(tracker.render())
-        console.print(f"\n[bold green]Filtering complete.[/bold green]")
+        console.print("\n[bold green]Filtering complete.[/bold green]")
         console.print(f"Original cases: {original_size}, Filtered cases: {filtered_size}")
         console.print(f"Output: [cyan]{output_file}[/cyan]")
 
@@ -881,12 +926,15 @@ def pm_sample(
 ):
     """Generate a sample event log for testing."""
     try:
-        import pm4py
         import random
         from datetime import datetime, timedelta
 
+        import pm4py
+
         if output_file.exists():
-            console.print(f"[yellow]Warning:[/yellow] Output file exists, will overwrite: {output_file}")
+            console.print(
+                f"[yellow]Warning:[/yellow] Output file exists, will overwrite: {output_file}"
+            )
 
         tracker = StepTracker("Sample Log Generation")
         tracker.add("generate", "Generate sample log")
@@ -901,7 +949,7 @@ def pm_sample(
                 random.seed(seed)
 
             event_log = []
-            activity_names = [f"Activity_{i+1}" for i in range(activities)]
+            activity_names = [f"Activity_{i + 1}" for i in range(activities)]
             start_date = datetime(2024, 1, 1)
 
             total_events = 0
@@ -911,7 +959,7 @@ def pm_sample(
 
                 for event_idx in range(trace_length):
                     event = {
-                        "case:concept:name": f"Case_{case_id+1:05d}",
+                        "case:concept:name": f"Case_{case_id + 1:05d}",
                         "concept:name": random.choice(activity_names),
                         "time:timestamp": current_time.isoformat(),
                     }
@@ -929,7 +977,9 @@ def pm_sample(
                 import csv
 
                 with open(output_file, "w", newline="") as f:
-                    writer = csv.DictWriter(f, fieldnames=["case:concept:name", "concept:name", "time:timestamp"])
+                    writer = csv.DictWriter(
+                        f, fieldnames=["case:concept:name", "concept:name", "time:timestamp"]
+                    )
                     writer.writeheader()
                     writer.writerows(event_log)
             elif out_suffix == ".xes":
@@ -945,11 +995,13 @@ def pm_sample(
             tracker.complete("save", output_file.name)
 
         console.print(tracker.render())
-        console.print(f"\n[bold green]Sample log generated.[/bold green]")
+        console.print("\n[bold green]Sample log generated.[/bold green]")
         console.print(f"Output: [cyan]{output_file}[/cyan]")
 
         # Show summary
-        summary_table = Table(title="Generated Log Summary", show_header=True, header_style="bold cyan")
+        summary_table = Table(
+            title="Generated Log Summary", show_header=True, header_style="bold cyan"
+        )
         summary_table.add_column("Parameter", style="cyan")
         summary_table.add_column("Value", style="white")
 
@@ -997,7 +1049,7 @@ def _load_workflow(file_path: Path) -> tuple:
         raise ValueError(f"Expected .bpmn file, got: {file_path.suffix}")
 
     parser = BpmnParser()
-    with open(file_path, "r") as f:
+    with open(file_path) as f:
         parser.parse_file(f)
 
     workflow_spec = parser.get_spec(list(parser.processes.keys())[0])
@@ -1005,13 +1057,24 @@ def _load_workflow(file_path: Path) -> tuple:
 
 
 def _save_workflow(workflow_spec, output_path: Path) -> None:
-    """Save workflow spec to BPMN file."""
+    """Save workflow spec to BPMN file.
+
+    Note: SpiffWorkflow doesn't support BPMN serialization/export.
+    Use the source BPMN file directly or external BPMN editors.
+
+    Raises:
+        ValueError: BPMN export not supported by SpiffWorkflow.
+
+    TODO v1.1: Consider adding BPMN export via lxml reconstruction
+    """
     if output_path.suffix.lower() != ".bpmn":
         raise ValueError(f"Expected .bpmn output file, got: {output_path.suffix}")
 
-    # For now, this is a placeholder as SpiffWorkflow doesn't have built-in BPMN export
-    # In practice, we'd use lxml to reconstruct or we'd copy the original
-    raise NotImplementedError("BPMN export is handled via file copy or external tools")
+    # SpiffWorkflow parser is read-only, does not support serialization
+    raise ValueError(
+        "BPMN export not supported by SpiffWorkflow. "
+        "Use source BPMN file or external BPMN editor (e.g., Camunda Modeler) instead."
+    )
 
 
 def _validate_bpmn(file_path: Path) -> dict:
@@ -1028,7 +1091,7 @@ def _validate_bpmn(file_path: Path) -> dict:
             "errors": [],
             "warnings": [],
             "root_tag": root.tag,
-            "namespaces": list(root.attrib.keys()) if hasattr(root, 'attrib') else [],
+            "namespaces": list(root.attrib.keys()) if hasattr(root, "attrib") else [],
         }
 
         # Check for required elements
@@ -1039,26 +1102,27 @@ def _validate_bpmn(file_path: Path) -> dict:
         # Try to load with SpiffWorkflow parser for deeper validation
         try:
             from SpiffWorkflow.bpmn.parser.BpmnParser import BpmnParser
+
             parser = BpmnParser()
-            with open(file_path, "r") as f:
+            with open(file_path) as f:
                 parser.parse_file(f)
             validation["processes_found"] = len(parser.processes)
         except Exception as e:
             validation["valid"] = False
-            validation["errors"].append(f"SpiffWorkflow parsing failed: {str(e)}")
+            validation["errors"].append(f"SpiffWorkflow parsing failed: {e!s}")
 
         return validation
 
     except ET.ParseError as e:
         return {
             "valid": False,
-            "errors": [f"XML parsing error: {str(e)}"],
+            "errors": [f"XML parsing error: {e!s}"],
             "warnings": [],
         }
     except Exception as e:
         return {
             "valid": False,
-            "errors": [f"Validation failed: {str(e)}"],
+            "errors": [f"Validation failed: {e!s}"],
             "warnings": [],
         }
 
@@ -1085,81 +1149,97 @@ def _parse_workflow_structure(file_path: Path) -> dict:
     for process in root.findall(".//bpmn:process", ns):
         process_id = process.get("id", "unknown")
         process_name = process.get("name", process_id)
-        structure["processes"].append({
-            "id": process_id,
-            "name": process_name,
-            "is_executable": process.get("isExecutable", "false") == "true",
-        })
+        structure["processes"].append(
+            {
+                "id": process_id,
+                "name": process_name,
+                "is_executable": process.get("isExecutable", "false") == "true",
+            }
+        )
 
     # Extract tasks
     for task in root.findall(".//bpmn:task", ns):
         task_id = task.get("id", "unknown")
         task_name = task.get("name", task_id)
-        structure["tasks"].append({
-            "id": task_id,
-            "name": task_name,
-            "type": "Task",
-        })
+        structure["tasks"].append(
+            {
+                "id": task_id,
+                "name": task_name,
+                "type": "Task",
+            }
+        )
 
     # Extract service tasks
     for task in root.findall(".//bpmn:serviceTask", ns):
         task_id = task.get("id", "unknown")
         task_name = task.get("name", task_id)
-        structure["tasks"].append({
-            "id": task_id,
-            "name": task_name,
-            "type": "ServiceTask",
-        })
+        structure["tasks"].append(
+            {
+                "id": task_id,
+                "name": task_name,
+                "type": "ServiceTask",
+            }
+        )
 
     # Extract user tasks
     for task in root.findall(".//bpmn:userTask", ns):
         task_id = task.get("id", "unknown")
         task_name = task.get("name", task_id)
-        structure["tasks"].append({
-            "id": task_id,
-            "name": task_name,
-            "type": "UserTask",
-        })
+        structure["tasks"].append(
+            {
+                "id": task_id,
+                "name": task_name,
+                "type": "UserTask",
+            }
+        )
 
     # Extract gateways
     for gateway in root.findall(".//bpmn:exclusiveGateway", ns):
         gateway_id = gateway.get("id", "unknown")
         gateway_name = gateway.get("name", gateway_id)
-        structure["gateways"].append({
-            "id": gateway_id,
-            "name": gateway_name,
-            "type": "ExclusiveGateway",
-        })
+        structure["gateways"].append(
+            {
+                "id": gateway_id,
+                "name": gateway_name,
+                "type": "ExclusiveGateway",
+            }
+        )
 
     # Extract events
     for event in root.findall(".//bpmn:startEvent", ns):
         event_id = event.get("id", "unknown")
         event_name = event.get("name", event_id)
-        structure["events"].append({
-            "id": event_id,
-            "name": event_name,
-            "type": "StartEvent",
-        })
+        structure["events"].append(
+            {
+                "id": event_id,
+                "name": event_name,
+                "type": "StartEvent",
+            }
+        )
 
     for event in root.findall(".//bpmn:endEvent", ns):
         event_id = event.get("id", "unknown")
         event_name = event.get("name", event_id)
-        structure["events"].append({
-            "id": event_id,
-            "name": event_name,
-            "type": "EndEvent",
-        })
+        structure["events"].append(
+            {
+                "id": event_id,
+                "name": event_name,
+                "type": "EndEvent",
+            }
+        )
 
     # Extract flows
     for flow in root.findall(".//bpmn:sequenceFlow", ns):
         flow_id = flow.get("id", "unknown")
         source = flow.get("sourceRef", "unknown")
         target = flow.get("targetRef", "unknown")
-        structure["flows"].append({
-            "id": flow_id,
-            "source": source,
-            "target": target,
-        })
+        structure["flows"].append(
+            {
+                "id": flow_id,
+                "source": source,
+                "target": target,
+            }
+        )
 
     return structure
 
@@ -1167,9 +1247,13 @@ def _parse_workflow_structure(file_path: Path) -> dict:
 @wf_app.command("execute")
 def wf_execute(
     workflow_file: Path = typer.Argument(..., help="BPMN workflow file (.bpmn)"),
-    variables: Optional[str] = typer.Option(None, "--variables", "-v", help="JSON string with workflow variables"),
+    variables: str | None = typer.Option(
+        None, "--variables", "-v", help="JSON string with workflow variables"
+    ),
     trace: bool = typer.Option(False, "--trace", "-t", help="Show execution trace"),
-    output: Optional[Path] = typer.Option(None, "--output", "-o", help="Save execution output to file"),
+    output: Path | None = typer.Option(
+        None, "--output", "-o", help="Save execution output to file"
+    ),
 ):
     """
     Execute a BPMN workflow with optional variables.
@@ -1198,7 +1282,7 @@ def wf_execute(
         try:
             tracker.start("load")
             parser = BpmnParser()
-            with open(workflow_file, "r") as f:
+            with open(workflow_file) as f:
                 parser.parse_file(f)
             tracker.complete("load", workflow_file.name)
 
@@ -1241,10 +1325,12 @@ def wf_execute(
             if trace:
                 # Build execution trace
                 for task in workflow.completed_tasks:
-                    execution_data["trace"].append({
-                        "task_id": task.task_spec.name,
-                        "status": "completed",
-                    })
+                    execution_data["trace"].append(
+                        {
+                            "task_id": task.task_spec.name,
+                            "status": "completed",
+                        }
+                    )
 
             tracker.complete("execute", f"{execution_data['tasks_completed']} task(s) completed")
 
@@ -1261,7 +1347,7 @@ def wf_execute(
             raise typer.Exit(1)
 
     console.print(tracker.render())
-    console.print(f"\n[bold green]Workflow executed successfully.[/bold green]")
+    console.print("\n[bold green]Workflow executed successfully.[/bold green]")
 
 
 @wf_app.command("validate")
@@ -1308,7 +1394,9 @@ def wf_validate(
         result_table.add_row("Errors", "[red]" + ", ".join(validation["errors"]) + "[/red]")
 
     if validation["warnings"]:
-        result_table.add_row("Warnings", "[yellow]" + ", ".join(validation["warnings"]) + "[/yellow]")
+        result_table.add_row(
+            "Warnings", "[yellow]" + ", ".join(validation["warnings"]) + "[/yellow]"
+        )
 
     console.print(result_table)
 
@@ -1340,7 +1428,9 @@ def wf_parse(
 
         tracker.start("parse")
         structure = _parse_workflow_structure(workflow_file)
-        tracker.complete("parse", f"{len(structure['tasks'])} task(s), {len(structure['gateways'])} gateway(s)")
+        tracker.complete(
+            "parse", f"{len(structure['tasks'])} task(s), {len(structure['gateways'])} gateway(s)"
+        )
 
     console.print(tracker.render())
     console.print()
@@ -1399,7 +1489,9 @@ def wf_parse(
 @wf_app.command("convert")
 def wf_convert(
     input_file: Path = typer.Argument(..., help="Input workflow file (.bpmn, .pnml, .png, .svg)"),
-    output_file: Path = typer.Option(..., "--output", "-o", help="Output file (.bpmn, .pnml, .png, .svg)"),
+    output_file: Path = typer.Option(
+        ..., "--output", "-o", help="Output file (.bpmn, .pnml, .png, .svg)"
+    ),
 ):
     """
     Convert workflow between formats.
@@ -1448,8 +1540,9 @@ def wf_convert(
 
             if in_suffix == ".bpmn":
                 from SpiffWorkflow.bpmn.parser.BpmnParser import BpmnParser
+
                 parser = BpmnParser()
-                with open(input_file, "r") as f:
+                with open(input_file) as f:
                     parser.parse_file(f)
                 model = parser.get_spec(list(parser.processes.keys())[0])
                 model_type = "bpmn"
@@ -1473,9 +1566,17 @@ def wf_convert(
                 model = pm4py.convert_to_bpmn(net, im, fm)
                 tracker.complete("convert", "Petri net → BPMN")
             elif out_suffix == ".pnml" and model_type == "bpmn":
-                # Convert BPMN to Petri net (via intermediate format)
-                tracker.error("convert", "BPMN → Petri net conversion not directly supported")
-                raise NotImplementedError("BPMN to Petri net conversion requires intermediate format")
+                # BPMN to Petri net conversion not supported
+                # Alternative: use 'specify pm discover' to discover Petri nets from event logs
+                tracker.error("convert", "BPMN → Petri net conversion not supported")
+                console.print(
+                    "\n[yellow]BPMN to Petri net conversion not supported.[/yellow]\n"
+                    "[dim]Alternative approaches:[/dim]\n"
+                    "  • Use [cyan]specify pm discover[/cyan] to discover Petri nets from event logs\n"
+                    "  • Export BPMN to XES event log, then discover Petri net\n"
+                    "  • Use external BPMN-to-Petri conversion tools\n"
+                )
+                raise typer.Exit(1)
             elif out_suffix in {".png", ".svg"}:
                 if model_type == "bpmn":
                     pm4py.save_vis_bpmn(model, str(output_file))
@@ -1496,7 +1597,7 @@ def wf_convert(
             raise typer.Exit(1)
 
     console.print(tracker.render())
-    console.print(f"\n[bold green]Workflow converted successfully.[/bold green]")
+    console.print("\n[bold green]Workflow converted successfully.[/bold green]")
     console.print(f"Output: [cyan]{output_file}[/cyan]")
 
 
@@ -1517,11 +1618,12 @@ def pm_execute(
         specify pm execute process.bpmn --verbose
         specify pm execute process.bpmn --data workflow_data.json
     """
-    from SpiffWorkflow.bpmn.workflow import BpmnWorkflow
+    import json
+
     from SpiffWorkflow.bpmn.parser.BpmnParser import BpmnParser
     from SpiffWorkflow.bpmn.serializer.workflow import BpmnWorkflowSerializer
+    from SpiffWorkflow.bpmn.workflow import BpmnWorkflow
     from SpiffWorkflow.task import TaskState
-    import json
 
     if not bpmn_file.exists():
         console.print(f"[red]Error:[/red] BPMN file not found: {bpmn_file}")
@@ -1570,7 +1672,7 @@ def pm_execute(
             step_count = 0
 
             # Execute all tasks in the workflow
-            task_types_to_show = ['Task', 'UserTask', 'ManualTask', 'ScriptTask', 'ServiceTask']
+            task_types_to_show = ["Task", "UserTask", "ManualTask", "ScriptTask", "ServiceTask"]
 
             while not workflow.is_completed():
                 # Get the next task to run
@@ -1580,7 +1682,11 @@ def pm_execute(
                     break
 
                 for task in ready_tasks:
-                    task_name = task.task_spec.name if hasattr(task.task_spec, 'name') else str(task.task_spec)
+                    task_name = (
+                        task.task_spec.name
+                        if hasattr(task.task_spec, "name")
+                        else str(task.task_spec)
+                    )
                     task_type = task.task_spec.__class__.__name__
 
                     if verbose:
@@ -1590,7 +1696,9 @@ def pm_execute(
                     task.run()
 
                     # Track completed work tasks
-                    if task.state == TaskState.COMPLETED and any(t in task_type for t in task_types_to_show):
+                    if task.state == TaskState.COMPLETED and any(
+                        t in task_type for t in task_types_to_show
+                    ):
                         step_count += 1
                         execution_steps.append(f"Step {step_count}: {task_name}")
                         completed_tasks.append(task_name)
@@ -1610,12 +1718,13 @@ def pm_execute(
         except Exception as e:
             console.print(f"[red]Error:[/red] {e}")
             import traceback
+
             if verbose:
                 console.print(traceback.format_exc())
             raise typer.Exit(1)
 
     console.print(tracker.render())
-    console.print(f"\n[bold green]Workflow execution complete.[/bold green]")
+    console.print("\n[bold green]Workflow execution complete.[/bold green]")
 
     # Show execution summary
     summary_table = Table(title="Execution Summary", show_header=True, header_style="bold cyan")
@@ -1650,15 +1759,15 @@ def pm_execute(
 
         console.print(tasks_table)
 
-
-# =============================================================================
-# End Workflow Automation Commands
-# =============================================================================
-
+    # =============================================================================
+    # End Workflow Automation Commands
+    # =============================================================================
 
     if not cargo_ok:
         console.print("[yellow]⚠ Cargo is required for ontology compilation[/yellow]")
-        console.print("[dim]  Install Rust: curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh[/dim]")
+        console.print(
+            "[dim]  Install Rust: curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh[/dim]"
+        )
         console.print("[dim]  Visit: https://rustup.rs/[/dim]")
 
     if not ggen_ok and cargo_ok:
@@ -1670,6 +1779,7 @@ def pm_execute(
     if not ggen_ok and not cargo_ok:
         console.print("[yellow]⚠ Spec-driven development requires ontology compilation[/yellow]")
         console.print("[dim]  Install Rust and ggen to continue[/dim]")
+
 
 @app.command()
 def version():
@@ -1750,7 +1860,10 @@ def version():
 
 
 def main():
-    app()
+    """Entry point for the CLI - delegates to refactored app.py."""
+    from specify_cli.app import main as app_main
+
+    app_main()
 
 
 if __name__ == "__main__":
