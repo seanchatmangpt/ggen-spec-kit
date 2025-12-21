@@ -175,7 +175,7 @@ ignore = [
 known-first-party = ["specify_cli"]
 
 [tool.ruff.lint.per-file-ignores]
-"tests/**/*.py" = ["ARG001", "S101", "PLR2004", "PLC0415"]
+"tests/**/*.py" = ["ARG001", "S101", "S404", "S603", "S607", "PLR2004", "PLC0415"]
 "examples/**/*.py" = ["T20", "PLC0415"]  # Allow print and local imports in examples
 
 [tool.ruff.format]
@@ -255,3 +255,12 @@ exclude_lines = [
     "if __name__ == .__main__.:",
 ]
 fail_under = 15  # Lowered to unblock commits - three-tier arch adds more code
+
+# ============================================================================
+# Bandit - Security Scanning
+# ============================================================================
+
+[tool.bandit]
+# Tests use subprocess for integration testing - this is appropriate
+# Tests use assertions - this is appropriate for pytest
+exclude = ["tests/"]

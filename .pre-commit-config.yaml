@@ -74,6 +74,7 @@ repos:
           - -r
           - src/
         additional_dependencies: ["bandit[toml]"]
+        exclude: ^tests/
 
   # Pytest - Run quick unit tests only (not integration/e2e)
   - repo: local
