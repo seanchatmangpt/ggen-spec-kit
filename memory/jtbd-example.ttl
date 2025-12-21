@@ -1,0 +1,410 @@
+@prefix sk: <http://github.com/github/spec-kit#> .
+@prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
+@prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+
+# ============================================================================
+# JTBD Example: Python Package Manager Tool (uvmgr-style)
+# ============================================================================
+# This example demonstrates how to model Jobs-to-be-Done in RDF for a
+# Python package management and DevOps automation tool.
+# ============================================================================
+
+# ----------------------------------------------------------------------------
+# PERSONAS
+# ----------------------------------------------------------------------------
+
+:DevLeadDana a sk:Persona ;
+  sk:personaName "Dev Lead Dana" ;
+  sk:personaRole "Development Team Lead" ;
+  sk:personaGoals "Ship features fast with high quality and minimal technical debt" ;
+  sk:personaFrustrations "Slow dependency management, unclear quality metrics, manual processes" ;
+  sk:personaBio "Dana manages a team of 5-8 developers, responsible for sprint planning and delivery velocity" ;
+  sk:segmentName "Development Leaders" ;
+  sk:segmentDescription "Team leads and engineering managers focused on productivity and quality" ;
+  sk:segmentSize "~10,000 engineering teams globally" .
+
+:BackendBen a sk:Persona ;
+  sk:personaName "Backend Developer Ben" ;
+  sk:personaRole "Backend Software Engineer" ;
+  sk:personaGoals "Write clean code with good observability and minimal debugging time" ;
+  sk:personaFrustrations "Complex OTEL setup, manual instrumentation, poor telemetry visibility" ;
+  sk:personaBio "Ben builds REST APIs and microservices, needs reliable monitoring and tracing" ;
+  sk:segmentName "Backend Developers" ;
+  sk:segmentDescription "Software engineers building server-side applications and APIs" ;
+  sk:segmentSize "~500,000 backend developers worldwide" .
+
+:QAQuinn a sk:Persona ;
+  sk:personaName "QA Engineer Quinn" ;
+  sk:personaRole "Quality Assurance Engineer" ;
+  sk:personaGoals "Maintain high test coverage with fast, reliable test execution" ;
+  sk:personaFrustrations "Slow test runs, flaky tests, unclear coverage gaps" ;
+  sk:personaBio "Quinn owns the test suite, writes integration and E2E tests, monitors CI/CD" ;
+  sk:segmentName "QA Engineers" ;
+  sk:segmentDescription "Quality assurance professionals ensuring software reliability" ;
+  sk:segmentSize "~100,000 QA engineers globally" .
+
+# ----------------------------------------------------------------------------
+# JOB 1: Manage Project Dependencies
+# ----------------------------------------------------------------------------
+
+:JobManageDependencies a sk:Job ;
+  sk:jobName "Manage project dependencies efficiently" ;
+  sk:jobDescription "Add, update, audit, and synchronize Python package dependencies for the project" ;
+  sk:jobVerb "manage" ;
+  sk:jobObject "dependencies" ;
+  sk:jobFrequency "Daily" ;
+  sk:jobImportance 9 ;
+  sk:jobSatisfaction 4 .
+
+# Link job to persona
+:DevLeadDana sk:hasJob :JobManageDependencies .
+:BackendBen sk:hasJob :JobManageDependencies .
+
+## Outcomes for Job 1
+
+:OutcomeFastResolution a sk:Outcome ;
+  sk:outcomeName "Resolve dependencies in under 5 minutes" ;
+  sk:outcomeDescription "When I add or update a dependency, it resolves and installs in under 5 minutes" ;
+  sk:outcomeMetric "time" ;
+  sk:outcomeTarget "< 5 minutes" ;
+  sk:outcomePriority 1 ;
+  sk:outcomeImportance 9 ;
+  sk:outcomeSatisfaction 5 ;
+  sk:outcomeOpportunityScore 13.0 .
+
+:OutcomeVulnerabilityDetection a sk:Outcome ;
+  sk:outcomeName "Detect all security vulnerabilities" ;
+  sk:outcomeDescription "Automatically audit dependencies for known security vulnerabilities" ;
+  sk:outcomeMetric "count" ;
+  sk:outcomeTarget "0 undetected vulnerabilities" ;
+  sk:outcomePriority 2 ;
+  sk:outcomeImportance 10 ;
+  sk:outcomeSatisfaction 3 ;
+  sk:outcomeOpportunityScore 17.0 .
+
+:OutcomeAccurateDependencyTree a sk:Outcome ;
+  sk:outcomeName "Visualize complete dependency tree" ;
+  sk:outcomeDescription "View full dependency tree with version conflicts highlighted" ;
+  sk:outcomeMetric "accuracy" ;
+  sk:outcomeTarget "100% transitive dependencies shown" ;
+  sk:outcomePriority 3 ;
+  sk:outcomeImportance 7 ;
+  sk:outcomeSatisfaction 6 ;
+  sk:outcomeOpportunityScore 8.0 .
+
+:JobManageDependencies sk:hasOutcome :OutcomeFastResolution ;
+                       sk:hasOutcome :OutcomeVulnerabilityDetection ;
+                       sk:hasOutcome :OutcomeAccurateDependencyTree .
+
+## Painpoints for Job 1
+
+:PainSlowResolution a sk:Painpoint ;
+  sk:painpointDescription "Dependency resolution takes 15+ minutes for large projects" ;
+  sk:painpointSeverity "High" ;
+  sk:painpointFrequency "Daily" ;
+  sk:painpointImpact "Blocks development flow, reduces productivity" .
+
+:PainNoVulnerabilityScanning a sk:Painpoint ;
+  sk:painpointDescription "No built-in vulnerability scanning, must use external tools" ;
+  sk:painpointSeverity "Critical" ;
+  sk:painpointFrequency "Weekly" ;
+  sk:painpointImpact "Security risks, compliance violations" .
+
+:PainConflictResolution a sk:Painpoint ;
+  sk:painpointDescription "Dependency conflicts are hard to debug and resolve manually" ;
+  sk:painpointSeverity "Medium" ;
+  sk:painpointFrequency "Weekly" ;
+  sk:painpointImpact "Time spent debugging instead of coding" .
+
+:OutcomeFastResolution sk:hasPainpoint :PainSlowResolution .
+:OutcomeVulnerabilityDetection sk:hasPainpoint :PainNoVulnerabilityScanning .
+:OutcomeAccurateDependencyTree sk:hasPainpoint :PainConflictResolution .
+
+## Progress Makers for Job 1
+
+:ProgressFastPackageManager a sk:ProgressMaker ;
+  sk:progressMakerDescription "Use fast package manager like uv instead of pip" ;
+  sk:progressMakerType "Tool" ;
+  sk:progressMakerImpact "10-100x faster dependency resolution" .
+
+:ProgressAutomatedAudit a sk:ProgressMaker ;
+  sk:progressMakerDescription "Automated security audit on every dependency change" ;
+  sk:progressMakerType "Automation" ;
+  sk:progressMakerImpact "Prevents vulnerabilities from entering codebase" .
+
+:OutcomeFastResolution sk:hasProgressMaker :ProgressFastPackageManager .
+:OutcomeVulnerabilityDetection sk:hasProgressMaker :ProgressAutomatedAudit .
+
+# ----------------------------------------------------------------------------
+# JOB 2: Validate Observability and Telemetry
+# ----------------------------------------------------------------------------
+
+:JobValidateObservability a sk:Job ;
+  sk:jobName "Validate observability and telemetry setup" ;
+  sk:jobDescription "Ensure OpenTelemetry instrumentation is complete and telemetry is flowing correctly" ;
+  sk:jobVerb "validate" ;
+  sk:jobObject "observability" ;
+  sk:jobFrequency "Weekly" ;
+  sk:jobImportance 8 ;
+  sk:jobSatisfaction 3 .
+
+:BackendBen sk:hasJob :JobValidateObservability .
+
+## Outcomes for Job 2
+
+:OutcomeCompleteInstrumentation a sk:Outcome ;
+  sk:outcomeName "100% instrumentation coverage" ;
+  sk:outcomeDescription "All critical code paths have OTEL spans and metrics" ;
+  sk:outcomeMetric "coverage" ;
+  sk:outcomeTarget "> 95% of critical paths instrumented" ;
+  sk:outcomePriority 1 ;
+  sk:outcomeImportance 9 ;
+  sk:outcomeSatisfaction 4 ;
+  sk:outcomeOpportunityScore 14.0 .
+
+:OutcomeFastDebugging a sk:Outcome ;
+  sk:outcomeName "Debug production issues in under 30 minutes" ;
+  sk:outcomeDescription "Use distributed traces to identify root cause quickly" ;
+  sk:outcomeMetric "time" ;
+  sk:outcomeTarget "< 30 minutes to root cause" ;
+  sk:outcomePriority 2 ;
+  sk:outcomeImportance 10 ;
+  sk:outcomeSatisfaction 5 ;
+  sk:outcomeOpportunityScore 15.0 .
+
+:JobValidateObservability sk:hasOutcome :OutcomeCompleteInstrumentation ;
+                          sk:hasOutcome :OutcomeFastDebugging .
+
+## Painpoints for Job 2
+
+:PainManualInstrumentation a sk:Painpoint ;
+  sk:painpointDescription "Manual OTEL instrumentation is tedious and error-prone" ;
+  sk:painpointSeverity "High" ;
+  sk:painpointFrequency "Weekly" ;
+  sk:painpointImpact "Incomplete observability, blind spots in production" .
+
+:PainNoValidation a sk:Painpoint ;
+  sk:painpointDescription "No automated way to validate OTEL setup is correct" ;
+  sk:painpointSeverity "Medium" ;
+  sk:painpointFrequency "Monthly" ;
+  sk:painpointImpact "Missing telemetry discovered only after production incidents" .
+
+:OutcomeCompleteInstrumentation sk:hasPainpoint :PainManualInstrumentation ;
+                                sk:hasPainpoint :PainNoValidation .
+
+## Progress Makers for Job 2
+
+:ProgressAutoInstrumentation a sk:ProgressMaker ;
+  sk:progressMakerDescription "Automatic OTEL instrumentation for common frameworks" ;
+  sk:progressMakerType "Automation" ;
+  sk:progressMakerImpact "Reduces instrumentation effort by 80%" .
+
+:ProgressValidationCommand a sk:ProgressMaker ;
+  sk:progressMakerDescription "CLI command to validate OTEL setup and detect gaps" ;
+  sk:progressMakerType "Tool" ;
+  sk:progressMakerImpact "Catches configuration issues before production" .
+
+:OutcomeCompleteInstrumentation sk:hasProgressMaker :ProgressAutoInstrumentation ;
+                                sk:hasProgressMaker :ProgressValidationCommand .
+
+# ----------------------------------------------------------------------------
+# JOB 3: Run Tests with High Coverage
+# ----------------------------------------------------------------------------
+
+:JobRunTests a sk:Job ;
+  sk:jobName "Run tests with comprehensive coverage" ;
+  sk:jobDescription "Execute test suite quickly with detailed coverage reports and failure analysis" ;
+  sk:jobVerb "run" ;
+  sk:jobObject "tests" ;
+  sk:jobFrequency "Daily" ;
+  sk:jobImportance 8 ;
+  sk:jobSatisfaction 6 .
+
+:QAQuinn sk:hasJob :JobRunTests .
+:DevLeadDana sk:hasJob :JobRunTests .
+
+## Outcomes for Job 3
+
+:OutcomeFastTestExecution a sk:Outcome ;
+  sk:outcomeName "Run full test suite in under 5 minutes" ;
+  sk:outcomeDescription "Execute all tests including integration and E2E in under 5 minutes" ;
+  sk:outcomeMetric "time" ;
+  sk:outcomeTarget "< 5 minutes for full suite" ;
+  sk:outcomePriority 1 ;
+  sk:outcomeImportance 7 ;
+  sk:outcomeSatisfaction 5 ;
+  sk:outcomeOpportunityScore 9.0 .
+
+:OutcomeHighCoverage a sk:Outcome ;
+  sk:outcomeName "Maintain 80%+ code coverage" ;
+  sk:outcomeDescription "Automated coverage reporting shows 80%+ coverage for all modules" ;
+  sk:outcomeMetric "percent" ;
+  sk:outcomeTarget "> 80% line coverage" ;
+  sk:outcomePriority 2 ;
+  sk:outcomeImportance 9 ;
+  sk:outcomeSatisfaction 7 ;
+  sk:outcomeOpportunityScore 11.0 .
+
+:JobRunTests sk:hasOutcome :OutcomeFastTestExecution ;
+             sk:hasOutcome :OutcomeHighCoverage .
+
+## Painpoints for Job 3
+
+:PainSlowTests a sk:Painpoint ;
+  sk:painpointDescription "Test suite takes 20+ minutes to run, slowing down CI/CD" ;
+  sk:painpointSeverity "Medium" ;
+  sk:painpointFrequency "Daily" ;
+  sk:painpointImpact "Longer feedback loops, slower iteration" .
+
+:PainFlakyTests a sk:Painpoint ;
+  sk:painpointDescription "Intermittent test failures require manual re-runs" ;
+  sk:painpointSeverity "High" ;
+  sk:painpointFrequency "Weekly" ;
+  sk:painpointImpact "Reduced trust in test suite, wasted debugging time" .
+
+:OutcomeFastTestExecution sk:hasPainpoint :PainSlowTests .
+:OutcomeHighCoverage sk:hasPainpoint :PainFlakyTests .
+
+## Progress Makers for Job 3
+
+:ProgressParallelExecution a sk:ProgressMaker ;
+  sk:progressMakerDescription "Parallel test execution across multiple cores" ;
+  sk:progressMakerType "Feature" ;
+  sk:progressMakerImpact "4-8x faster test execution" .
+
+:ProgressCoverageReporting a sk:ProgressMaker ;
+  sk:progressMakerDescription "Automatic coverage reports with gap visualization" ;
+  sk:progressMakerType "Feature" ;
+  sk:progressMakerImpact "Clear visibility into coverage gaps" .
+
+:OutcomeFastTestExecution sk:hasProgressMaker :ProgressParallelExecution .
+:OutcomeHighCoverage sk:hasProgressMaker :ProgressCoverageReporting .
+
+# ----------------------------------------------------------------------------
+# FEATURES ADDRESSING JOBS
+# ----------------------------------------------------------------------------
+
+## Feature 1: deps-add
+
+:FeatureDepsAdd a sk:Feature ;
+  sk:featureName "deps-add" ;
+  sk:featureBranch "001-deps-add" ;
+  sk:status "Complete" ;
+  sk:created "2025-01-10"^^xsd:date ;
+  sk:addressesJob :JobManageDependencies ;
+  sk:deliversOutcome :OutcomeFastResolution ;
+  sk:solvesPainpoint :PainSlowResolution ;
+  sk:enablesProgressMaker :ProgressFastPackageManager ;
+  sk:targetsPersona :DevLeadDana ;
+  sk:targetsPersona :BackendBen .
+
+## Feature 2: deps-audit
+
+:FeatureDepsAudit a sk:Feature ;
+  sk:featureName "deps-audit" ;
+  sk:featureBranch "002-deps-audit" ;
+  sk:status "Complete" ;
+  sk:created "2025-01-15"^^xsd:date ;
+  sk:addressesJob :JobManageDependencies ;
+  sk:deliversOutcome :OutcomeVulnerabilityDetection ;
+  sk:solvesPainpoint :PainNoVulnerabilityScanning ;
+  sk:enablesProgressMaker :ProgressAutomatedAudit ;
+  sk:targetsPersona :DevLeadDana .
+
+## Feature 3: deps-tree
+
+:FeatureDepsTree a sk:Feature ;
+  sk:featureName "deps-tree" ;
+  sk:featureBranch "003-deps-tree" ;
+  sk:status "Complete" ;
+  sk:created "2025-01-20"^^xsd:date ;
+  sk:addressesJob :JobManageDependencies ;
+  sk:deliversOutcome :OutcomeAccurateDependencyTree ;
+  sk:solvesPainpoint :PainConflictResolution ;
+  sk:targetsPersona :DevLeadDana ;
+  sk:targetsPersona :BackendBen .
+
+## Feature 4: otel-validate
+
+:FeatureOtelValidate a sk:Feature ;
+  sk:featureName "otel-validate" ;
+  sk:featureBranch "004-otel-validate" ;
+  sk:status "Complete" ;
+  sk:created "2025-02-01"^^xsd:date ;
+  sk:addressesJob :JobValidateObservability ;
+  sk:deliversOutcome :OutcomeCompleteInstrumentation ;
+  sk:solvesPainpoint :PainNoValidation ;
+  sk:enablesProgressMaker :ProgressValidationCommand ;
+  sk:targetsPersona :BackendBen .
+
+## Feature 5: tests-run
+
+:FeatureTestsRun a sk:Feature ;
+  sk:featureName "tests-run" ;
+  sk:featureBranch "005-tests-run" ;
+  sk:status "Complete" ;
+  sk:created "2025-02-10"^^xsd:date ;
+  sk:addressesJob :JobRunTests ;
+  sk:deliversOutcome :OutcomeFastTestExecution ;
+  sk:solvesPainpoint :PainSlowTests ;
+  sk:enablesProgressMaker :ProgressParallelExecution ;
+  sk:targetsPersona :QAQuinn ;
+  sk:targetsPersona :DevLeadDana .
+
+## Feature 6: tests-coverage
+
+:FeatureTestsCoverage a sk:Feature ;
+  sk:featureName "tests-coverage" ;
+  sk:featureBranch "006-tests-coverage" ;
+  sk:status "Complete" ;
+  sk:created "2025-02-15"^^xsd:date ;
+  sk:addressesJob :JobRunTests ;
+  sk:deliversOutcome :OutcomeHighCoverage ;
+  sk:enablesProgressMaker :ProgressCoverageReporting ;
+  sk:targetsPersona :QAQuinn ;
+  sk:targetsPersona :DevLeadDana .
+
+# ----------------------------------------------------------------------------
+# UNADDRESSED GAPS (Jobs/Outcomes without Features)
+# ----------------------------------------------------------------------------
+
+## Job 4: Example of unaddressed job
+
+:JobManageSecrets a sk:Job ;
+  sk:jobName "Manage secrets and environment variables securely" ;
+  sk:jobDescription "Store and access secrets without hardcoding in source code" ;
+  sk:jobVerb "manage" ;
+  sk:jobObject "secrets" ;
+  sk:jobFrequency "Weekly" ;
+  sk:jobImportance 10 ;
+  sk:jobSatisfaction 2 .
+
+:BackendBen sk:hasJob :JobManageSecrets .
+
+:OutcomeSecureStorage a sk:Outcome ;
+  sk:outcomeName "Zero secrets in source code or git history" ;
+  sk:outcomeDescription "All secrets stored in secure vault, not in code" ;
+  sk:outcomeMetric "count" ;
+  sk:outcomeTarget "0 secrets in git" ;
+  sk:outcomePriority 1 ;
+  sk:outcomeImportance 10 ;
+  sk:outcomeSatisfaction 2 ;
+  sk:outcomeOpportunityScore 18.0 .
+
+:JobManageSecrets sk:hasOutcome :OutcomeSecureStorage .
+
+:PainHardcodedSecrets a sk:Painpoint ;
+  sk:painpointDescription "Developers accidentally commit secrets to git" ;
+  sk:painpointSeverity "Critical" ;
+  sk:painpointFrequency "Monthly" ;
+  sk:painpointImpact "Security breaches, exposed credentials" .
+
+:OutcomeSecureStorage sk:hasPainpoint :PainHardcodedSecrets .
+
+# NOTE: No feature addresses :JobManageSecrets - this is a GAP!
+# Query jtbd-job-feature-mapping.rq will identify this as "YES - NO FEATURE"
+
+# ============================================================================
+# End of JTBD Example
+# ============================================================================

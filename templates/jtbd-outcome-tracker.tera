@@ -1,0 +1,397 @@
+{# JTBD Outcome Tracker Dashboard Template
+   Generates real-time outcome tracking dashboard with progress indicators
+
+   Expected SPARQL result variables:
+   - outcome: Specific outcome category
+   - outcomeDescription: What this outcome means
+   - outcomeMetric: Quantifiable success metric
+   - successCriteria: How to measure success
+   - targetValue: Target performance value
+   - currentValue: Current measured performance (optional)
+   - baselineValue: Before-feature baseline (optional)
+   - featureName: Feature delivering this outcome
+   - featureStatus: Status (Planned, In Progress, Released)
+   - releaseDate: When released (optional)
+   - personaName: Target persona
+   - jobTitle: Job to be done
+   - priority: Outcome priority (Critical, High, Medium, Low)
+   - trackingFrequency: How often to measure (Daily, Weekly, Monthly)
+   - lastMeasured: When last measured (optional)
+   - trend: Performance trend (Improving, Stable, Declining, optional)
+#}
+# JTBD Outcome Tracker Dashboard
+
+> **Real-Time Tracking**: Monitor outcome performance, trends, and target achievement
+
+**Dashboard Updated**: {{ now() | date(format="%Y-%m-%d %H:%M") }}
+
+---
+
+## Overview
+
+{% set total_outcomes = results | map(attribute="outcome") | unique | length %}
+{% set measured_outcomes = results | filter(attribute="currentValue") | map(attribute="outcome") | unique | length %}
+{% set on_target = 0 %}
+{% set at_risk = 0 %}
+{% set off_target = 0 %}
+
+{% for outcome_name in results | map(attribute="outcome") | unique %}
+{% set outcome_data = results | filter(attribute="outcome", value=outcome_name) | filter(attribute="currentValue") | filter(attribute="targetValue") %}
+{% if outcome_data | length > 0 %}
+{% set total_achievement = 0 %}
+{% set count = 0 %}
+{% for item in outcome_data %}
+{% set achievement = item.currentValue | float / item.targetValue | float %}
+{% set_global total_achievement = total_achievement + achievement %}
+{% set_global count = count + 1 %}
+{% endfor %}
+{% set avg_achievement = total_achievement / count %}
+{% if avg_achievement >= 1.0 %}
+{% set_global on_target = on_target + 1 %}
+{% elif avg_achievement >= 0.7 %}
+{% set_global at_risk = at_risk + 1 %}
+{% else %}
+{% set_global off_target = off_target + 1 %}
+{% endif %}
+{% endif %}
+{% endfor %}
+
+### Tracking Summary
+
+| Metric | Value |
+|--------|-------|
+| **Total Outcomes** | {{ total_outcomes }} |
+| **Measured Outcomes** | {{ measured_outcomes }} ({{ (measured_outcomes / total_outcomes * 100) | round }}%) |
+| **On Target** (≥100%) | {{ on_target }} ✅ |
+| **At Risk** (70-99%) | {{ at_risk }} ⚠️ |
+| **Off Target** (<70%) | {{ off_target }} 🔴 |
+
+### Health Score
+
+{% set health_score = 0 %}
+{% if measured_outcomes > 0 %}
+{% set_global health_score = ((on_target * 100) + (at_risk * 70)) / measured_outcomes %}
+{% endif %}
+
+```
+Overall Health: {{ health_score | round }}/ 100
+{% if health_score >= 90 %}████████████████████ ✅ Excellent{% elif health_score >= 70 %}██████████████░░░░░░ ⚠️ Good{% elif health_score >= 50 %}██████████░░░░░░░░░░ 🔴 Fair{% else %}█████░░░░░░░░░░░░░░░ 🚨 Critical{% endif %}
+```
+
+---
+
+## Outcome Performance Dashboard
+
+{% set outcomes_sorted = results | map(attribute="outcome") | unique | sort %}
+
+{% for outcome_name in outcomes_sorted %}
+{% set outcome_items = results | filter(attribute="outcome", value=outcome_name) %}
+{% set outcome_info = outcome_items | first %}
+{% set outcome_measured = outcome_items | filter(attribute="currentValue") | filter(attribute="targetValue") %}
+
+### {{ outcome_name }}
+
+{% if outcome_info.outcomeDescription %}
+**Description**: {{ outcome_info.outcomeDescription }}
+{% endif %}
+
+**Priority**: {{ outcome_info.priority | default(value="Medium") }}
+
+#### Current Status
+
+{% if outcome_measured | length > 0 %}
+
+{% set total_achievement = 0 %}
+{% set count = 0 %}
+{% set total_current = 0 %}
+{% set total_target = 0 %}
+{% for item in outcome_measured %}
+{% set_global total_achievement = total_achievement + (item.currentValue | float / item.targetValue | float * 100) %}
+{% set_global count = count + 1 %}
+{% set_global total_current = total_current + (item.currentValue | float) %}
+{% set_global total_target = total_target + (item.targetValue | float) %}
+{% endfor %}
+{% set avg_achievement = total_achievement / count %}
+
+| Metric | Target | Current | Achievement |
+|--------|--------|---------|-------------|
+| {{ outcome_info.outcomeMetric | default(value="Outcome Metric") }} | {{ (total_target / count) | round(precision=1) }} | {{ (total_current / count) | round(precision=1) }} | {{ avg_achievement | round(precision=1) }}% |
+
+**Status**: {% if avg_achievement >= 100 %}✅ On Target{% elif avg_achievement >= 70 %}⚠️ At Risk{% else %}🔴 Off Target{% endif %}
+
+{% if outcome_info.trend %}
+**Trend**: {% if outcome_info.trend == "Improving" %}📈 {{ outcome_info.trend }}{% elif outcome_info.trend == "Declining" %}📉 {{ outcome_info.trend }}{% else %}➡️ {{ outcome_info.trend }}{% endif %}
+{% endif %}
+
+{% if outcome_info.lastMeasured %}
+**Last Measured**: {{ outcome_info.lastMeasured }}
+{% endif %}
+
+**Tracking Frequency**: {{ outcome_info.trackingFrequency | default(value="Weekly") }}
+
+#### Progress Bar
+
+```
+{% set bar_length = 20 %}
+{% set filled = (avg_achievement / 100 * bar_length) | round %}
+{% set empty = bar_length - filled %}
+{% if filled > 0 %}{{ "█" | repeat(count=filled) }}{% endif %}{% if empty > 0 %}{{ "░" | repeat(count=empty) }}{% endif %} {{ avg_achievement | round }}%
+```
+
+{% if outcome_measured | first | get(key="baselineValue") %}
+{% set baseline = outcome_measured | first | get(key="baselineValue") | float %}
+{% set current = (total_current / count) %}
+{% set improvement = ((current - baseline) / baseline * 100) %}
+
+**Improvement from Baseline**: {% if improvement > 0 %}+{% endif %}{{ improvement | round(precision=1) }}%
+{% endif %}
+
+{% else %}
+
+**Status**: 🔵 Not Yet Measured
+
+**Measurement Plan**:
+- Metric: {{ outcome_info.outcomeMetric | default(value="Define metric") }}
+- Target: {{ outcome_info.targetValue | default(value="Set target") }}
+- Frequency: {{ outcome_info.trackingFrequency | default(value="Define frequency") }}
+
+{% endif %}
+
+#### Features Delivering This Outcome
+
+| Feature | Status | Contribution | Last Update |
+|---------|--------|--------------|-------------|
+{% for item in outcome_items | unique(attribute="featureName") %}
+{% set feature_data = outcome_items | filter(attribute="featureName", value=item.featureName) | first %}
+| {{ item.featureName }} | {{ item.featureStatus }} | {% if feature_data.currentValue and feature_data.targetValue %}{{ (feature_data.currentValue | float / feature_data.targetValue | float * 100) | round }}%{% else %}TBD{% endif %} | {% if feature_data.lastMeasured %}{{ feature_data.lastMeasured }}{% else %}Never{% endif %} |
+{% endfor %}
+
+#### Action Items
+
+{% if avg_achievement < 70 %}
+🔴 **Critical**: This outcome is significantly off target
+- Review feature effectiveness
+- Investigate barriers to achievement
+- Consider alternative approaches
+{% elif avg_achievement < 100 %}
+⚠️ **At Risk**: Close monitoring required
+- Track progress weekly
+- Identify improvement opportunities
+{% else %}
+✅ **On Track**: Maintain current trajectory
+- Continue monitoring at {{ outcome_info.trackingFrequency | default(value="current") }} frequency
+{% endif %}
+
+{% if not outcome_measured or outcome_measured | length == 0 %}
+🔵 **Not Measured**: Implement tracking
+- Define measurement process
+- Collect baseline data
+- Set up automated tracking
+{% endif %}
+
+---
+
+{% endfor %}
+
+## Priority Outcome Focus
+
+### Critical Priority Outcomes
+
+{% set critical_outcomes = results | filter(attribute="priority", value="Critical") | map(attribute="outcome") | unique %}
+
+{% if critical_outcomes | length > 0 %}
+{% for outcome in critical_outcomes %}
+{% set outcome_data = results | filter(attribute="outcome", value=outcome) | filter(attribute="currentValue") | filter(attribute="targetValue") %}
+{% if outcome_data | length > 0 %}
+{% set total_achievement = 0 %}
+{% set count = 0 %}
+{% for item in outcome_data %}
+{% set_global total_achievement = total_achievement + (item.currentValue | float / item.targetValue | float * 100) %}
+{% set_global count = count + 1 %}
+{% endfor %}
+{% set avg_achievement = total_achievement / count %}
+
+#### {{ outcome }}
+
+**Achievement**: {{ avg_achievement | round(precision=1) }}% {% if avg_achievement >= 100 %}✅{% elif avg_achievement >= 70 %}⚠️{% else %}🔴{% endif %}
+
+{% set outcome_features = results | filter(attribute="outcome", value=outcome) %}
+**Features**: {{ outcome_features | map(attribute="featureName") | unique | join(sep=", ") }}
+
+**Personas Impacted**: {{ outcome_features | map(attribute="personaName") | unique | join(sep=", ") }}
+
+{% endif %}
+{% endfor %}
+{% else %}
+*No critical priority outcomes defined.*
+{% endif %}
+
+---
+
+## Trend Analysis
+
+### Performance Trends
+
+{% set improving = results | filter(attribute="trend", value="Improving") | map(attribute="outcome") | unique %}
+{% set stable = results | filter(attribute="trend", value="Stable") | map(attribute="outcome") | unique %}
+{% set declining = results | filter(attribute="trend", value="Declining") | map(attribute="outcome") | unique %}
+
+| Trend | Outcome Count |
+|-------|---------------|
+| 📈 Improving | {{ improving | length }} |
+| ➡️ Stable | {{ stable | length }} |
+| 📉 Declining | {{ declining | length }} |
+
+{% if declining | length > 0 %}
+
+#### 🚨 Declining Outcomes (Immediate Attention Required)
+
+{% for outcome in declining %}
+{% set outcome_data = results | filter(attribute="outcome", value=outcome) | first %}
+- **{{ outcome }}**
+  - Features: {{ results | filter(attribute="outcome", value=outcome) | map(attribute="featureName") | unique | join(sep=", ") }}
+  - Priority: {{ outcome_data.priority | default(value="Medium") }}
+  - Action: {% if outcome_data.priority == "Critical" %}🔴 URGENT - Escalate immediately{% else %}⚠️ Investigate root cause{% endif %}
+{% endfor %}
+
+{% endif %}
+
+{% if improving | length > 0 %}
+
+#### 📈 Improving Outcomes (Positive Momentum)
+
+{% for outcome in improving %}
+- **{{ outcome }}**
+  - Continue current strategies
+  - Document success factors for replication
+{% endfor %}
+
+{% endif %}
+
+---
+
+## Measurement Coverage
+
+### Outcomes by Measurement Status
+
+{% set measured = results | filter(attribute="currentValue") | map(attribute="outcome") | unique | length %}
+{% set unmeasured = total_outcomes - measured %}
+
+```
+Measured:   {{ measured }} ({{ (measured / total_outcomes * 100) | round }}%) ████████████████
+Unmeasured: {{ unmeasured }} ({{ (unmeasured / total_outcomes * 100) | round }}%) ████
+```
+
+### Unmeasured Outcomes
+
+{% if unmeasured > 0 %}
+
+These outcomes need measurement infrastructure:
+
+| Outcome | Priority | Features | Next Step |
+|---------|----------|----------|-----------|
+{% for outcome_name in results | map(attribute="outcome") | unique %}
+{% set outcome_data = results | filter(attribute="outcome", value=outcome_name) %}
+{% set has_measurement = outcome_data | filter(attribute="currentValue") | length > 0 %}
+{% if not has_measurement %}
+{% set outcome = outcome_data | first %}
+| {{ outcome_name }} | {{ outcome.priority | default(value="Medium") }} | {{ outcome_data | length }} | Define {{ outcome.outcomeMetric | default(value="metric") }} tracking |
+{% endif %}
+{% endfor %}
+
+{% else %}
+
+✅ **Full measurement coverage achieved!** All outcomes have tracking in place.
+
+{% endif %}
+
+---
+
+## Tracking Schedule
+
+### Measurement Calendar
+
+{% set daily = results | filter(attribute="trackingFrequency", value="Daily") | map(attribute="outcome") | unique %}
+{% set weekly = results | filter(attribute="trackingFrequency", value="Weekly") | map(attribute="outcome") | unique %}
+{% set monthly = results | filter(attribute="trackingFrequency", value="Monthly") | map(attribute="outcome") | unique %}
+
+| Frequency | Outcomes | Count |
+|-----------|----------|-------|
+| **Daily** | {{ daily | join(sep=", ") }} | {{ daily | length }} |
+| **Weekly** | {{ weekly | join(sep=", ") }} | {{ weekly | length }} |
+| **Monthly** | {{ monthly | join(sep=", ") }} | {{ monthly | length }} |
+
+### Upcoming Measurements
+
+{% set outcomes_with_dates = results | filter(attribute="lastMeasured") %}
+{% if outcomes_with_dates | length > 0 %}
+
+Outcomes due for measurement based on tracking frequency:
+
+{% for outcome_name in outcomes_with_dates | map(attribute="outcome") | unique %}
+{% set outcome = outcomes_with_dates | filter(attribute="outcome", value=outcome_name) | first %}
+- **{{ outcome_name }}**
+  - Last Measured: {{ outcome.lastMeasured }}
+  - Frequency: {{ outcome.trackingFrequency | default(value="Weekly") }}
+  - Status: {% if outcome.trackingFrequency == "Daily" %}⏰ Daily check due{% elif outcome.trackingFrequency == "Weekly" %}📅 Weekly review{% else %}📆 Monthly assessment{% endif %}
+{% endfor %}
+
+{% else %}
+
+*No measurement dates tracked. Add lastMeasured data to enable scheduling.*
+
+{% endif %}
+
+---
+
+## Recommendations
+
+### Immediate Actions
+
+1. **Off-Target Outcomes** ({{ off_target }})
+   {% if off_target > 0 %}
+   - Investigate {{ off_target }} outcomes performing < 70% of target
+   - Review feature effectiveness and user adoption
+   - Consider feature pivots or alternatives
+   {% else %}
+   - All measured outcomes at or above 70% - maintain focus
+   {% endif %}
+
+2. **Declining Trends** ({{ declining | length }})
+   {% if declining | length > 0 %}
+   - Prioritize {{ declining | length }} outcomes with declining performance
+   - Identify root causes of degradation
+   - Implement corrective actions within 2 weeks
+   {% else %}
+   - No declining trends - positive trajectory overall
+   {% endif %}
+
+3. **Measurement Gaps** ({{ unmeasured }})
+   {% if unmeasured > 0 %}
+   - Implement tracking for {{ unmeasured }} unmeasured outcomes
+   - Prioritize critical and high-priority outcomes first
+   - Target 100% measurement coverage within 30 days
+   {% else %}
+   - Full measurement coverage achieved ✅
+   {% endif %}
+
+### Strategic Improvements
+
+1. **Outcome Optimization**
+   - Focus resources on critical outcomes off-target
+   - Replicate success patterns from exceeding outcomes
+   - Quarterly review of outcome relevance and targets
+
+2. **Measurement Automation**
+   - Automate data collection for daily/weekly metrics
+   - Set up alerts for significant drops (>10%)
+   - Dashboard integration for real-time visibility
+
+3. **Cross-Functional Alignment**
+   - Share outcome performance in weekly standups
+   - Align sprint goals to improve off-target outcomes
+   - Celebrate teams achieving/exceeding targets
+
+---
+
+*Outcome tracker dashboard | Auto-refresh recommended: Daily for critical outcomes, Weekly for others*

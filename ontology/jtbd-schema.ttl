@@ -69,6 +69,45 @@ jtbd:SuccessMetric a owl:Class ;
     rdfs:subClassOf owl:Thing .
 
 # ============================================================================
+# MEASUREMENT-SPECIFIC CLASSES
+# ============================================================================
+
+jtbd:JobCompletion a owl:Class ;
+    rdfs:label "Job Completion"@en ;
+    rdfs:comment "Record of a completed job instance with temporal data, success status, and outcome achievements."@en ;
+    rdfs:subClassOf owl:Thing .
+
+jtbd:OutcomeAchievement a owl:Class ;
+    rdfs:label "Outcome Achievement"@en ;
+    rdfs:comment "Measured achievement of a desired outcome with metric values, temporal data, and success indicators."@en ;
+    rdfs:subClassOf owl:Thing .
+
+jtbd:PainpointResolution a owl:Class ;
+    rdfs:label "Painpoint Resolution"@en ;
+    rdfs:comment "Record of painpoint resolution with before/after severity, impact reduction, and solution reference."@en ;
+    rdfs:subClassOf owl:Thing .
+
+jtbd:MetricsDashboard a owl:Class ;
+    rdfs:label "Metrics Dashboard"@en ;
+    rdfs:comment "Aggregated metrics view for job performance, outcome achievement, or painpoint tracking over a time period."@en ;
+    rdfs:subClassOf owl:Thing .
+
+jtbd:OutcomeReport a owl:Class ;
+    rdfs:label "Outcome Report"@en ;
+    rdfs:comment "Periodic report on outcome performance with statistics, trends, and achievement rates."@en ;
+    rdfs:subClassOf owl:Thing .
+
+jtbd:SatisfactionSurvey a owl:Class ;
+    rdfs:label "Satisfaction Survey"@en ;
+    rdfs:comment "Customer satisfaction survey measuring importance and satisfaction scores for jobs and outcomes."@en ;
+    rdfs:subClassOf owl:Thing .
+
+jtbd:FeatureImpactAnalysis a owl:Class ;
+    rdfs:label "Feature Impact Analysis"@en ;
+    rdfs:comment "Analysis of feature impact on jobs, outcomes, and painpoints with before/after comparisons."@en ;
+    rdfs:subClassOf owl:Thing .
+
+# ============================================================================
 # CUSTOMER & CONTEXT CLASSES
 # ============================================================================
 
@@ -517,6 +556,76 @@ jtbd:fireReason a owl:DatatypeProperty ;
     rdfs:domain jtbd:Solution ;
     rdfs:range xsd:string ;
     rdfs:comment "Why do customers 'fire' (stop using) this solution?"@en .
+
+# ============================================================================
+# DATATYPE PROPERTIES - Temporal Tracking
+# ============================================================================
+
+jtbd:measuredAt a owl:DatatypeProperty ;
+    rdfs:label "measured at"@en ;
+    rdfs:domain owl:Thing ;
+    rdfs:range xsd:dateTime ;
+    rdfs:comment "Timestamp when a measurement was taken. Used for outcome achievements, surveys, and analytics."@en .
+
+jtbd:periodStart a owl:DatatypeProperty ;
+    rdfs:label "period start"@en ;
+    rdfs:domain owl:Thing ;
+    rdfs:range xsd:dateTime ;
+    rdfs:comment "Start of measurement or analysis period for aggregated data."@en .
+
+jtbd:periodEnd a owl:DatatypeProperty ;
+    rdfs:label "period end"@en ;
+    rdfs:domain owl:Thing ;
+    rdfs:range xsd:dateTime ;
+    rdfs:comment "End of measurement or analysis period for aggregated data."@en .
+
+jtbd:aggregationLevel a owl:DatatypeProperty ;
+    rdfs:label "aggregation level"@en ;
+    rdfs:domain owl:Thing ;
+    rdfs:range xsd:string ;
+    rdfs:comment "Level of temporal aggregation: Individual, Hourly, Daily, Weekly, Monthly, Quarterly, Yearly."@en .
+
+jtbd:completedAt a owl:DatatypeProperty ;
+    rdfs:label "completed at"@en ;
+    rdfs:domain jtbd:JobCompletion ;
+    rdfs:range xsd:dateTime ;
+    rdfs:comment "Timestamp when a job was completed."@en .
+
+jtbd:resolvedAt a owl:DatatypeProperty ;
+    rdfs:label "resolved at"@en ;
+    rdfs:domain jtbd:PainpointResolution ;
+    rdfs:range xsd:dateTime ;
+    rdfs:comment "Timestamp when a painpoint was resolved."@en .
+
+jtbd:conductedAt a owl:DatatypeProperty ;
+    rdfs:label "conducted at"@en ;
+    rdfs:domain jtbd:SatisfactionSurvey ;
+    rdfs:range xsd:dateTime ;
+    rdfs:comment "Timestamp when a satisfaction survey was conducted."@en .
+
+jtbd:generatedAt a owl:DatatypeProperty ;
+    rdfs:label "generated at"@en ;
+    rdfs:domain jtbd:OutcomeReport ;
+    rdfs:range xsd:dateTime ;
+    rdfs:comment "Timestamp when an outcome report was generated."@en .
+
+jtbd:analyzedAt a owl:DatatypeProperty ;
+    rdfs:label "analyzed at"@en ;
+    rdfs:domain jtbd:FeatureImpactAnalysis ;
+    rdfs:range xsd:dateTime ;
+    rdfs:comment "Timestamp when a feature impact analysis was performed."@en .
+
+jtbd:lastRefreshed a owl:DatatypeProperty ;
+    rdfs:label "last refreshed"@en ;
+    rdfs:domain jtbd:MetricsDashboard ;
+    rdfs:range xsd:dateTime ;
+    rdfs:comment "Timestamp when dashboard metrics were last refreshed."@en .
+
+jtbd:lastMeasured a owl:DatatypeProperty ;
+    rdfs:label "last measured"@en ;
+    rdfs:domain jtbd:Persona ;
+    rdfs:range xsd:dateTime ;
+    rdfs:comment "Timestamp of the last measurement taken for this persona."@en .
 
 # ============================================================================
 # OBJECT PROPERTIES - Job Relationships

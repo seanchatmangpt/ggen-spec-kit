@@ -1,13 +1,14 @@
 """Progress tracking and interactive selection utilities."""
 
+import contextlib
+
 import readchar
 import typer
 from rich.console import Console
-from rich.panel import Panel
 from rich.live import Live
+from rich.panel import Panel
 from rich.table import Table
 from rich.tree import Tree
-
 
 console = Console()
 
@@ -19,31 +20,31 @@ class StepTracker:
 
     def __init__(self, title: str):
         self.title = title
-        self.steps = []  # list of dicts: {key, label, status, detail}
+        self.steps: list[dict[str, str]] = []  # list of dicts: {key, label, status, detail}
         self.status_order = {"pending": 0, "running": 1, "done": 2, "error": 3, "skipped": 4}
-        self._refresh_cb = None  # callable to trigger UI refresh
+        self._refresh_cb: None | callable = None  # callable to trigger UI refresh
 
-    def attach_refresh(self, cb):
+    def attach_refresh(self, cb: callable) -> None:
         self._refresh_cb = cb
 
-    def add(self, key: str, label: str):
+    def add(self, key: str, label: str) -> None:
         if key not in [s["key"] for s in self.steps]:
             self.steps.append({"key": key, "label": label, "status": "pending", "detail": ""})
             self._maybe_refresh()
 
-    def start(self, key: str, detail: str = ""):
+    def start(self, key: str, detail: str = "") -> None:
         self._update(key, status="running", detail=detail)
 
-    def complete(self, key: str, detail: str = ""):
+    def complete(self, key: str, detail: str = "") -> None:
         self._update(key, status="done", detail=detail)
 
-    def error(self, key: str, detail: str = ""):
+    def error(self, key: str, detail: str = "") -> None:
         self._update(key, status="error", detail=detail)
 
-    def skip(self, key: str, detail: str = ""):
+    def skip(self, key: str, detail: str = "") -> None:
         self._update(key, status="skipped", detail=detail)
 
-    def _update(self, key: str, status: str, detail: str):
+    def _update(self, key: str, status: str, detail: str) -> None:
         for s in self.steps:
             if s["key"] == key:
                 s["status"] = status
@@ -55,14 +56,12 @@ class StepTracker:
         self.steps.append({"key": key, "label": key, "status": status, "detail": detail})
         self._maybe_refresh()
 
-    def _maybe_refresh(self):
+    def _maybe_refresh(self) -> None:
         if self._refresh_cb:
-            try:
+            with contextlib.suppress(Exception):
                 self._refresh_cb()
-            except Exception:
-                pass
 
-    def render(self):
+    def render(self) -> Tree:
         tree = Tree(f"[cyan]{self.title}[/cyan]", guide_style="grey50")
         for step in self.steps:
             label = step["label"]
@@ -88,24 +87,25 @@ class StepTracker:
                     line = f"{symbol} [bright_black]{label} ({detail_text})[/bright_black]"
                 else:
                     line = f"{symbol} [bright_black]{label}[/bright_black]"
+            # Label white, detail (if any) light gray in parentheses
+            elif detail_text:
+                line = (
+                    f"{symbol} [white]{label}[/white] [bright_black]({detail_text})[/bright_black]"
+                )
             else:
-                # Label white, detail (if any) light gray in parentheses
-                if detail_text:
-                    line = f"{symbol} [white]{label}[/white] [bright_black]({detail_text})[/bright_black]"
-                else:
-                    line = f"{symbol} [white]{label}[/white]"
+                line = f"{symbol} [white]{label}[/white]"
 
             tree.add(line)
         return tree
 
 
-def get_key():
+def get_key() -> str:
     """Get a single keypress in a cross-platform way using readchar."""
     key = readchar.readkey()
 
-    if key == readchar.key.UP or key == readchar.key.CTRL_P:
+    if key in (readchar.key.UP, readchar.key.CTRL_P):
         return "up"
-    if key == readchar.key.DOWN or key == readchar.key.CTRL_N:
+    if key in (readchar.key.DOWN, readchar.key.CTRL_N):
         return "down"
 
     if key == readchar.key.ENTER:
@@ -121,7 +121,7 @@ def get_key():
 
 
 def select_with_arrows(
-    options: dict, prompt_text: str = "Select an option", default_key: str = None
+    options: dict[str, str], prompt_text: str = "Select an option", default_key: str | None = None
 ) -> str:
     """
     Interactive selection using arrow keys with Rich Live display.
@@ -142,7 +142,7 @@ def select_with_arrows(
 
     selected_key = None
 
-    def create_selection_panel():
+    def create_selection_panel() -> Panel:
         """Create the selection panel with current selection highlighted."""
         table = Table.grid(padding=(0, 2))
         table.add_column(style="cyan", justify="left", width=3)
@@ -163,7 +163,7 @@ def select_with_arrows(
 
     console.print()
 
-    def run_selection_loop():
+    def run_selection_loop() -> None:
         nonlocal selected_key, selected_index
         with Live(
             create_selection_panel(), console=console, transient=True, auto_refresh=False
@@ -180,13 +180,13 @@ def select_with_arrows(
                         break
                     elif key == "escape":
                         console.print("\n[yellow]Selection cancelled[/yellow]")
-                        raise typer.Exit(1)
+                        raise typer.Exit(1) from None
 
                     live.update(create_selection_panel(), refresh=True)
 
                 except KeyboardInterrupt:
                     console.print("\n[yellow]Selection cancelled[/yellow]")
-                    raise typer.Exit(1)
+                    raise typer.Exit(1) from None
 
     run_selection_loop()
 

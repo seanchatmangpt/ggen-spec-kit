@@ -18,6 +18,7 @@ from rich.table import Table
 
 try:
     import dspy
+
     DSPY_AVAILABLE = True
 except ImportError:
     DSPY_AVAILABLE = False
@@ -38,12 +39,24 @@ DEFAULT_CONFIG_PATH = Path(".specify") / "dspy_config.json"
 LM_PROVIDERS = {
     "openai": {
         "name": "OpenAI",
-        "models": ["gpt-4o", "gpt-4o-mini", "gpt-4-turbo", "gpt-3.5-turbo", "o1", "o1-mini", "o1-preview"],
+        "models": [
+            "gpt-4o",
+            "gpt-4o-mini",
+            "gpt-4-turbo",
+            "gpt-3.5-turbo",
+            "o1",
+            "o1-mini",
+            "o1-preview",
+        ],
         "env_var": "OPENAI_API_KEY",
     },
     "anthropic": {
         "name": "Anthropic",
-        "models": ["claude-3-5-sonnet-20241022", "claude-3-5-haiku-20241022", "claude-3-opus-20240229"],
+        "models": [
+            "claude-3-5-sonnet-20241022",
+            "claude-3-5-haiku-20241022",
+            "claude-3-opus-20240229",
+        ],
         "env_var": "ANTHROPIC_API_KEY",
     },
     "google": {
@@ -59,17 +72,19 @@ LM_PROVIDERS = {
 }
 
 
-def check_dspy_available():
+def check_dspy_available() -> None:
     """Check if DSPy is available and raise error if not."""
     if not DSPY_AVAILABLE:
-        console.print(Panel(
-            "[red]DSPy is not installed.[/red]\n\n"
-            "Install it with:\n"
-            "[cyan]pip install dspy[/cyan]\n\n"
-            "Or reinstall specify-cli with DSPy support.",
-            title="DSPy Not Available",
-            border_style="red"
-        ))
+        console.print(
+            Panel(
+                "[red]DSPy is not installed.[/red]\n\n"
+                "Install it with:\n"
+                "[cyan]pip install dspy[/cyan]\n\n"
+                "Or reinstall specify-cli with DSPy support.",
+                title="DSPy Not Available",
+                border_style="red",
+            )
+        )
         raise typer.Exit(1)
 
 
@@ -82,7 +97,7 @@ def load_config(config_path: Path | None = None) -> dict:
     return {}
 
 
-def save_config(config: dict, config_path: Path | None = None) -> None:
+def save_config(config: dict[str, Any], config_path: Path | None = None) -> None:
     """Save DSPy configuration to file."""
     path = config_path or DEFAULT_CONFIG_PATH
     path.parent.mkdir(parents=True, exist_ok=True)
@@ -91,7 +106,7 @@ def save_config(config: dict, config_path: Path | None = None) -> None:
     console.print(f"[green]Configuration saved to {path}[/green]")
 
 
-def get_configured_lm(config: dict | None = None) -> Any:
+def get_configured_lm(config: dict[str, Any] | None = None) -> Any:
     """Get a configured DSPy LM instance based on stored config."""
     check_dspy_available()
 
@@ -106,13 +121,15 @@ def get_configured_lm(config: dict | None = None) -> Any:
 
     # Check for API key if required
     if env_var and not os.getenv(env_var):
-        console.print(Panel(
-            f"[red]Missing API key for {provider_info.get('name', provider)}[/red]\n\n"
-            f"Set the [cyan]{env_var}[/cyan] environment variable:\n"
-            f"[dim]export {env_var}=your-api-key[/dim]",
-            title="API Key Required",
-            border_style="red"
-        ))
+        console.print(
+            Panel(
+                f"[red]Missing API key for {provider_info.get('name', provider)}[/red]\n\n"
+                f"Set the [cyan]{env_var}[/cyan] environment variable:\n"
+                f"[dim]export {env_var}=your-api-key[/dim]",
+                title="API Key Required",
+                border_style="red",
+            )
+        )
         raise typer.Exit(1)
 
     # Configure the LM based on provider
@@ -133,9 +150,13 @@ def get_configured_lm(config: dict | None = None) -> Any:
 
 @dspy_app.command()
 def configure(
-    provider: str | None = typer.Option(None, "--provider", "-p", help="LM provider: openai, anthropic, google, ollama"),
+    provider: str | None = typer.Option(
+        None, "--provider", "-p", help="LM provider: openai, anthropic, google, ollama"
+    ),
     model: str | None = typer.Option(None, "--model", "-m", help="Model name to use"),
-    base_url: str | None = typer.Option(None, "--base-url", help="Base URL for Ollama or custom endpoints"),
+    base_url: str | None = typer.Option(
+        None, "--base-url", help="Base URL for Ollama or custom endpoints"
+    ),
     show: bool = typer.Option(False, "--show", "-s", help="Show current configuration"),
 ) -> None:
     """
@@ -154,7 +175,9 @@ def configure(
     if show:
         if not config:
             console.print("[yellow]No DSPy configuration found.[/yellow]")
-            console.print("[dim]Run 'specify dspy configure --provider <provider> --model <model>' to set up.[/dim]")
+            console.print(
+                "[dim]Run 'specify dspy configure --provider <provider> --model <model>' to set up.[/dim]"
+            )
             return
 
         table = Table(title="DSPy Configuration", show_header=True, header_style="bold cyan")
@@ -172,7 +195,9 @@ def configure(
             env_status = ""
             if pinfo.get("env_var"):
                 env_set = os.getenv(pinfo["env_var"])
-                env_status = " [green](configured)[/green]" if env_set else " [red](API key missing)[/red]"
+                env_status = (
+                    " [green](configured)[/green]" if env_set else " [red](API key missing)[/red]"
+                )
             console.print(f"  [cyan]{pkey}[/cyan]: {pinfo['name']}{env_status}")
         return
 
@@ -197,22 +222,30 @@ def configure(
         save_config(config)
 
         # Show the new configuration
-        console.print(Panel(
-            f"[bold]Provider:[/bold] {config.get('provider', 'not set')}\n"
-            f"[bold]Model:[/bold] {config.get('model', 'not set')}\n"
-            f"[bold]Base URL:[/bold] {config.get('base_url', 'default')}",
-            title="[green]DSPy Configuration Updated[/green]",
-            border_style="green"
-        ))
+        console.print(
+            Panel(
+                f"[bold]Provider:[/bold] {config.get('provider', 'not set')}\n"
+                f"[bold]Model:[/bold] {config.get('model', 'not set')}\n"
+                f"[bold]Base URL:[/bold] {config.get('base_url', 'default')}",
+                title="[green]DSPy Configuration Updated[/green]",
+                border_style="green",
+            )
+        )
     else:
-        console.print("[yellow]No changes made. Use --provider, --model, or --base-url to configure.[/yellow]")
+        console.print(
+            "[yellow]No changes made. Use --provider, --model, or --base-url to configure.[/yellow]"
+        )
         console.print("[dim]Use --show to view current configuration.[/dim]")
 
 
 @dspy_app.command()
 def run(
-    signature: str = typer.Argument(..., help="DSPy signature (e.g., 'question -> answer' or 'context, question -> answer')"),
-    input_text: str | None = typer.Option(None, "--input", "-i", help="Input text for the signature"),
+    signature: str = typer.Argument(
+        ..., help="DSPy signature (e.g., 'question -> answer' or 'context, question -> answer')"
+    ),
+    input_text: str | None = typer.Option(
+        None, "--input", "-i", help="Input text for the signature"
+    ),
     input_file: Path | None = typer.Option(None, "--file", "-f", help="Read input from file"),
     output_file: Path | None = typer.Option(None, "--output", "-o", help="Write output to file"),
     verbose: bool = typer.Option(False, "--verbose", "-v", help="Show detailed output"),
@@ -272,14 +305,16 @@ def run(
             inputs[input_fields[0]] = input_text or file_content
 
     if verbose:
-        console.print(Panel(
-            f"[bold]Signature:[/bold] {signature}\n"
-            f"[bold]Provider:[/bold] {config.get('provider')}\n"
-            f"[bold]Model:[/bold] {config.get('model')}\n"
-            f"[bold]Inputs:[/bold] {list(inputs.keys())}",
-            title="Running DSPy Signature",
-            border_style="cyan"
-        ))
+        console.print(
+            Panel(
+                f"[bold]Signature:[/bold] {signature}\n"
+                f"[bold]Provider:[/bold] {config.get('provider')}\n"
+                f"[bold]Model:[/bold] {config.get('model')}\n"
+                f"[bold]Inputs:[/bold] {list(inputs.keys())}",
+                title="Running DSPy Signature",
+                border_style="cyan",
+            )
+        )
 
     # Run the predictor
     try:
@@ -294,11 +329,13 @@ def run(
             output_file.write_text(str(output_value))
             console.print(f"[green]Output written to {output_file}[/green]")
         else:
-            console.print(Panel(
-                str(output_value),
-                title=f"[green]Result ({output_field})[/green]",
-                border_style="green"
-            ))
+            console.print(
+                Panel(
+                    str(output_value),
+                    title=f"[green]Result ({output_field})[/green]",
+                    border_style="green",
+                )
+            )
 
         if verbose:
             console.print("\n[dim]Full result object:[/dim]")
@@ -311,10 +348,16 @@ def run(
 
 @dspy_app.command()
 def generate(
-    spec_type: str = typer.Argument(..., help="Type of specification to generate: requirement, user-story, task, plan"),
-    description: str = typer.Option(..., "--description", "-d", help="Description or context for generation"),
+    spec_type: str = typer.Argument(
+        ..., help="Type of specification to generate: requirement, user-story, task, plan"
+    ),
+    description: str = typer.Option(
+        ..., "--description", "-d", help="Description or context for generation"
+    ),
     output_file: Path | None = typer.Option(None, "--output", "-o", help="Write output to file"),
-    format_type: str = typer.Option("markdown", "--format", "-f", help="Output format: markdown, ttl, json"),
+    format_type: str = typer.Option(
+        "markdown", "--format", "-f", help="Output format: markdown, ttl, json"
+    ),
 ) -> None:
     """
     Generate specifications using DSPy.
@@ -351,10 +394,14 @@ def generate(
 
     # Create a more sophisticated signature class for structured output
     if spec_type == "requirement":
+
         class GenerateRequirement(dspy.Signature):
             """Generate a formal software requirement specification."""
+
             description: str = dspy.InputField(desc="Description of the requirement")
-            requirement_id: str = dspy.OutputField(desc="Unique requirement identifier (e.g., REQ-001)")
+            requirement_id: str = dspy.OutputField(
+                desc="Unique requirement identifier (e.g., REQ-001)"
+            )
             title: str = dspy.OutputField(desc="Short title for the requirement")
             requirement_text: str = dspy.OutputField(desc="Formal requirement statement")
             acceptance_criteria: str = dspy.OutputField(desc="List of acceptance criteria")
@@ -363,8 +410,10 @@ def generate(
         predictor = dspy.Predict(GenerateRequirement)
 
     elif spec_type == "user-story":
+
         class GenerateUserStory(dspy.Signature):
             """Generate a user story in standard format."""
+
             description: str = dspy.InputField(desc="Description or context for the user story")
             story_id: str = dspy.OutputField(desc="Unique story identifier (e.g., US-001)")
             as_a: str = dspy.OutputField(desc="The user role")
@@ -375,8 +424,10 @@ def generate(
         predictor = dspy.Predict(GenerateUserStory)
 
     elif spec_type == "task":
+
         class GenerateTask(dspy.Signature):
             """Generate a development task specification."""
+
             description: str = dspy.InputField(desc="Description of the task")
             task_id: str = dspy.OutputField(desc="Unique task identifier (e.g., TASK-001)")
             title: str = dspy.OutputField(desc="Short task title")
@@ -388,8 +439,10 @@ def generate(
         predictor = dspy.Predict(GenerateTask)
 
     else:  # plan
+
         class GeneratePlan(dspy.Signature):
             """Generate a project implementation plan."""
+
             description: str = dspy.InputField(desc="Description of what to plan")
             plan_id: str = dspy.OutputField(desc="Unique plan identifier (e.g., PLAN-001)")
             title: str = dspy.OutputField(desc="Plan title")
@@ -420,13 +473,31 @@ def generate(
             output_file.write_text(output)
             console.print(f"[green]Output written to {output_file}[/green]")
         elif format_type == "markdown":
-            console.print(Panel(output, title=f"[green]Generated {spec_type.title()}[/green]", border_style="green"))
+            console.print(
+                Panel(
+                    output,
+                    title=f"[green]Generated {spec_type.title()}[/green]",
+                    border_style="green",
+                )
+            )
         elif format_type == "ttl":
             syntax = Syntax(output, "turtle", theme="monokai", line_numbers=True)
-            console.print(Panel(syntax, title=f"[green]Generated {spec_type.title()} (Turtle)[/green]", border_style="green"))
+            console.print(
+                Panel(
+                    syntax,
+                    title=f"[green]Generated {spec_type.title()} (Turtle)[/green]",
+                    border_style="green",
+                )
+            )
         elif format_type == "json":
             syntax = Syntax(output, "json", theme="monokai", line_numbers=True)
-            console.print(Panel(syntax, title=f"[green]Generated {spec_type.title()} (JSON)[/green]", border_style="green"))
+            console.print(
+                Panel(
+                    syntax,
+                    title=f"[green]Generated {spec_type.title()} (JSON)[/green]",
+                    border_style="green",
+                )
+            )
         else:
             console.print(output)
 
@@ -438,74 +509,74 @@ def generate(
 def format_as_markdown(spec_type: str, result) -> str:
     """Format DSPy result as Markdown."""
     if spec_type == "requirement":
-        return f"""# {getattr(result, 'title', 'Requirement')}
+        return f"""# {getattr(result, "title", "Requirement")}
 
-**ID:** {getattr(result, 'requirement_id', 'REQ-XXX')}
-**Priority:** {getattr(result, 'priority', 'Medium')}
+**ID:** {getattr(result, "requirement_id", "REQ-XXX")}
+**Priority:** {getattr(result, "priority", "Medium")}
 
 ## Description
 
-{getattr(result, 'requirement_text', getattr(result, 'description', ''))}
+{getattr(result, "requirement_text", getattr(result, "description", ""))}
 
 ## Acceptance Criteria
 
-{getattr(result, 'acceptance_criteria', '')}
+{getattr(result, "acceptance_criteria", "")}
 """
     if spec_type == "user-story":
-        return f"""# User Story: {getattr(result, 'story_id', 'US-XXX')}
+        return f"""# User Story: {getattr(result, "story_id", "US-XXX")}
 
-**As a** {getattr(result, 'as_a', '')}
+**As a** {getattr(result, "as_a", "")}
 
-**I want** {getattr(result, 'i_want', '')}
+**I want** {getattr(result, "i_want", "")}
 
-**So that** {getattr(result, 'so_that', '')}
+**So that** {getattr(result, "so_that", "")}
 
 ## Acceptance Criteria
 
-{getattr(result, 'acceptance_criteria', '')}
+{getattr(result, "acceptance_criteria", "")}
 """
     if spec_type == "task":
-        return f"""# {getattr(result, 'title', 'Task')}
+        return f"""# {getattr(result, "title", "Task")}
 
-**ID:** {getattr(result, 'task_id', 'TASK-XXX')}
-**Estimated Effort:** {getattr(result, 'estimated_effort', 'TBD')}
+**ID:** {getattr(result, "task_id", "TASK-XXX")}
+**Estimated Effort:** {getattr(result, "estimated_effort", "TBD")}
 
 ## Description
 
-{getattr(result, 'task_description', getattr(result, 'description', ''))}
+{getattr(result, "task_description", getattr(result, "description", ""))}
 
 ## Implementation Steps
 
-{getattr(result, 'steps', '')}
+{getattr(result, "steps", "")}
 
 ## Dependencies
 
-{getattr(result, 'dependencies', 'None')}
+{getattr(result, "dependencies", "None")}
 """
     # plan
-    return f"""# {getattr(result, 'title', 'Implementation Plan')}
+    return f"""# {getattr(result, "title", "Implementation Plan")}
 
-**ID:** {getattr(result, 'plan_id', 'PLAN-XXX')}
+**ID:** {getattr(result, "plan_id", "PLAN-XXX")}
 
 ## Overview
 
-{getattr(result, 'overview', '')}
+{getattr(result, "overview", "")}
 
 ## Phases
 
-{getattr(result, 'phases', '')}
+{getattr(result, "phases", "")}
 
 ## Milestones
 
-{getattr(result, 'milestones', '')}
+{getattr(result, "milestones", "")}
 
 ## Risks
 
-{getattr(result, 'risks', '')}
+{getattr(result, "risks", "")}
 
 ## Success Criteria
 
-{getattr(result, 'success_criteria', '')}
+{getattr(result, "success_criteria", "")}
 """
 
 
@@ -518,38 +589,50 @@ def format_as_ttl(spec_type: str, result) -> str:
 """
     if spec_type == "requirement":
         req_id = getattr(result, "requirement_id", "REQ-001").replace("-", "_")
-        return prefix + f"""spec:{req_id} a spec:FunctionalRequirement ;
-    rdfs:label "{getattr(result, 'title', '')}" ;
-    spec:priority "{getattr(result, 'priority', 'Medium')}" ;
-    spec:description \"\"\"{getattr(result, 'requirement_text', getattr(result, 'description', ''))}\"\"\" ;
-    spec:acceptanceCriteria \"\"\"{getattr(result, 'acceptance_criteria', '')}\"\"\" .
+        return (
+            prefix
+            + f"""spec:{req_id} a spec:FunctionalRequirement ;
+    rdfs:label "{getattr(result, "title", "")}" ;
+    spec:priority "{getattr(result, "priority", "Medium")}" ;
+    spec:description \"\"\"{getattr(result, "requirement_text", getattr(result, "description", ""))}\"\"\" ;
+    spec:acceptanceCriteria \"\"\"{getattr(result, "acceptance_criteria", "")}\"\"\" .
 """
+        )
     if spec_type == "user-story":
         story_id = getattr(result, "story_id", "US-001").replace("-", "_")
-        return prefix + f"""spec:{story_id} a spec:UserStory ;
-    spec:asA "{getattr(result, 'as_a', '')}" ;
-    spec:iWant "{getattr(result, 'i_want', '')}" ;
-    spec:soThat "{getattr(result, 'so_that', '')}" ;
-    spec:acceptanceCriteria \"\"\"{getattr(result, 'acceptance_criteria', '')}\"\"\" .
+        return (
+            prefix
+            + f"""spec:{story_id} a spec:UserStory ;
+    spec:asA "{getattr(result, "as_a", "")}" ;
+    spec:iWant "{getattr(result, "i_want", "")}" ;
+    spec:soThat "{getattr(result, "so_that", "")}" ;
+    spec:acceptanceCriteria \"\"\"{getattr(result, "acceptance_criteria", "")}\"\"\" .
 """
+        )
     if spec_type == "task":
         task_id = getattr(result, "task_id", "TASK-001").replace("-", "_")
-        return prefix + f"""spec:{task_id} a spec:Task ;
-    rdfs:label "{getattr(result, 'title', '')}" ;
-    spec:description \"\"\"{getattr(result, 'task_description', getattr(result, 'description', ''))}\"\"\" ;
-    spec:estimatedEffort "{getattr(result, 'estimated_effort', 'TBD')}" ;
-    spec:steps \"\"\"{getattr(result, 'steps', '')}\"\"\" .
+        return (
+            prefix
+            + f"""spec:{task_id} a spec:Task ;
+    rdfs:label "{getattr(result, "title", "")}" ;
+    spec:description \"\"\"{getattr(result, "task_description", getattr(result, "description", ""))}\"\"\" ;
+    spec:estimatedEffort "{getattr(result, "estimated_effort", "TBD")}" ;
+    spec:steps \"\"\"{getattr(result, "steps", "")}\"\"\" .
 """
+        )
     # plan
     plan_id = getattr(result, "plan_id", "PLAN-001").replace("-", "_")
-    return prefix + f"""spec:{plan_id} a spec:Plan ;
-    rdfs:label "{getattr(result, 'title', '')}" ;
-    spec:overview \"\"\"{getattr(result, 'overview', '')}\"\"\" ;
-    spec:phases \"\"\"{getattr(result, 'phases', '')}\"\"\" ;
-    spec:milestones \"\"\"{getattr(result, 'milestones', '')}\"\"\" ;
-    spec:risks \"\"\"{getattr(result, 'risks', '')}\"\"\" ;
-    spec:successCriteria \"\"\"{getattr(result, 'success_criteria', '')}\"\"\" .
+    return (
+        prefix
+        + f"""spec:{plan_id} a spec:Plan ;
+    rdfs:label "{getattr(result, "title", "")}" ;
+    spec:overview \"\"\"{getattr(result, "overview", "")}\"\"\" ;
+    spec:phases \"\"\"{getattr(result, "phases", "")}\"\"\" ;
+    spec:milestones \"\"\"{getattr(result, "milestones", "")}\"\"\" ;
+    spec:risks \"\"\"{getattr(result, "risks", "")}\"\"\" ;
+    spec:successCriteria \"\"\"{getattr(result, "success_criteria", "")}\"\"\" .
 """
+    )
 
 
 def format_as_json(spec_type: str, result) -> str:
@@ -602,12 +685,23 @@ def format_as_json(spec_type: str, result) -> str:
 @dspy_app.command()
 def optimize(
     spec_file: Path = typer.Argument(..., help="Path to specification file (TTL or JSON)"),
-    metric: str = typer.Option("coverage", "--metric", "-m", help="Optimization metric: coverage, clarity, brevity, performance"),
-    iterations: int = typer.Option(3, "--iterations", "-i", help="Number of optimization iterations"),
+    metric: str = typer.Option(
+        "coverage",
+        "--metric",
+        "-m",
+        help="Optimization metric: coverage, clarity, brevity, performance",
+    ),
+    iterations: int = typer.Option(
+        3, "--iterations", "-i", help="Number of optimization iterations"
+    ),
     model: str | None = typer.Option(None, "--model", help="Override LLM model for optimization"),
     temperature: float = typer.Option(0.7, "--temperature", "-t", help="LLM temperature (0.0-1.0)"),
-    output_file: Path | None = typer.Option(None, "--output", "-o", help="Output path for optimized spec"),
-    verbose: bool = typer.Option(False, "--verbose", "-v", help="Show detailed optimization progress"),
+    output_file: Path | None = typer.Option(
+        None, "--output", "-o", help="Output path for optimized spec"
+    ),
+    verbose: bool = typer.Option(
+        False, "--verbose", "-v", help="Show detailed optimization progress"
+    ),
 ) -> None:
     """
     Optimize a specification using DSPy with LLM-powered iterative refinement.
@@ -670,7 +764,9 @@ def _optimize_spec_cli(
         raise typer.Exit(1)
 
     if metric not in ["coverage", "clarity", "brevity", "performance"]:
-        console.print(f"[red]Invalid metric: {metric}. Choose: coverage, clarity, brevity, performance[/red]")
+        console.print(
+            f"[red]Invalid metric: {metric}. Choose: coverage, clarity, brevity, performance[/red]"
+        )
         raise typer.Exit(1)
 
     if iterations < 1 or iterations > 10:
@@ -713,17 +809,19 @@ def _optimize_spec_cli(
         raise typer.Exit(1)
 
     # Show optimization parameters
-    console.print(Panel(
-        f"[bold]Spec File:[/bold] {spec_file}\n"
-        f"[bold]Format:[/bold] {spec_format.upper()}\n"
-        f"[bold]Metric:[/bold] {metric}\n"
-        f"[bold]Iterations:[/bold] {iterations}\n"
-        f"[bold]Provider:[/bold] {config.get('provider', 'openai')}\n"
-        f"[bold]Model:[/bold] {config.get('model', 'gpt-4o-mini')}\n"
-        f"[bold]Temperature:[/bold] {temperature}",
-        title="[cyan]DSPy Spec Optimization[/cyan]",
-        border_style="cyan"
-    ))
+    console.print(
+        Panel(
+            f"[bold]Spec File:[/bold] {spec_file}\n"
+            f"[bold]Format:[/bold] {spec_format.upper()}\n"
+            f"[bold]Metric:[/bold] {metric}\n"
+            f"[bold]Iterations:[/bold] {iterations}\n"
+            f"[bold]Provider:[/bold] {config.get('provider', 'openai')}\n"
+            f"[bold]Model:[/bold] {config.get('model', 'gpt-4o-mini')}\n"
+            f"[bold]Temperature:[/bold] {temperature}",
+            title="[cyan]DSPy Spec Optimization[/cyan]",
+            border_style="cyan",
+        )
+    )
 
     # Run optimization using the imported function
     from specify_cli._dspy_optimize_impl import optimize_spec
@@ -738,23 +836,27 @@ def _optimize_spec_cli(
         )
 
         if not result.success:
-            console.print(Panel(
-                "[red]Optimization failed[/red]\n\n"
-                "[bold]Errors:[/bold]\n" + "\n".join(f"- {e}" for e in result.errors),
-                title="Optimization Failed",
-                border_style="red"
-            ))
+            console.print(
+                Panel(
+                    "[red]Optimization failed[/red]\n\n"
+                    "[bold]Errors:[/bold]\n" + "\n".join(f"- {e}" for e in result.errors),
+                    title="Optimization Failed",
+                    border_style="red",
+                )
+            )
             raise typer.Exit(1)
 
         # Display results
-        console.print(Panel(
-            f"[bold]Iterations:[/bold] {result.iterations}\n"
-            f"[bold]Improvement:[/bold] {result.improvement:.1f}%\n"
-            f"[bold]Metrics:[/bold]\n"
-            + "\n".join(f"  - {k}: {v:.2f}" for k, v in result.metrics.items()),
-            title="[green]Optimization Complete[/green]",
-            border_style="green"
-        ))
+        console.print(
+            Panel(
+                f"[bold]Iterations:[/bold] {result.iterations}\n"
+                f"[bold]Improvement:[/bold] {result.improvement:.1f}%\n"
+                f"[bold]Metrics:[/bold]\n"
+                + "\n".join(f"  - {k}: {v:.2f}" for k, v in result.metrics.items()),
+                title="[green]Optimization Complete[/green]",
+                border_style="green",
+            )
+        )
 
         # Save or display optimized spec
         if output_file:
@@ -763,7 +865,13 @@ def _optimize_spec_cli(
         else:
             if verbose:
                 console.print("\n[bold]Original Spec:[/bold]")
-                console.print(Panel(result.original_spec[:500] + "..." if len(result.original_spec) > 500 else result.original_spec))
+                console.print(
+                    Panel(
+                        result.original_spec[:500] + "..."
+                        if len(result.original_spec) > 500
+                        else result.original_spec
+                    )
+                )
 
             console.print("\n[bold cyan]Optimized Spec:[/bold cyan]")
             syntax = Syntax(result.optimized_spec, spec_format, theme="monokai", line_numbers=True)
@@ -773,14 +881,13 @@ def _optimize_spec_cli(
         console.print(f"[red]Optimization error: {e}[/red]")
         if verbose:
             import traceback
+
             console.print(f"[dim]{traceback.format_exc()}[/dim]")
         raise typer.Exit(1)
 
 
-
-
 @dspy_app.command()
-def info():
+def info() -> None:
     """
     Show DSPy installation and configuration information.
     """
@@ -790,7 +897,9 @@ def info():
 
     if DSPY_AVAILABLE:
         table.add_row("DSPy Installed", "[green]Yes[/green]")
-        table.add_row("DSPy Version", dspy.__version__ if hasattr(dspy, "__version__") else "unknown")
+        table.add_row(
+            "DSPy Version", dspy.__version__ if hasattr(dspy, "__version__") else "unknown"
+        )
     else:
         table.add_row("DSPy Installed", "[red]No[/red]")
 
@@ -807,7 +916,7 @@ def info():
     # Check API keys
     table.add_row("", "")
     table.add_row("[bold]API Keys[/bold]", "")
-    for provider, info in LM_PROVIDERS.items():
+    for _provider, info in LM_PROVIDERS.items():
         if info.get("env_var"):
             env_set = os.getenv(info["env_var"])
             status = "[green]Set[/green]" if env_set else "[dim]Not set[/dim]"

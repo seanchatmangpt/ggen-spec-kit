@@ -1,0 +1,911 @@
+@prefix sk: <http://github.com/github/spec-kit#> .
+@prefix jtbd: <http://github.com/github/spec-kit/jtbd#> .
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
+@prefix dcterms: <http://purl.org/dc/terms/> .
+@prefix owl: <http://www.w3.org/2002/07/owl#> .
+
+# ============================================================================
+# Jobs-to-be-Done Customer Jobs and Outcomes for Spec-Kit
+# ============================================================================
+# Defines concrete customer jobs and desired outcomes using JTBD framework
+# for four primary personas using the spec-kit RDF-first development toolkit
+# ============================================================================
+
+jtbd:JTBDSpecification
+  a sk:Documentation ;
+  rdfs:label "Jobs-to-be-Done Customer Analysis" ;
+  sk:documentTitle "Jobs-to-be-Done: Customer Jobs and Outcomes" ;
+  sk:documentDescription "Concrete customer jobs, outcomes, painpoints, and progress makers for spec-kit personas using JTBD framework"@en ;
+  sk:documentVersion "1.0" ;
+  sk:createdDate "2025-12-21T00:00:00Z"^^xsd:dateTime ;
+  sk:authorName "Spec-Kit Team" ;
+  sk:maintenanceStatus "Current" ;
+  sk:audience "Product teams, UX designers, and developers optimizing spec-kit experience"@en ;
+  sk:category "Customer Research" ;
+  .
+
+# ============================================================================
+# JTBD ONTOLOGY CLASSES
+# ============================================================================
+
+jtbd:Persona a owl:Class ;
+  rdfs:label "Persona" ;
+  rdfs:comment "User archetype with specific jobs and goals using spec-kit" .
+
+jtbd:FunctionalJob a owl:Class ;
+  rdfs:label "Functional Job" ;
+  rdfs:comment "Concrete task the persona is trying to accomplish" .
+
+jtbd:EmotionalJob a owl:Class ;
+  rdfs:label "Emotional Job" ;
+  rdfs:comment "How the persona wants to feel while using spec-kit" .
+
+jtbd:SocialJob a owl:Class ;
+  rdfs:label "Social Job" ;
+  rdfs:comment "How the persona wants to be perceived by others" .
+
+jtbd:Outcome a owl:Class ;
+  rdfs:label "Desired Outcome" ;
+  rdfs:comment "Specific measurable outcome the persona wants to achieve" .
+
+jtbd:Painpoint a owl:Class ;
+  rdfs:label "Painpoint" ;
+  rdfs:comment "Current friction preventing job completion" .
+
+jtbd:ProgressMaker a owl:Class ;
+  rdfs:label "Progress Maker" ;
+  rdfs:comment "Force pushing toward spec-kit adoption" .
+
+# ============================================================================
+# JTBD PROPERTIES
+# ============================================================================
+
+jtbd:personaName a owl:DatatypeProperty ;
+  rdfs:domain jtbd:Persona ;
+  rdfs:range xsd:string ;
+  rdfs:comment "Name of the persona" .
+
+jtbd:personaDescription a owl:DatatypeProperty ;
+  rdfs:domain jtbd:Persona ;
+  rdfs:range xsd:string ;
+  rdfs:comment "Description of the persona's role and context" .
+
+jtbd:jobStatement a owl:DatatypeProperty ;
+  rdfs:domain jtbd:FunctionalJob ;
+  rdfs:range xsd:string ;
+  rdfs:comment "Job statement in format: When [situation], I want to [motivation], so I can [outcome]" .
+
+jtbd:jobDescription a owl:DatatypeProperty ;
+  rdfs:range xsd:string ;
+  rdfs:comment "Detailed description of the job" .
+
+jtbd:outcomeStatement a owl:DatatypeProperty ;
+  rdfs:domain jtbd:Outcome ;
+  rdfs:range xsd:string ;
+  rdfs:comment "Measurable outcome statement" .
+
+jtbd:outcomeMetric a owl:DatatypeProperty ;
+  rdfs:domain jtbd:Outcome ;
+  rdfs:range xsd:string ;
+  rdfs:comment "Measurement dimension (time, quality, reliability, etc.)" .
+
+jtbd:currentBaseline a owl:DatatypeProperty ;
+  rdfs:domain jtbd:Outcome ;
+  rdfs:range xsd:string ;
+  rdfs:comment "Current performance baseline" .
+
+jtbd:targetValue a owl:DatatypeProperty ;
+  rdfs:domain jtbd:Outcome ;
+  rdfs:range xsd:string ;
+  rdfs:comment "Target performance value" .
+
+jtbd:painpointDescription a owl:DatatypeProperty ;
+  rdfs:domain jtbd:Painpoint ;
+  rdfs:range xsd:string ;
+  rdfs:comment "Description of current friction or pain" .
+
+jtbd:impactLevel a owl:DatatypeProperty ;
+  rdfs:range xsd:string ;
+  rdfs:comment "Impact severity: Critical, High, Medium, Low" .
+
+jtbd:progressMakerDescription a owl:DatatypeProperty ;
+  rdfs:domain jtbd:ProgressMaker ;
+  rdfs:range xsd:string ;
+  rdfs:comment "Description of force pushing toward adoption" .
+
+jtbd:progressMakerCategory a owl:DatatypeProperty ;
+  rdfs:domain jtbd:ProgressMaker ;
+  rdfs:range xsd:string ;
+  rdfs:comment "Category: Time Savings, Quality Improvement, Reduced Cognitive Load, etc." .
+
+# JTBD relationships
+jtbd:hasFunctionalJob a owl:ObjectProperty ;
+  rdfs:domain jtbd:Persona ;
+  rdfs:range jtbd:FunctionalJob .
+
+jtbd:hasEmotionalJob a owl:ObjectProperty ;
+  rdfs:domain jtbd:Persona ;
+  rdfs:range jtbd:EmotionalJob .
+
+jtbd:hasSocialJob a owl:ObjectProperty ;
+  rdfs:domain jtbd:Persona ;
+  rdfs:range jtbd:SocialJob .
+
+jtbd:hasOutcome a owl:ObjectProperty ;
+  rdfs:domain jtbd:Persona ;
+  rdfs:range jtbd:Outcome .
+
+jtbd:hasPainpoint a owl:ObjectProperty ;
+  rdfs:domain jtbd:Persona ;
+  rdfs:range jtbd:Painpoint .
+
+jtbd:hasProgressMaker a owl:ObjectProperty ;
+  rdfs:domain jtbd:Persona ;
+  rdfs:range jtbd:ProgressMaker .
+
+# ============================================================================
+# PERSONA 1: RDF ONTOLOGY DESIGNER
+# ============================================================================
+
+jtbd:Persona_OntologyDesigner
+  a jtbd:Persona ;
+  jtbd:personaName "RDF Ontology Designer" ;
+  jtbd:personaDescription "Creates semantic specifications from user requirements and domain knowledge. Translates business needs into RDF ontologies that serve as source code. Works with SHACL shapes, SPARQL queries, and Tera templates to define the μ transformation pipeline." ;
+  jtbd:hasFunctionalJob jtbd:Job_OD_ModelDomainKnowledge ;
+  jtbd:hasFunctionalJob jtbd:Job_OD_ValidateSpecifications ;
+  jtbd:hasEmotionalJob jtbd:EmotionalJob_OD_ConfidenceInCompleteness ;
+  jtbd:hasEmotionalJob jtbd:EmotionalJob_OD_SatisfactionInElegance ;
+  jtbd:hasSocialJob jtbd:SocialJob_OD_SemanticExpert ;
+  jtbd:hasOutcome jtbd:Outcome_OD_1 ;
+  jtbd:hasOutcome jtbd:Outcome_OD_2 ;
+  jtbd:hasOutcome jtbd:Outcome_OD_3 ;
+  jtbd:hasOutcome jtbd:Outcome_OD_4 ;
+  jtbd:hasOutcome jtbd:Outcome_OD_5 ;
+  jtbd:hasOutcome jtbd:Outcome_OD_6 ;
+  jtbd:hasOutcome jtbd:Outcome_OD_7 ;
+  jtbd:hasPainpoint jtbd:Pain_OD_1 ;
+  jtbd:hasPainpoint jtbd:Pain_OD_2 ;
+  jtbd:hasPainpoint jtbd:Pain_OD_3 ;
+  jtbd:hasPainpoint jtbd:Pain_OD_4 ;
+  jtbd:hasPainpoint jtbd:Pain_OD_5 ;
+  jtbd:hasProgressMaker jtbd:Progress_OD_1 ;
+  jtbd:hasProgressMaker jtbd:Progress_OD_2 ;
+  jtbd:hasProgressMaker jtbd:Progress_OD_3 ;
+  .
+
+# Functional Jobs - Ontology Designer
+jtbd:Job_OD_ModelDomainKnowledge
+  a jtbd:FunctionalJob ;
+  jtbd:jobStatement "When requirements arrive, I want to model domain knowledge in RDF, so I can create a single source of truth that compiles to code" ;
+  jtbd:jobDescription "Transform user requirements and domain understanding into precise RDF ontologies with classes, properties, SHACL shapes, and semantic constraints. Create specifications that are executable - deterministic enough to generate working implementations across multiple languages." ;
+  .
+
+jtbd:Job_OD_ValidateSpecifications
+  a jtbd:FunctionalJob ;
+  jtbd:jobStatement "When I've created RDF specifications, I want to validate semantic correctness and completeness, so I can catch errors before code generation" ;
+  jtbd:jobDescription "Validate RDF syntax, SHACL shape constraints, SPARQL query correctness, and template rendering before committing specifications. Ensure ontologies are internally consistent and capture all requirements." ;
+  .
+
+# Emotional Jobs - Ontology Designer
+jtbd:EmotionalJob_OD_ConfidenceInCompleteness
+  a jtbd:EmotionalJob ;
+  jtbd:jobDescription "Feel confident that my RDF specifications are complete, unambiguous, and will generate correct implementations without surprises" ;
+  .
+
+jtbd:EmotionalJob_OD_SatisfactionInElegance
+  a jtbd:EmotionalJob ;
+  jtbd:jobDescription "Feel satisfaction in creating elegant semantic models that are both machine-executable and human-readable" ;
+  .
+
+# Social Jobs - Ontology Designer
+jtbd:SocialJob_OD_SemanticExpert
+  a jtbd:SocialJob ;
+  jtbd:jobDescription "Be perceived as a semantic modeling expert who delivers precise, high-quality specifications that development teams trust" ;
+  .
+
+# Outcomes - Ontology Designer
+jtbd:Outcome_OD_1
+  a jtbd:Outcome ;
+  jtbd:outcomeStatement "Minimize time to create validated RDF specification from requirements" ;
+  jtbd:outcomeMetric "Time" ;
+  jtbd:currentBaseline "4-6 hours to model a feature domain in RDF" ;
+  jtbd:targetValue "1-2 hours with AI-assisted modeling and real-time SHACL validation" ;
+  .
+
+jtbd:Outcome_OD_2
+  a jtbd:Outcome ;
+  jtbd:outcomeStatement "Maximize semantic correctness of RDF specifications before code generation" ;
+  jtbd:outcomeMetric "Quality" ;
+  jtbd:currentBaseline "2-3 SHACL validation errors discovered during ggen sync" ;
+  jtbd:targetValue "0 validation errors - catch all issues during RDF authoring" ;
+  .
+
+jtbd:Outcome_OD_3
+  a jtbd:Outcome ;
+  jtbd:outcomeStatement "Minimize ambiguity in ontology definitions that lead to incorrect code generation" ;
+  jtbd:outcomeMetric "Quality" ;
+  jtbd:currentBaseline "15-20% of generated code requires manual fixes due to spec ambiguity" ;
+  jtbd:targetValue "< 5% manual fixes - specifications precise enough for deterministic generation" ;
+  .
+
+jtbd:Outcome_OD_4
+  a jtbd:Outcome ;
+  jtbd:outcomeStatement "Maximize reusability of ontology patterns across features" ;
+  jtbd:outcomeMetric "Efficiency" ;
+  jtbd:currentBaseline "30% code reuse across features (copy-paste RDF patterns)" ;
+  jtbd:targetValue "70% reuse via shared ontology modules and pattern libraries" ;
+  .
+
+jtbd:Outcome_OD_5
+  a jtbd:Outcome ;
+  jtbd:outcomeStatement "Minimize effort to evolve ontology when requirements change" ;
+  jtbd:outcomeMetric "Time" ;
+  jtbd:currentBaseline "2-3 hours to update RDF and regenerate all affected artifacts" ;
+  jtbd:targetValue "< 30 minutes with incremental ggen sync and impact analysis" ;
+  .
+
+jtbd:Outcome_OD_6
+  a jtbd:Outcome ;
+  jtbd:outcomeStatement "Maximize confidence that RDF specifications capture all edge cases" ;
+  jtbd:outcomeMetric "Reliability" ;
+  jtbd:currentBaseline "Edge cases discovered during testing (40% coverage in specs)" ;
+  jtbd:targetValue "90% edge case coverage captured in SHACL shapes and constraints" ;
+  .
+
+jtbd:Outcome_OD_7
+  a jtbd:Outcome ;
+  jtbd:outcomeStatement "Minimize learning curve for team members to read and understand RDF specifications" ;
+  jtbd:outcomeMetric "Maintainability" ;
+  jtbd:currentBaseline "2-3 days for developer to understand RDF ontology structure" ;
+  jtbd:targetValue "< 4 hours with generated documentation and interactive examples" ;
+  .
+
+# Painpoints - Ontology Designer
+jtbd:Pain_OD_1
+  a jtbd:Painpoint ;
+  jtbd:painpointDescription "SHACL validation errors only appear when running ggen sync, not during RDF authoring - leads to long feedback loops" ;
+  jtbd:impactLevel "High" ;
+  .
+
+jtbd:Pain_OD_2
+  a jtbd:Painpoint ;
+  jtbd:painpointDescription "No tooling to visualize ontology structure and relationships - must mentally parse Turtle syntax" ;
+  jtbd:impactLevel "Medium" ;
+  .
+
+jtbd:Pain_OD_3
+  a jtbd:Painpoint ;
+  jtbd:painpointDescription "Difficult to track which parts of RDF specification are actually used in templates vs. unused definitions" ;
+  jtbd:impactLevel "Medium" ;
+  .
+
+jtbd:Pain_OD_4
+  a jtbd:Painpoint ;
+  jtbd:painpointDescription "No automated testing for SPARQL queries - must manually verify query results match expected data" ;
+  jtbd:impactLevel "High" ;
+  .
+
+jtbd:Pain_OD_5
+  a jtbd:Painpoint ;
+  jtbd:painpointDescription "Breaking changes to ontology structure require manual updates across SPARQL queries and Tera templates" ;
+  jtbd:impactLevel "Critical" ;
+  .
+
+# Progress Makers - Ontology Designer
+jtbd:Progress_OD_1
+  a jtbd:ProgressMaker ;
+  jtbd:progressMakerDescription "Deterministic code generation eliminates 'specification drift' - generated code always matches RDF source" ;
+  jtbd:progressMakerCategory "Quality Improvement" ;
+  .
+
+jtbd:Progress_OD_2
+  a jtbd:ProgressMaker ;
+  jtbd:progressMakerDescription "Single RDF specification compiles to multiple languages (Python, TypeScript, Rust, Java, C#, Go) - write once, deploy everywhere" ;
+  jtbd:progressMakerCategory "Efficiency" ;
+  .
+
+jtbd:Progress_OD_3
+  a jtbd:ProgressMaker ;
+  jtbd:progressMakerDescription "Semantic reasoning via SPARQL materializes implicit knowledge - reduces manual specification work" ;
+  jtbd:progressMakerCategory "Reduced Cognitive Load" ;
+  .
+
+# ============================================================================
+# PERSONA 2: CLI DEVELOPER
+# ============================================================================
+
+jtbd:Persona_CLIDeveloper
+  a jtbd:Persona ;
+  jtbd:personaName "CLI Developer" ;
+  jtbd:personaDescription "Implements CLI commands based on RDF specifications following three-tier architecture (commands, ops, runtime). Writes business logic, subprocess execution, and telemetry instrumentation. Ensures specification-driven implementation matches generated types." ;
+  jtbd:hasFunctionalJob jtbd:Job_CLI_ImplementCommands ;
+  jtbd:hasFunctionalJob jtbd:Job_CLI_MaintainArchitecture ;
+  jtbd:hasEmotionalJob jtbd:EmotionalJob_CLI_ConfidenceInCorrectness ;
+  jtbd:hasEmotionalJob jtbd:EmotionalJob_CLI_PrideInCraftsmanship ;
+  jtbd:hasSocialJob jtbd:SocialJob_CLI_SpecDrivenEngineer ;
+  jtbd:hasOutcome jtbd:Outcome_CLI_1 ;
+  jtbd:hasOutcome jtbd:Outcome_CLI_2 ;
+  jtbd:hasOutcome jtbd:Outcome_CLI_3 ;
+  jtbd:hasOutcome jtbd:Outcome_CLI_4 ;
+  jtbd:hasOutcome jtbd:Outcome_CLI_5 ;
+  jtbd:hasOutcome jtbd:Outcome_CLI_6 ;
+  jtbd:hasOutcome jtbd:Outcome_CLI_7 ;
+  jtbd:hasPainpoint jtbd:Pain_CLI_1 ;
+  jtbd:hasPainpoint jtbd:Pain_CLI_2 ;
+  jtbd:hasPainpoint jtbd:Pain_CLI_3 ;
+  jtbd:hasPainpoint jtbd:Pain_CLI_4 ;
+  jtbd:hasPainpoint jtbd:Pain_CLI_5 ;
+  jtbd:hasProgressMaker jtbd:Progress_CLI_1 ;
+  jtbd:hasProgressMaker jtbd:Progress_CLI_2 ;
+  jtbd:hasProgressMaker jtbd:Progress_CLI_3 ;
+  .
+
+# Functional Jobs - CLI Developer
+jtbd:Job_CLI_ImplementCommands
+  a jtbd:FunctionalJob ;
+  jtbd:jobStatement "When RDF specifications are ready, I want to implement CLI commands, so I can deliver working tools that match specifications" ;
+  jtbd:jobDescription "Implement CLI commands across three tiers: commands (Typer interface), ops (pure business logic), runtime (subprocess/I/O). Write code that matches generated types from RDF specifications. Add comprehensive telemetry via OpenTelemetry spans, metrics, and events." ;
+  .
+
+jtbd:Job_CLI_MaintainArchitecture
+  a jtbd:FunctionalJob ;
+  jtbd:jobStatement "When implementing features, I want to maintain three-tier architecture boundaries, so I can ensure testability and modularity" ;
+  jtbd:jobDescription "Enforce layer separation: commands only parse/format, ops only pure logic, runtime only I/O. Prevent violations like subprocess calls in ops layer or business logic in commands layer. Maintain clean architecture for testing and evolution." ;
+  .
+
+# Emotional Jobs - CLI Developer
+jtbd:EmotionalJob_CLI_ConfidenceInCorrectness
+  a jtbd:EmotionalJob ;
+  jtbd:jobDescription "Feel confident that my implementation is correct because it matches generated types and passes comprehensive tests" ;
+  .
+
+jtbd:EmotionalJob_CLI_PrideInCraftsmanship
+  a jtbd:EmotionalJob ;
+  jtbd:jobDescription "Feel pride in writing clean, well-architected code that follows specification-driven patterns and quality standards" ;
+  .
+
+# Social Jobs - CLI Developer
+jtbd:SocialJob_CLI_SpecDrivenEngineer
+  a jtbd:SocialJob ;
+  jtbd:jobDescription "Be perceived as a specification-driven engineer who delivers high-quality, well-tested implementations on schedule" ;
+  .
+
+# Outcomes - CLI Developer
+jtbd:Outcome_CLI_1
+  a jtbd:Outcome ;
+  jtbd:outcomeStatement "Minimize time to implement fully-tested CLI command from RDF specification" ;
+  jtbd:outcomeMetric "Time" ;
+  jtbd:currentBaseline "4-6 hours to implement command across three tiers with tests" ;
+  jtbd:targetValue "1-2 hours with generated scaffolding and test templates" ;
+  .
+
+jtbd:Outcome_CLI_2
+  a jtbd:Outcome ;
+  jtbd:outcomeStatement "Maximize test coverage of implemented commands" ;
+  jtbd:outcomeMetric "Quality" ;
+  jtbd:currentBaseline "70% coverage with manual test writing" ;
+  jtbd:targetValue "95% coverage with generated test stubs and examples" ;
+  .
+
+jtbd:Outcome_CLI_3
+  a jtbd:Outcome ;
+  jtbd:outcomeStatement "Minimize architecture violations across three-tier boundaries" ;
+  jtbd:outcomeMetric "Quality" ;
+  jtbd:currentBaseline "3-5 violations per feature (subprocess in ops, logic in commands)" ;
+  jtbd:targetValue "0 violations detected by automated architecture validator" ;
+  .
+
+jtbd:Outcome_CLI_4
+  a jtbd:Outcome ;
+  jtbd:outcomeStatement "Maximize consistency of telemetry instrumentation across commands" ;
+  jtbd:outcomeMetric "Observability" ;
+  jtbd:currentBaseline "60% of operations emit spans/metrics (inconsistent patterns)" ;
+  jtbd:targetValue "100% with standardized telemetry patterns from specifications" ;
+  .
+
+jtbd:Outcome_CLI_5
+  a jtbd:Outcome ;
+  jtbd:outcomeStatement "Minimize effort to update implementation when specifications change" ;
+  jtbd:outcomeMetric "Time" ;
+  jtbd:currentBaseline "2-3 hours to update code and tests after spec change" ;
+  jtbd:targetValue "< 30 minutes with type-guided refactoring and test regeneration" ;
+  .
+
+jtbd:Outcome_CLI_6
+  a jtbd:Outcome ;
+  jtbd:outcomeStatement "Maximize reliability of subprocess execution and error handling" ;
+  jtbd:outcomeMetric "Reliability" ;
+  jtbd:currentBaseline "10-15% of edge cases missing error handling" ;
+  jtbd:targetValue "< 2% with comprehensive error scenarios in specifications" ;
+  .
+
+jtbd:Outcome_CLI_7
+  a jtbd:Outcome ;
+  jtbd:outcomeStatement "Minimize time to debug implementation issues using telemetry traces" ;
+  jtbd:outcomeMetric "Time" ;
+  jtbd:currentBaseline "30-45 minutes to diagnose issue with print debugging" ;
+  jtbd:targetValue "5-10 minutes with structured OTEL traces and span events" ;
+  .
+
+# Painpoints - CLI Developer
+jtbd:Pain_CLI_1
+  a jtbd:Painpoint ;
+  jtbd:painpointDescription "Generated types from RDF specifications not automatically imported - must manually add imports after ggen sync" ;
+  jtbd:impactLevel "Medium" ;
+  .
+
+jtbd:Pain_CLI_2
+  a jtbd:Painpoint ;
+  jtbd:painpointDescription "No scaffolding generator for three-tier structure - must manually create commands/, ops/, runtime/ files following patterns" ;
+  jtbd:impactLevel "High" ;
+  .
+
+jtbd:Pain_CLI_3
+  a jtbd:Painpoint ;
+  jtbd:painpointDescription "Telemetry boilerplate is repetitive - every function needs @timed, span(), add_span_event() calls" ;
+  jtbd:impactLevel "Medium" ;
+  .
+
+jtbd:Pain_CLI_4
+  a jtbd:Painpoint ;
+  jtbd:painpointDescription "Test files not generated from specifications - must manually write pytest fixtures and test cases" ;
+  jtbd:impactLevel "Critical" ;
+  .
+
+jtbd:Pain_CLI_5
+  a jtbd:Painpoint ;
+  jtbd:painpointDescription "No automated architecture validator - violations only caught during code review" ;
+  jtbd:impactLevel "High" ;
+  .
+
+# Progress Makers - CLI Developer
+jtbd:Progress_CLI_1
+  a jtbd:ProgressMaker ;
+  jtbd:progressMakerDescription "Generated types from RDF ensure type safety - compiler catches spec mismatches immediately" ;
+  jtbd:progressMakerCategory "Quality Improvement" ;
+  .
+
+jtbd:Progress_CLI_2
+  a jtbd:ProgressMaker ;
+  jtbd:progressMakerDescription "Three-tier architecture makes testing trivial - ops layer is pure functions, runtime layer mocked easily" ;
+  jtbd:progressMakerCategory "Testability" ;
+  .
+
+jtbd:Progress_CLI_3
+  a jtbd:ProgressMaker ;
+  jtbd:progressMakerDescription "OpenTelemetry instrumentation provides production debugging - traces show exact execution path and timing" ;
+  jtbd:progressMakerCategory "Observability" ;
+  .
+
+# ============================================================================
+# PERSONA 3: OPERATIONS ENGINEER
+# ============================================================================
+
+jtbd:Persona_OperationsEngineer
+  a jtbd:Persona ;
+  jtbd:personaName "Operations Engineer" ;
+  jtbd:personaDescription "Validates and deploys specifications to production environments. Ensures RDF-to-code transformations are correct, deployments are reliable, and observability is comprehensive. Monitors production reality and feeds learnings back into specifications." ;
+  jtbd:hasFunctionalJob jtbd:Job_OPS_ValidateSpecifications ;
+  jtbd:hasFunctionalJob jtbd:Job_OPS_DeployReliably ;
+  jtbd:hasFunctionalJob jtbd:Job_OPS_MonitorProduction ;
+  jtbd:hasEmotionalJob jtbd:EmotionalJob_OPS_ConfidenceInDeployments ;
+  jtbd:hasEmotionalJob jtbd:EmotionalJob_OPS_ControlOverSystems ;
+  jtbd:hasSocialJob jtbd:SocialJob_OPS_ReliabilityGuardian ;
+  jtbd:hasOutcome jtbd:Outcome_OPS_1 ;
+  jtbd:hasOutcome jtbd:Outcome_OPS_2 ;
+  jtbd:hasOutcome jtbd:Outcome_OPS_3 ;
+  jtbd:hasOutcome jtbd:Outcome_OPS_4 ;
+  jtbd:hasOutcome jtbd:Outcome_OPS_5 ;
+  jtbd:hasOutcome jtbd:Outcome_OPS_6 ;
+  jtbd:hasOutcome jtbd:Outcome_OPS_7 ;
+  jtbd:hasPainpoint jtbd:Pain_OPS_1 ;
+  jtbd:hasPainpoint jtbd:Pain_OPS_2 ;
+  jtbd:hasPainpoint jtbd:Pain_OPS_3 ;
+  jtbd:hasPainpoint jtbd:Pain_OPS_4 ;
+  jtbd:hasPainpoint jtbd:Pain_OPS_5 ;
+  jtbd:hasProgressMaker jtbd:Progress_OPS_1 ;
+  jtbd:hasProgressMaker jtbd:Progress_OPS_2 ;
+  jtbd:hasProgressMaker jtbd:Progress_OPS_3 ;
+  .
+
+# Functional Jobs - Operations Engineer
+jtbd:Job_OPS_ValidateSpecifications
+  a jtbd:FunctionalJob ;
+  jtbd:jobStatement "When specifications are ready for deployment, I want to validate RDF-to-code transformations, so I can ensure generated code is production-ready" ;
+  jtbd:jobDescription "Execute ggen sync to transform RDF to Markdown and code. Validate SHACL shape constraints, SPARQL query correctness, and template rendering. Run comprehensive test suites to verify generated code matches specifications. Check for security vulnerabilities, performance issues, and edge cases." ;
+  .
+
+jtbd:Job_OPS_DeployReliably
+  a jtbd:FunctionalJob ;
+  jtbd:jobStatement "When code is validated, I want to deploy reliably to production, so I can ensure zero-downtime releases" ;
+  jtbd:jobDescription "Deploy generated code to production environments with comprehensive observability. Ensure OpenTelemetry telemetry is configured, health checks are in place, and rollback procedures are ready. Validate dependencies, configurations, and infrastructure before cutover." ;
+  .
+
+jtbd:Job_OPS_MonitorProduction
+  a jtbd:FunctionalJob ;
+  jtbd:jobStatement "When systems are running, I want to monitor production reality, so I can feed learnings back into specifications" ;
+  jtbd:jobDescription "Monitor OpenTelemetry traces, metrics, and logs from production systems. Identify performance bottlenecks, error patterns, and usage anomalies. Translate production incidents into specification requirements (e.g., connection pooling limits, caching strategies, error handling)." ;
+  .
+
+# Emotional Jobs - Operations Engineer
+jtbd:EmotionalJob_OPS_ConfidenceInDeployments
+  a jtbd:EmotionalJob ;
+  jtbd:jobDescription "Feel confident deploying generated code to production because comprehensive validation and observability de-risk changes" ;
+  .
+
+jtbd:EmotionalJob_OPS_ControlOverSystems
+  a jtbd:EmotionalJob ;
+  jtbd:jobDescription "Feel in control of production systems with real-time telemetry and the ability to quickly diagnose issues" ;
+  .
+
+# Social Jobs - Operations Engineer
+jtbd:SocialJob_OPS_ReliabilityGuardian
+  a jtbd:SocialJob ;
+  jtbd:jobDescription "Be perceived as the reliability guardian who ensures production stability and transforms incidents into specification improvements" ;
+  .
+
+# Outcomes - Operations Engineer
+jtbd:Outcome_OPS_1
+  a jtbd:Outcome ;
+  jtbd:outcomeStatement "Minimize time to validate specification before production deployment" ;
+  jtbd:outcomeMetric "Time" ;
+  jtbd:currentBaseline "2-3 hours running manual validation checklists" ;
+  jtbd:targetValue "< 30 minutes with automated BPMN validation workflows" ;
+  .
+
+jtbd:Outcome_OPS_2
+  a jtbd:Outcome ;
+  jtbd:outcomeStatement "Maximize confidence that generated code is production-ready" ;
+  jtbd:outcomeMetric "Reliability" ;
+  jtbd:currentBaseline "15-20% of deployments require hotfixes within 24 hours" ;
+  jtbd:targetValue "< 3% hotfixes with comprehensive pre-deployment validation" ;
+  .
+
+jtbd:Outcome_OPS_3
+  a jtbd:Outcome ;
+  jtbd:outcomeStatement "Minimize mean time to detect (MTTD) production issues" ;
+  jtbd:outcomeMetric "Time" ;
+  jtbd:currentBaseline "15-30 minutes to detect anomalies via manual monitoring" ;
+  jtbd:targetValue "< 2 minutes with OTEL alerting and automated anomaly detection" ;
+  .
+
+jtbd:Outcome_OPS_4
+  a jtbd:Outcome ;
+  jtbd:outcomeStatement "Minimize mean time to diagnose (MTTD) production issues" ;
+  jtbd:outcomeMetric "Time" ;
+  jtbd:currentBaseline "45-60 minutes to diagnose root cause with logs" ;
+  jtbd:targetValue "10-15 minutes with distributed traces and span correlation" ;
+  .
+
+jtbd:Outcome_OPS_5
+  a jtbd:Outcome ;
+  jtbd:outcomeStatement "Maximize observability coverage across all operations" ;
+  jtbd:outcomeMetric "Observability" ;
+  jtbd:currentBaseline "60% of operations emit telemetry (inconsistent)" ;
+  jtbd:targetValue "100% with specification-driven telemetry patterns" ;
+  .
+
+jtbd:Outcome_OPS_6
+  a jtbd:Outcome ;
+  jtbd:outcomeStatement "Minimize time to convert production incident into specification requirement" ;
+  jtbd:outcomeMetric "Time" ;
+  jtbd:currentBaseline "2-3 hours to document incident and update specs manually" ;
+  jtbd:targetValue "< 30 minutes with incident-to-RDF transformation templates" ;
+  .
+
+jtbd:Outcome_OPS_7
+  a jtbd:Outcome ;
+  jtbd:outcomeStatement "Maximize reliability of specification-to-production pipeline" ;
+  jtbd:outcomeMetric "Reliability" ;
+  jtbd:currentBaseline "5-10% of deployments fail due to configuration drift" ;
+  jtbd:targetValue "< 1% failures with infrastructure-as-code from specifications" ;
+  .
+
+# Painpoints - Operations Engineer
+jtbd:Pain_OPS_1
+  a jtbd:Painpoint ;
+  jtbd:painpointDescription "OTEL validation is manual and time-consuming - must check telemetry configuration, span coverage, metrics emission" ;
+  jtbd:impactLevel "Critical" ;
+  .
+
+jtbd:Pain_OPS_2
+  a jtbd:Painpoint ;
+  jtbd:painpointDescription "No automated workflow to validate external project dependencies (ggen, Docker, SpiffWorkflow, pm4py)" ;
+  jtbd:impactLevel "High" ;
+  .
+
+jtbd:Pain_OPS_3
+  a jtbd:Painpoint ;
+  jtbd:painpointDescription "Production incidents require manual analysis - no automated mapping from traces to specification gaps" ;
+  jtbd:impactLevel "High" ;
+  .
+
+jtbd:Pain_OPS_4
+  a jtbd:Painpoint ;
+  jtbd:painpointDescription "Rollback procedures not generated from specifications - must maintain separate runbooks" ;
+  jtbd:impactLevel "Medium" ;
+  .
+
+jtbd:Pain_OPS_5
+  a jtbd:Painpoint ;
+  jtbd:painpointDescription "Infrastructure drift between specification and production - no continuous validation of deployed state" ;
+  jtbd:impactLevel "High" ;
+  .
+
+# Progress Makers - Operations Engineer
+jtbd:Progress_OPS_1
+  a jtbd:ProgressMaker ;
+  jtbd:progressMakerDescription "Automated BPMN workflows validate entire stack (Docker, OTEL, ggen, Weaver) in minutes instead of hours" ;
+  jtbd:progressMakerCategory "Time Savings" ;
+  .
+
+jtbd:Progress_OPS_2
+  a jtbd:ProgressMaker ;
+  jtbd:progressMakerDescription "OpenTelemetry traces provide complete visibility into RDF transformation pipeline and runtime execution" ;
+  jtbd:progressMakerCategory "Observability" ;
+  .
+
+jtbd:Progress_OPS_3
+  a jtbd:ProgressMaker ;
+  jtbd:progressMakerDescription "Bidirectional feedback from production metrics into specifications prevents recurring issues" ;
+  jtbd:progressMakerCategory "Quality Improvement" ;
+  .
+
+# ============================================================================
+# PERSONA 4: DATA ANALYST
+# ============================================================================
+
+jtbd:Persona_DataAnalyst
+  a jtbd:Persona ;
+  jtbd:personaName "Data Analyst" ;
+  jtbd:personaDescription "Extracts insights from generated code, telemetry data, and process mining. Analyzes RDF transformations, SPARQL queries, and observability traces to understand system behavior. Uses BPMN process models and pm4py to identify bottlenecks and optimization opportunities." ;
+  jtbd:hasFunctionalJob jtbd:Job_DA_AnalyzeGeneration ;
+  jtbd:hasFunctionalJob jtbd:Job_DA_ExtractInsights ;
+  jtbd:hasFunctionalJob jtbd:Job_DA_OptimizePerformance ;
+  jtbd:hasEmotionalJob jtbd:EmotionalJob_DA_ConfidenceInData ;
+  jtbd:hasEmotionalJob jtbd:EmotionalJob_DA_ExcitementInDiscovery ;
+  jtbd:hasSocialJob jtbd:SocialJob_DA_InsightProvider ;
+  jtbd:hasOutcome jtbd:Outcome_DA_1 ;
+  jtbd:hasOutcome jtbd:Outcome_DA_2 ;
+  jtbd:hasOutcome jtbd:Outcome_DA_3 ;
+  jtbd:hasOutcome jtbd:Outcome_DA_4 ;
+  jtbd:hasOutcome jtbd:Outcome_DA_5 ;
+  jtbd:hasOutcome jtbd:Outcome_DA_6 ;
+  jtbd:hasOutcome jtbd:Outcome_DA_7 ;
+  jtbd:hasPainpoint jtbd:Pain_DA_1 ;
+  jtbd:hasPainpoint jtbd:Pain_DA_2 ;
+  jtbd:hasPainpoint jtbd:Pain_DA_3 ;
+  jtbd:hasPainpoint jtbd:Pain_DA_4 ;
+  jtbd:hasPainpoint jtbd:Pain_DA_5 ;
+  jtbd:hasProgressMaker jtbd:Progress_DA_1 ;
+  jtbd:hasProgressMaker jtbd:Progress_DA_2 ;
+  jtbd:hasProgressMaker jtbd:Progress_DA_3 ;
+  .
+
+# Functional Jobs - Data Analyst
+jtbd:Job_DA_AnalyzeGeneration
+  a jtbd:FunctionalJob ;
+  jtbd:jobStatement "When code is generated from RDF, I want to analyze transformation pipeline, so I can understand what code was produced and why" ;
+  jtbd:jobDescription "Analyze RDF-to-code transformations via ggen pipeline. Examine SPARQL queries, template rendering, and generated artifacts. Trace how semantic definitions map to code constructs. Identify patterns, reuse opportunities, and transformation bottlenecks." ;
+  .
+
+jtbd:Job_DA_ExtractInsights
+  a jtbd:FunctionalJob ;
+  jtbd:jobStatement "When systems are running, I want to extract insights from telemetry data, so I can identify usage patterns and performance characteristics" ;
+  jtbd:jobDescription "Query OpenTelemetry traces, metrics, and events to understand system behavior. Analyze span durations, error rates, and resource utilization. Build dashboards showing RDF specification usage, command execution frequency, and transformation performance." ;
+  .
+
+jtbd:Job_DA_OptimizePerformance
+  a jtbd:FunctionalJob ;
+  jtbd:jobStatement "When bottlenecks are identified, I want to optimize performance, so I can improve system throughput and latency" ;
+  jtbd:jobDescription "Use process mining (pm4py) to discover BPMN process models from event logs. Identify performance bottlenecks, parallel execution opportunities, and optimization targets. Analyze subprocess execution times, cache hit rates, and I/O patterns." ;
+  .
+
+# Emotional Jobs - Data Analyst
+jtbd:EmotionalJob_DA_ConfidenceInData
+  a jtbd:EmotionalJob ;
+  jtbd:jobDescription "Feel confident in data quality because telemetry is comprehensive, structured, and semantically meaningful" ;
+  .
+
+jtbd:EmotionalJob_DA_ExcitementInDiscovery
+  a jtbd:EmotionalJob ;
+  jtbd:jobDescription "Feel excitement discovering hidden patterns and optimization opportunities through semantic analysis" ;
+  .
+
+# Social Jobs - Data Analyst
+jtbd:SocialJob_DA_InsightProvider
+  a jtbd:SocialJob ;
+  jtbd:jobDescription "Be perceived as the data-driven insight provider who uncovers optimization opportunities and validates system health" ;
+  .
+
+# Outcomes - Data Analyst
+jtbd:Outcome_DA_1
+  a jtbd:Outcome ;
+  jtbd:outcomeStatement "Minimize time to extract meaningful insights from telemetry data" ;
+  jtbd:outcomeMetric "Time" ;
+  jtbd:currentBaseline "2-3 hours to query traces and build analysis notebooks" ;
+  jtbd:targetValue "< 30 minutes with pre-built SPARQL queries and visualization templates" ;
+  .
+
+jtbd:Outcome_DA_2
+  a jtbd:Outcome ;
+  jtbd:outcomeStatement "Maximize visibility into RDF transformation pipeline behavior" ;
+  jtbd:outcomeMetric "Observability" ;
+  jtbd:currentBaseline "Limited visibility - only see ggen sync success/failure" ;
+  jtbd:targetValue "Full pipeline traces showing SHACL validation, SPARQL execution, template rendering timings" ;
+  .
+
+jtbd:Outcome_DA_3
+  a jtbd:Outcome ;
+  jtbd:outcomeStatement "Minimize time to identify performance bottlenecks via process mining" ;
+  jtbd:outcomeMetric "Time" ;
+  jtbd:currentBaseline "4-5 hours to load event logs, discover BPMN, analyze variants" ;
+  jtbd:targetValue "< 1 hour with automated process discovery and bottleneck detection" ;
+  .
+
+jtbd:Outcome_DA_4
+  a jtbd:Outcome ;
+  jtbd:outcomeStatement "Maximize accuracy of performance predictions for RDF changes" ;
+  jtbd:outcomeMetric "Quality" ;
+  jtbd:currentBaseline "30% accuracy predicting impact of ontology changes" ;
+  jtbd:targetValue "85% accuracy with historical telemetry analysis and simulation" ;
+  .
+
+jtbd:Outcome_DA_5
+  a jtbd:Outcome ;
+  jtbd:outcomeStatement "Minimize data quality issues in telemetry collection" ;
+  jtbd:outcomeMetric "Quality" ;
+  jtbd:currentBaseline "15-20% of spans missing critical attributes (inconsistent instrumentation)" ;
+  jtbd:targetValue "< 3% missing data with specification-driven telemetry schemas" ;
+  .
+
+jtbd:Outcome_DA_6
+  a jtbd:Outcome ;
+  jtbd:outcomeStatement "Maximize reusability of analytical queries across projects" ;
+  jtbd:outcomeMetric "Efficiency" ;
+  jtbd:currentBaseline "20% query reuse (mostly copy-paste and adapt)" ;
+  jtbd:targetValue "70% reuse with shared SPARQL query library and semantic conventions" ;
+  .
+
+jtbd:Outcome_DA_7
+  a jtbd:Outcome ;
+  jtbd:outcomeStatement "Minimize effort to build performance dashboards from telemetry" ;
+  jtbd:outcomeMetric "Time" ;
+  jtbd:currentBaseline "3-4 hours to build Grafana dashboard from scratch" ;
+  jtbd:targetValue "< 30 minutes with generated dashboards from RDF specifications" ;
+  .
+
+# Painpoints - Data Analyst
+jtbd:Pain_DA_1
+  a jtbd:Painpoint ;
+  jtbd:painpointDescription "Telemetry attributes are inconsistent - different commands use different naming conventions for similar data" ;
+  jtbd:impactLevel "High" ;
+  .
+
+jtbd:Pain_DA_2
+  a jtbd:Painpoint ;
+  jtbd:painpointDescription "No semantic layer over telemetry data - must manually map span names to business concepts" ;
+  jtbd:impactLevel "Medium" ;
+  .
+
+jtbd:Pain_DA_3
+  a jtbd:Painpoint ;
+  jtbd:painpointDescription "Process mining requires manual event log preparation - no automated export from OTEL to pm4py format" ;
+  jtbd:impactLevel "Critical" ;
+  .
+
+jtbd:Pain_DA_4
+  a jtbd:Painpoint ;
+  jtbd:painpointDescription "RDF transformation pipeline is opaque - can't trace how SPARQL query results map to template variables" ;
+  jtbd:impactLevel "High" ;
+  .
+
+jtbd:Pain_DA_5
+  a jtbd:Painpoint ;
+  jtbd:painpointDescription "No automated analysis of generated code quality - must manually review output for patterns and issues" ;
+  jtbd:impactLevel "Medium" ;
+  .
+
+# Progress Makers - Data Analyst
+jtbd:Progress_DA_1
+  a jtbd:ProgressMaker ;
+  jtbd:progressMakerDescription "Semantic conventions from RDF specifications ensure consistent, queryable telemetry across all operations" ;
+  jtbd:progressMakerCategory "Data Quality" ;
+  .
+
+jtbd:Progress_DA_2
+  a jtbd:ProgressMaker ;
+  jtbd:progressMakerDescription "OpenTelemetry traces provide end-to-end visibility into specification-to-code transformation pipeline" ;
+  jtbd:progressMakerCategory "Observability" ;
+  .
+
+jtbd:Progress_DA_3
+  a jtbd:ProgressMaker ;
+  jtbd:progressMakerDescription "SPARQL queries over RDF specifications enable powerful semantic analysis and pattern discovery" ;
+  jtbd:progressMakerCategory "Analytical Power" ;
+  .
+
+# ============================================================================
+# CROSS-PERSONA INSIGHTS
+# ============================================================================
+
+jtbd:CrossPersonaInsight_1
+  a sk:Documentation ;
+  rdfs:label "Shared Painpoint: Specification Validation Feedback Loop" ;
+  sk:documentDescription "All personas struggle with delayed feedback from RDF validation - errors only surface during ggen sync, not during authoring. This creates long iteration cycles and reduces confidence in specifications." ;
+  .
+
+jtbd:CrossPersonaInsight_2
+  a sk:Documentation ;
+  rdfs:label "Shared Outcome: Time to Production" ;
+  sk:documentDescription "All personas prioritize minimizing time from requirements to production-ready code. Ontology Designers want faster RDF authoring (6h→2h), CLI Developers want faster implementation (6h→2h), Operations Engineers want faster validation (3h→30m)." ;
+  .
+
+jtbd:CrossPersonaInsight_3
+  a sk:Documentation ;
+  rdfs:label "Shared Progress Maker: Deterministic Generation" ;
+  sk:documentDescription "The core value proposition - deterministic code generation from RDF - resonates across all personas. It eliminates specification drift, ensures type safety, enables multi-language support, and provides semantic traceability." ;
+  .
+
+jtbd:CrossPersonaInsight_4
+  a sk:Documentation ;
+  rdfs:label "Critical Gap: Automated Testing" ;
+  sk:documentDescription "Test generation is the most critical gap. Ontology Designers can't validate SPARQL queries, CLI Developers must manually write tests, Operations Engineers lack pre-deployment validation, Data Analysts can't verify telemetry quality." ;
+  .
+
+jtbd:CrossPersonaInsight_5
+  a sk:Documentation ;
+  rdfs:label "Opportunity: Specification-Driven Telemetry" ;
+  sk:documentDescription "All personas benefit from comprehensive, consistent telemetry. Ontology Designers can encode telemetry requirements in RDF, CLI Developers get generated instrumentation, Operations Engineers get observability, Data Analysts get clean data." ;
+  .
+
+# ============================================================================
+# PRIORITIZED IMPROVEMENTS (Based on Impact × Frequency)
+# ============================================================================
+
+jtbd:ImprovementPriority_1
+  a sk:Documentation ;
+  rdfs:label "Priority 1: Real-time RDF Validation" ;
+  sk:documentDescription "Provide real-time SHACL validation and SPARQL testing during RDF authoring. Impacts: Ontology Designers (Critical), CLI Developers (High), Operations Engineers (High). Estimated impact: 40% reduction in specification iteration time." ;
+  .
+
+jtbd:ImprovementPriority_2
+  a sk:Documentation ;
+  rdfs:label "Priority 2: Test Generation from Specifications" ;
+  sk:documentDescription "Generate test stubs, fixtures, and validation scenarios from RDF specifications. Impacts: CLI Developers (Critical), Operations Engineers (High), Ontology Designers (Medium). Estimated impact: 60% reduction in test authoring time, 30% increase in coverage." ;
+  .
+
+jtbd:ImprovementPriority_3
+  a sk:Documentation ;
+  rdfs:label "Priority 3: Automated OTEL Validation Workflows" ;
+  sk:documentDescription "BPMN workflows for comprehensive OTEL validation (already implemented in specify wf validate). Impacts: Operations Engineers (Critical), Data Analysts (High). Estimated impact: 80% reduction in validation time (3h→30m)." ;
+  .
+
+jtbd:ImprovementPriority_4
+  a sk:Documentation ;
+  rdfs:label "Priority 4: Three-Tier Scaffolding Generator" ;
+  sk:documentDescription "Generate commands/, ops/, runtime/ structure with telemetry boilerplate from RDF command specifications. Impacts: CLI Developers (High). Estimated impact: 70% reduction in boilerplate authoring time." ;
+  .
+
+jtbd:ImprovementPriority_5
+  a sk:Documentation ;
+  rdfs:label "Priority 5: Semantic Telemetry Layer" ;
+  sk:documentDescription "Map OTEL spans to RDF ontology concepts, enabling semantic queries over telemetry. Impacts: Data Analysts (High), Operations Engineers (Medium). Estimated impact: 50% reduction in analysis time, 90% improvement in data consistency." ;
+  .
+
+jtbd:ImprovementPriority_6
+  a sk:Documentation ;
+  rdfs:label "Priority 6: Process Mining Integration" ;
+  sk:documentDescription "Automated export from OTEL traces to pm4py event logs for BPMN discovery. Impacts: Data Analysts (Critical), Operations Engineers (Medium). Estimated impact: 75% reduction in process mining preparation time (5h→1h)." ;
+  .
+
+jtbd:ImprovementPriority_7
+  a sk:Documentation ;
+  rdfs:label "Priority 7: Architecture Validator" ;
+  sk:documentDescription "Automated detection of three-tier architecture violations (subprocess in ops, logic in commands). Impacts: CLI Developers (High). Estimated impact: 100% reduction in architecture violations (5→0 per feature)." ;
+  .
+
+# ============================================================================
+# End of JTBD Specification
+# ============================================================================

@@ -13,20 +13,20 @@ from .templates import (
 __all__ = [
     # Constants
     "AGENT_CONFIG",
-    "SCRIPT_TYPE_CHOICES",
-    "CLAUDE_LOCAL_PATH",
     "BANNER",
+    "CLAUDE_LOCAL_PATH",
+    "SCRIPT_TYPE_CHOICES",
     "TAGLINE",
     # Progress
     "StepTracker",
-    "get_key",
-    "select_with_arrows",
-    # Commands
-    "run_command",
     "check_tool",
+    "download_and_extract_template",
+    "ensure_executable_scripts",
+    "get_key",
     # Templates
     "handle_vscode_settings",
     "merge_json_files",
-    "download_and_extract_template",
-    "ensure_executable_scripts",
+    # Commands
+    "run_command",
+    "select_with_arrows",
 ]

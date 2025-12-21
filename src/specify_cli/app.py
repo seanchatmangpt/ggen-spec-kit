@@ -67,6 +67,7 @@ from specify_cli.commands import (
     check_app,
     ggen_app,
     init_app,
+    jtbd_app,
     spiff_app,
     version_app,
     version_callback,
@@ -104,6 +105,9 @@ app.add_typer(spiff_app, name="wf", help="Workflow automation (SpiffWorkflow)")
 # ggen commands (RDF-first code generation)
 app.add_typer(ggen_app, name="ggen", help="RDF-first code generation (ggen v5.0.2)")
 
+# JTBD commands (Jobs-to-be-Done metrics)
+app.add_typer(jtbd_app, name="jtbd", help="Jobs-to-be-Done (JTBD) metrics tracking")
+
 
 # Try to add process mining commands if pm4py is available
 try:
@@ -122,6 +126,25 @@ try:
     app.add_typer(dspy_app, name="dspy", help="DSPy LLM optimization")
 except ImportError:
     pass  # dspy not installed
+
+
+# Try to add Hyperdimensional Dashboard commands if dependencies are available
+try:
+    from specify_cli.commands.dashboards import app as dashboards_app
+
+    app.add_typer(
+        dashboards_app, name="dashboard", help="Hyperdimensional dashboards & observability"
+    )
+except ImportError:
+    pass  # numpy/scikit-learn not installed
+
+# Try to add Hyperdimensional analysis commands if dependencies are available
+try:
+    from specify_cli.commands.hd import app as hd_app
+
+    app.add_typer(hd_app, name="hd", help="Hyperdimensional analysis & decision support")
+except ImportError:
+    pass  # numpy/scikit-learn not installed
 
 
 # uvmgr commands - 13 core commands for project management

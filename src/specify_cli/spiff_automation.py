@@ -7,12 +7,13 @@ All workflows execute autonomously via SpiffWorkflow BPMN execution.
 NO HUMAN INTERVENTION POINTS.
 """
 
-from pathlib import Path
-from typing import Dict, Any
-from SpiffWorkflow.bpmn.workflow import BpmnWorkflow
-from SpiffWorkflow.bpmn.parser.BpmnParser import BpmnParser
-from SpiffWorkflow.task import TaskState
 import logging
+from pathlib import Path
+from typing import Any
+
+from SpiffWorkflow.bpmn.parser.BpmnParser import BpmnParser
+from SpiffWorkflow.bpmn.workflow import BpmnWorkflow
+from SpiffWorkflow.task import TaskState
 
 logger = logging.getLogger(__name__)
 
@@ -52,15 +53,17 @@ class SelfAutomatingSystem:
                 if process_ids:
                     spec = parser.get_spec(process_ids[0])
                     self.workflows[workflow_name] = {
-                        'spec': spec,
-                        'file': bpmn_file,
-                        'process_id': process_ids[0]
+                        "spec": spec,
+                        "file": bpmn_file,
+                        "process_id": process_ids[0],
                     }
                     logger.info(f"Loaded workflow: {workflow_name}")
             except Exception as e:
-                logger.error(f"Failed to load workflow {workflow_name}: {e}")
+                logger.exception(f"Failed to load workflow {workflow_name}: {e}")
 
-    def execute_3t_pipeline(self, ontology_path: str, config_path: str = "ggen.toml") -> Dict[str, Any]:
+    def execute_3t_pipeline(
+        self, ontology_path: str, config_path: str = "ggen.toml"
+    ) -> dict[str, Any]:
         """
         Execute the 3T transformation pipeline (μ₁ → μ₂ → μ₃ → μ₄ → μ₅).
 
@@ -75,26 +78,27 @@ class SelfAutomatingSystem:
         Returns:
             Execution results including idempotence verification
         """
-        if '3t_transformation_pipeline' not in self.workflows:
+        if "3t_transformation_pipeline" not in self.workflows:
             raise ValueError("3T transformation pipeline workflow not loaded")
 
-        workflow_spec = self.workflows['3t_transformation_pipeline']['spec']
-        workflow = BpmnWorkflow(workflow_spec, {
-            'ontology_path': ontology_path,
-            'config_path': config_path
-        })
+        workflow_spec = self.workflows["3t_transformation_pipeline"]["spec"]
+        workflow = BpmnWorkflow(
+            workflow_spec, {"ontology_path": ontology_path, "config_path": config_path}
+        )
 
         logger.info("Starting 3T transformation pipeline (μ)")
 
         # Execute workflow to completion (NO HUMAN BLOCKS)
         while not workflow.is_completed():
-            ready_tasks = [t for t in workflow.get_tasks(state=TaskState.READY)]
+            ready_tasks = list(workflow.get_tasks(state=TaskState.READY))
 
             if not ready_tasks:
                 break
 
             for task in ready_tasks:
-                task_name = task.task_spec.name if hasattr(task.task_spec, 'name') else str(task.task_spec)
+                task_name = (
+                    task.task_spec.name if hasattr(task.task_spec, "name") else str(task.task_spec)
+                )
                 logger.info(f"Executing: {task_name}")
 
                 # Execute task (SpiffWorkflow handles script execution)
@@ -106,31 +110,31 @@ class SelfAutomatingSystem:
         # Extract results
         final_task_data = {}
         for task in workflow.get_tasks(state=TaskState.COMPLETED):
-            if hasattr(task, 'data'):
+            if hasattr(task, "data"):
                 final_task_data.update(task.data)
 
         results = {
-            'completed': workflow.is_completed(),
-            'pipeline_executed': True,
-            'stages': {
-                'mu1_normalization': final_task_data.get('validation_passed', False),
-                'mu2_extraction': final_task_data.get('extraction_passed', False),
-                'mu3_emission': final_task_data.get('emission_passed', False),
-                'mu4_canonicalization': final_task_data.get('canonicalization_passed', False),
-                'mu5_receipt': final_task_data.get('receipt_passed', False)
+            "completed": workflow.is_completed(),
+            "pipeline_executed": True,
+            "stages": {
+                "mu1_normalization": final_task_data.get("validation_passed", False),
+                "mu2_extraction": final_task_data.get("extraction_passed", False),
+                "mu3_emission": final_task_data.get("emission_passed", False),
+                "mu4_canonicalization": final_task_data.get("canonicalization_passed", False),
+                "mu5_receipt": final_task_data.get("receipt_passed", False),
             },
-            'idempotent_verified': final_task_data.get('idempotent_verified', False),
-            'receipt_hash': final_task_data.get('receipt_hash'),
-            'auto_rollback': final_task_data.get('auto_rollback_executed', False),
-            'human_intervention': False  # ALWAYS False - humans are not allowed
+            "idempotent_verified": final_task_data.get("idempotent_verified", False),
+            "receipt_hash": final_task_data.get("receipt_hash"),
+            "auto_rollback": final_task_data.get("auto_rollback_executed", False),
+            "human_intervention": False,  # ALWAYS False - humans are not allowed
         }
 
-        if results['auto_rollback']:
+        if results["auto_rollback"]:
             logger.warning(f"Auto-rollback executed: {final_task_data.get('rollback_reason')}")
 
         return results
 
-    def validate_change_request(self, change_request_rdf: str) -> Dict[str, Any]:
+    def validate_change_request(self, change_request_rdf: str) -> dict[str, Any]:
         """
         Validate a change request via HDITC proficiency gate.
 
@@ -149,25 +153,25 @@ class SelfAutomatingSystem:
         Returns:
             Validation results (approved/rejected + reasons)
         """
-        if 'hditc_validation_gate' not in self.workflows:
+        if "hditc_validation_gate" not in self.workflows:
             raise ValueError("HDITC validation gate workflow not loaded")
 
-        workflow_spec = self.workflows['hditc_validation_gate']['spec']
-        workflow = BpmnWorkflow(workflow_spec, {
-            'change_request': change_request_rdf
-        })
+        workflow_spec = self.workflows["hditc_validation_gate"]["spec"]
+        workflow = BpmnWorkflow(workflow_spec, {"change_request": change_request_rdf})
 
         logger.info("Validating change request via HDITC gate")
 
         # Execute workflow to completion
         while not workflow.is_completed():
-            ready_tasks = [t for t in workflow.get_tasks(state=TaskState.READY)]
+            ready_tasks = list(workflow.get_tasks(state=TaskState.READY))
 
             if not ready_tasks:
                 break
 
             for task in ready_tasks:
-                task_name = task.task_spec.name if hasattr(task.task_spec, 'name') else str(task.task_spec)
+                task_name = (
+                    task.task_spec.name if hasattr(task.task_spec, "name") else str(task.task_spec)
+                )
                 logger.info(f"HDITC Gate: {task_name}")
 
                 task.run()
@@ -177,27 +181,27 @@ class SelfAutomatingSystem:
         # Extract results
         final_task_data = {}
         for task in workflow.get_tasks(state=TaskState.COMPLETED):
-            if hasattr(task, 'data'):
+            if hasattr(task, "data"):
                 final_task_data.update(task.data)
 
         # Determine outcome
-        if final_task_data.get('approval_record'):
-            status = 'APPROVED'
-            record = final_task_data['approval_record']
+        if final_task_data.get("approval_record"):
+            status = "APPROVED"
+            record = final_task_data["approval_record"]
         else:
-            status = 'REJECTED'
-            record = final_task_data.get('rejection_record', {})
+            status = "REJECTED"
+            record = final_task_data.get("rejection_record", {})
 
         results = {
-            'status': status,
-            'record': record,
-            'hditc_proficient': final_task_data.get('hditc_proficient', False),
-            'affected_dimensions': final_task_data.get('affected_dimensions'),
-            'information_loss': final_task_data.get('information_loss'),
-            'queue_for_mu': final_task_data.get('queue_for_mu_pipeline', False)
+            "status": status,
+            "record": record,
+            "hditc_proficient": final_task_data.get("hditc_proficient", False),
+            "affected_dimensions": final_task_data.get("affected_dimensions"),
+            "information_loss": final_task_data.get("information_loss"),
+            "queue_for_mu": final_task_data.get("queue_for_mu_pipeline", False),
         }
 
-        if status == 'REJECTED':
+        if status == "REJECTED":
             logger.warning(f"Change request REJECTED: {record.get('rejection_reason')}")
         else:
             logger.info("Change request APPROVED - queued for μ pipeline")
@@ -219,8 +223,8 @@ class SelfAutomatingSystem:
             ontology_path: Path to watch for changes
             watch_interval: Seconds between checks (default: 60)
         """
-        import time
         import hashlib
+        import time
         from pathlib import Path
 
         logger.info("Starting continuous self-automating execution loop")
@@ -241,7 +245,7 @@ class SelfAutomatingSystem:
                         # Execute 3T pipeline automatically
                         results = self.execute_3t_pipeline(str(ontology_file))
 
-                        if results['completed'] and not results['auto_rollback']:
+                        if results["completed"] and not results["auto_rollback"]:
                             logger.info("3T pipeline completed successfully")
                             logger.info(f"Idempotence verified: {results['idempotent_verified']}")
                             logger.info(f"Receipt hash: {results['receipt_hash']}")
@@ -258,12 +262,12 @@ class SelfAutomatingSystem:
                 logger.info("Continuous execution loop stopped by interrupt")
                 break
             except Exception as e:
-                logger.error(f"Error in continuous execution loop: {e}")
+                logger.exception(f"Error in continuous execution loop: {e}")
                 # Continue running despite errors (self-healing)
                 time.sleep(watch_interval)
 
 
-def create_self_automating_cli():
+def create_self_automating_cli() -> None:
     """
     Create CLI commands for self-automating system.
 
@@ -278,7 +282,7 @@ def create_self_automating_cli():
     @app.command("pipeline")
     def run_pipeline(
         ontology: str = typer.Argument(..., help="RDF ontology file path"),
-        config: str = typer.Option("ggen.toml", help="Configuration file")
+        config: str = typer.Option("ggen.toml", help="Configuration file"),
     ) -> None:
         """Execute 3T transformation pipeline (μ) on RDF ontology."""
         system = SelfAutomatingSystem()
@@ -286,7 +290,7 @@ def create_self_automating_cli():
 
         results = system.execute_3t_pipeline(ontology, config)
 
-        if results['completed'] and not results['auto_rollback']:
+        if results["completed"] and not results["auto_rollback"]:
             console.print("[green]✓ Pipeline completed successfully[/green]")
             console.print(f"Receipt Hash: {results['receipt_hash']}")
             console.print(f"Idempotent: {results['idempotent_verified']}")
@@ -295,7 +299,7 @@ def create_self_automating_cli():
 
     @app.command("validate")
     def validate_request(
-        request_file: str = typer.Argument(..., help="RDF change request file")
+        request_file: str = typer.Argument(..., help="RDF change request file"),
     ) -> None:
         """Validate change request via HDITC proficiency gate."""
         system = SelfAutomatingSystem()
@@ -307,18 +311,18 @@ def create_self_automating_cli():
 
         results = system.validate_change_request(request_rdf)
 
-        if results['status'] == 'APPROVED':
-            console.print(f"[green]✓ APPROVED[/green]")
+        if results["status"] == "APPROVED":
+            console.print("[green]✓ APPROVED[/green]")
             console.print(f"Affected Dimensions: {results['affected_dimensions']}")
             console.print(f"Information Loss: {results['information_loss']:.4%}")
         else:
-            console.print(f"[red]✗ REJECTED[/red]")
+            console.print("[red]✗ REJECTED[/red]")
             console.print(f"Reason: {results['record'].get('rejection_reason')}")
 
     @app.command("watch")
     def watch_ontology(
         ontology: str = typer.Argument(..., help="RDF ontology file to watch"),
-        interval: int = typer.Option(60, help="Check interval in seconds")
+        interval: int = typer.Option(60, help="Check interval in seconds"),
     ) -> None:
         """Continuously watch ontology and auto-execute pipeline on changes."""
         system = SelfAutomatingSystem()

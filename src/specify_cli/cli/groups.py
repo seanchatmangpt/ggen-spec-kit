@@ -1,11 +1,11 @@
 """CLI group customizations."""
 
-from typer.core import TyperGroup
+from rich.align import Align
 from rich.console import Console
 from rich.text import Text
-from rich.align import Align
+from typer.core import TyperGroup
 
-from ..utils.constants import BANNER, TAGLINE
+from specify_cli.utils.constants import BANNER, TAGLINE
 
 console = Console()
 

@@ -19,39 +19,40 @@ Examples:
 """
 
 __all__ = [
+    "get_workflow_stats",
     "run_bpmn",
     "validate_bpmn_file",
-    "get_workflow_stats",
 ]
 
 # Lazy imports - SpiffWorkflow is optional
 _spiff_available = False
 try:
     import spiff
+
     _spiff_available = True
 except ImportError:
     pass
 
 
-def run_bpmn(*args, **kwargs):
+def run_bpmn(*args, **kwargs) -> None:
     """Execute a BPMN workflow (lazy loaded)."""
     if not _spiff_available:
         raise ImportError(
-            "SpiffWorkflow is not installed. "
-            "Install with: pip install specify-cli[spiff]"
+            "SpiffWorkflow is not installed. Install with: pip install specify-cli[spiff]"
         )
     from .runtime import run_bpmn as _run_bpmn
+
     return _run_bpmn(*args, **kwargs)
 
 
-def validate_bpmn_file(*args, **kwargs):
+def validate_bpmn_file(*args, **kwargs) -> None:
     """Validate a BPMN file (lazy loaded)."""
     if not _spiff_available:
         raise ImportError(
-            "SpiffWorkflow is not installed. "
-            "Install with: pip install specify-cli[spiff]"
+            "SpiffWorkflow is not installed. Install with: pip install specify-cli[spiff]"
         )
     from .runtime import validate_bpmn_file as _validate_bpmn_file
+
     return _validate_bpmn_file(*args, **kwargs)
 
 
@@ -59,8 +60,8 @@ def get_workflow_stats(*args, **kwargs):
     """Get workflow execution statistics (lazy loaded)."""
     if not _spiff_available:
         raise ImportError(
-            "SpiffWorkflow is not installed. "
-            "Install with: pip install specify-cli[spiff]"
+            "SpiffWorkflow is not installed. Install with: pip install specify-cli[spiff]"
         )
     from .runtime import get_workflow_stats as _get_workflow_stats
+
     return _get_workflow_stats(*args, **kwargs)

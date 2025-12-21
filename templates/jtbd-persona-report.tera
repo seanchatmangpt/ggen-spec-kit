@@ -1,0 +1,375 @@
+{# JTBD Persona Report Template
+   Generates detailed per-persona JTBD analysis and feature mapping
+
+   Expected SPARQL result variables:
+   - personaName: Customer segment/persona
+   - personaDescription: Persona details (optional)
+   - jobTitle: The job to be done
+   - jobDescription: Job details (optional)
+   - jobFrequency: How often job occurs (High, Medium, Low)
+   - jobImportance: How critical job is (Critical, High, Medium, Low)
+   - featureName: Feature addressing this job
+   - featureDescription: Feature details
+   - featureStatus: Status (Planned, In Progress, Released)
+   - outcome: Expected outcome
+   - outcomeMetric: Quantifiable success metric
+   - currentValue: Current measured performance (optional)
+   - targetValue: Target performance value
+   - successCriteria: How to measure success
+   - painpoint: Pain point being addressed
+   - painpointSeverity: Severity (Critical, High, Medium, Low)
+   - emotionalBenefit: Emotional benefit delivered
+   - satisfactionScore: User satisfaction (1-10 scale, optional)
+   - usageExample: Code/CLI example (optional)
+#}
+# JTBD Persona Report
+
+> **Focus**: Deep analysis of jobs, features, and outcomes for each customer persona
+
+**Report Generated**: {{ now() | date(format="%Y-%m-%d %H:%M") }}
+
+---
+
+## Overview
+
+{% set personas = results | map(attribute="personaName") | unique | sort %}
+{% set total_personas = personas | length %}
+
+**Total Personas Analyzed**: {{ total_personas }}
+
+### Persona Index
+
+{% for persona in personas %}
+{{ loop.index }}. [{{ persona }}](#{{ persona | slugify }})
+{% endfor %}
+
+---
+
+{% for persona in personas %}
+{% set persona_data = results | filter(attribute="personaName", value=persona) %}
+{% set persona_jobs = persona_data | map(attribute="jobTitle") | unique %}
+{% set persona_features = persona_data | map(attribute="featureName") | unique %}
+{% set persona_released = persona_data | filter(attribute="featureStatus", value="Released") %}
+
+## {{ persona }}
+
+{% set persona_desc = persona_data | first %}
+{% if persona_desc.personaDescription %}
+**Description**: {{ persona_desc.personaDescription }}
+{% endif %}
+
+### Quick Stats
+
+| Metric | Value |
+|--------|-------|
+| **Jobs to be Done** | {{ persona_jobs | length }} |
+| **Features Delivered** | {{ persona_released | length }} / {{ persona_features | length }} |
+| **Delivery Rate** | {{ (persona_released | length / persona_features | length * 100) | round(precision=1) }}% |
+{% set persona_satisfaction = persona_data | filter(attribute="satisfactionScore") %}
+{% if persona_satisfaction | length > 0 %}
+{% set total_sat = 0 %}
+{% set sat_count = 0 %}
+{% for item in persona_satisfaction %}
+{% set_global total_sat = total_sat + (item.satisfactionScore | float) %}
+{% set_global sat_count = sat_count + 1 %}
+{% endfor %}
+| **Avg Satisfaction** | {{ (total_sat / sat_count) | round(precision=1) }}/10 |
+{% endif %}
+
+---
+
+### Jobs Analysis
+
+#### Jobs by Priority
+
+{% set high_freq_critical = persona_data | filter(attribute="jobFrequency", value="High") | filter(attribute="jobImportance", value="Critical") | map(attribute="jobTitle") | unique %}
+{% set high_freq_high = persona_data | filter(attribute="jobFrequency", value="High") | filter(attribute="jobImportance", value="High") | map(attribute="jobTitle") | unique %}
+{% set medium_freq_high = persona_data | filter(attribute="jobFrequency", value="Medium") | filter(attribute="jobImportance", value="High") | map(attribute="jobTitle") | unique %}
+
+| Priority | Job Count | Status |
+|----------|-----------|--------|
+| **P0: Critical × High-Freq** | {{ high_freq_critical | length }} | {% if high_freq_critical | length > 0 %}🔴 Focus{% else %}✅{% endif %} |
+| **P1: High × High-Freq** | {{ high_freq_high | length }} | {% if high_freq_high | length > 3 %}⚠️{% else %}✅{% endif %} |
+| **P2: High × Medium-Freq** | {{ medium_freq_high | length }} | {% if medium_freq_high | length > 5 %}⚠️{% else %}✅{% endif %} |
+
+#### Complete Job List
+
+{% for job in persona_jobs %}
+{% set job_data = persona_data | filter(attribute="jobTitle", value=job) | first %}
+
+##### {{ job }}
+
+{% if job_data.jobDescription %}
+**Description**: {{ job_data.jobDescription }}
+{% endif %}
+
+**Priority**: {{ job_data.jobFrequency | default(value="Medium") }} Frequency × {{ job_data.jobImportance | default(value="Medium") }} Importance
+
+{% set job_features = persona_data | filter(attribute="jobTitle", value=job) %}
+**Features Addressing This Job**: {{ job_features | length }}
+
+| Feature | Status | Outcome | Progress |
+|---------|--------|---------|----------|
+{% for feature in job_features %}
+| {{ feature.featureName }} | {{ feature.featureStatus }} | {{ feature.outcome }} | {% if feature.currentValue and feature.targetValue %}{{ (feature.currentValue | float / feature.targetValue | float * 100) | round }}%{% else %}TBD{% endif %} |
+{% endfor %}
+
+{% endfor %}
+
+---
+
+### Pain Points
+
+#### Critical & High-Severity Pain Points
+
+{% set critical_pains = persona_data | filter(attribute="painpointSeverity", value="Critical") %}
+{% set high_pains = persona_data | filter(attribute="painpointSeverity", value="High") %}
+
+{% if critical_pains | length > 0 %}
+**Critical Severity** ({{ critical_pains | length }} pain points):
+
+{% for pain in critical_pains %}
+{% set pain_features = persona_data | filter(attribute="painpoint", value=pain.painpoint) %}
+{% set pain_resolved = pain_features | filter(attribute="featureStatus", value="Released") | length %}
+- **{{ pain.painpoint }}**
+  - Resolution: {% if pain_resolved == pain_features | length %}✅ Complete{% elif pain_resolved > 0 %}⚠️ Partial ({{ pain_resolved }}/{{ pain_features | length }}){% else %}🔴 Planned{% endif %}
+  - Features: {{ pain_features | map(attribute="featureName") | join(sep=", ") }}
+{% endfor %}
+{% endif %}
+
+{% if high_pains | length > 0 %}
+**High Severity** ({{ high_pains | length }} pain points):
+
+{% for pain in high_pains %}
+- **{{ pain.painpoint }}**
+  - Addressed by: {{ pain.featureName }} ({{ pain.featureStatus }})
+{% endfor %}
+{% endif %}
+
+{% if critical_pains | length == 0 and high_pains | length == 0 %}
+*No critical or high-severity pain points - excellent experience for {{ persona }}.*
+{% endif %}
+
+---
+
+### Outcomes & Performance
+
+#### Outcome Categories
+
+{% set persona_outcomes = persona_data | map(attribute="outcome") | unique %}
+
+{% for outcome in persona_outcomes %}
+{% set outcome_features = persona_data | filter(attribute="outcome", value=outcome) %}
+
+##### {{ outcome }}
+
+{% set outcome_with_metrics = outcome_features | filter(attribute="currentValue") | filter(attribute="targetValue") %}
+
+{% if outcome_with_metrics | length > 0 %}
+
+| Feature | Metric | Target | Current | Achievement |
+|---------|--------|--------|---------|-------------|
+{% for feature in outcome_with_metrics %}
+| {{ feature.featureName }} | {{ feature.outcomeMetric }} | {{ feature.targetValue }} | {{ feature.currentValue }} | {% if feature.currentValue | float >= feature.targetValue | float %}✅ {{ ((feature.currentValue | float / feature.targetValue | float) * 100) | round }}%{% else %}⚠️ {{ ((feature.currentValue | float / feature.targetValue | float) * 100) | round }}%{% endif %} |
+{% endfor %}
+
+{% set met_targets = 0 %}
+{% for feature in outcome_with_metrics %}
+{% if feature.currentValue | float >= feature.targetValue | float %}
+{% set_global met_targets = met_targets + 1 %}
+{% endif %}
+{% endfor %}
+
+**Target Achievement**: {{ (met_targets / outcome_with_metrics | length * 100) | round }}% ({{ met_targets }}/{{ outcome_with_metrics | length }})
+
+{% else %}
+
+**Features**: {{ outcome_features | map(attribute="featureName") | join(sep=", ") }}
+
+*No current metrics available. Implement tracking to measure impact.*
+
+{% endif %}
+
+{% endfor %}
+
+---
+
+### Feature Details
+
+#### Released Features ({{ persona_released | length }})
+
+{% for feature_name in persona_released | map(attribute="featureName") | unique %}
+{% set feature = persona_released | filter(attribute="featureName", value=feature_name) | first %}
+
+##### {{ feature.featureName }}
+
+**Job**: {{ feature.jobTitle }}
+
+**Outcome**: {{ feature.outcome }}
+
+{% if feature.featureDescription %}
+{{ feature.featureDescription }}
+{% endif %}
+
+**Success Criteria**: {{ feature.successCriteria | default(value="TBD") }}
+- Target: {{ feature.targetValue | default(value="TBD") }}
+- Current: {{ feature.currentValue | default(value="Not measured") }}
+
+{% if feature.emotionalBenefit %}
+**Emotional Benefit**: {{ feature.emotionalBenefit }}
+{% endif %}
+
+{% if feature.usageExample %}
+**Usage Example**:
+```
+{{ feature.usageExample }}
+```
+{% endif %}
+
+{% endfor %}
+
+#### In Progress ({{ persona_data | filter(attribute="featureStatus", value="In Progress") | map(attribute="featureName") | unique | length }})
+
+{% set in_progress = persona_data | filter(attribute="featureStatus", value="In Progress") | map(attribute="featureName") | unique %}
+{% for feature_name in in_progress %}
+{% set feature = persona_data | filter(attribute="featureName", value=feature_name) | first %}
+- **{{ feature.featureName }}** - {{ feature.jobTitle }}
+  - Outcome: {{ feature.outcome }}
+{% endfor %}
+
+---
+
+### Emotional Impact
+
+{% set benefits = persona_data | filter(attribute="emotionalBenefit") | map(attribute="emotionalBenefit") | unique %}
+
+**Emotional Benefits Delivered**:
+
+{% for benefit in benefits %}
+{% set benefit_features = persona_data | filter(attribute="emotionalBenefit", value=benefit) %}
+- **{{ benefit }}**
+  - Delivered by: {{ benefit_features | map(attribute="featureName") | join(sep=", ") }}
+{% endfor %}
+
+---
+
+### Satisfaction Analysis
+
+{% if persona_satisfaction | length > 0 %}
+
+{% set satisfaction_features = persona_satisfaction | map(attribute="featureName") | unique %}
+
+**Satisfaction Scores by Feature**:
+
+| Feature | Job | Score | Status |
+|---------|-----|-------|--------|
+{% for feature_name in satisfaction_features %}
+{% set feature = persona_satisfaction | filter(attribute="featureName", value=feature_name) | first %}
+| {{ feature.featureName }} | {{ feature.jobTitle }} | {{ feature.satisfactionScore }}/10 | {% if feature.satisfactionScore | float >= 8 %}✅ Excellent{% elif feature.satisfactionScore | float >= 6 %}⚠️ Good{% else %}🔴 Needs Work{% endif %} |
+{% endfor %}
+
+#### Satisfaction Distribution
+
+{% set excellent = persona_satisfaction | filter(attribute="satisfactionScore", value="8") | length + persona_satisfaction | filter(attribute="satisfactionScore", value="9") | length + persona_satisfaction | filter(attribute="satisfactionScore", value="10") | length %}
+{% set good = persona_satisfaction | filter(attribute="satisfactionScore", value="6") | length + persona_satisfaction | filter(attribute="satisfactionScore", value="7") | length %}
+{% set poor = persona_satisfaction | length - excellent - good %}
+
+```
+Excellent (8-10): {{ excellent }} ({{ (excellent / persona_satisfaction | length * 100) | round }}%)
+Good (6-7):       {{ good }} ({{ (good / persona_satisfaction | length * 100) | round }}%)
+Poor (0-5):       {{ poor }} ({{ (poor / persona_satisfaction | length * 100) | round }}%)
+```
+
+{% else %}
+*No satisfaction data available for {{ persona }}. Implement user surveys to track satisfaction.*
+{% endif %}
+
+---
+
+### Recommendations for {{ persona }}
+
+#### High-Priority Actions
+
+1. **Job Coverage**
+   {% if high_freq_critical | length > 0 %}
+   - Address {{ high_freq_critical | length }} P0 jobs immediately
+   {% else %}
+   - Maintain current job coverage; focus on P1 jobs
+   {% endif %}
+
+2. **Pain Point Resolution**
+   {% if critical_pains | length > 0 %}
+   - Resolve {{ critical_pains | length }} critical pain points
+   {% elif high_pains | length > 0 %}
+   - Address {{ high_pains | length }} high-severity pain points
+   {% else %}
+   - Continue monitoring for emerging pain points
+   {% endif %}
+
+3. **Outcome Performance**
+   {% if outcome_with_metrics | length > 0 %}
+   {% set underperforming = 0 %}
+   {% for feature in outcome_with_metrics %}
+   {% if feature.currentValue | float < (feature.targetValue | float * 0.7) %}
+   {% set_global underperforming = underperforming + 1 %}
+   {% endif %}
+   {% endfor %}
+   {% if underperforming > 0 %}
+   - Improve {{ underperforming }} underperforming outcomes (< 70% of target)
+   {% else %}
+   - Maintain current performance levels
+   {% endif %}
+   {% else %}
+   - Implement outcome tracking for released features
+   {% endif %}
+
+4. **Satisfaction**
+   {% if persona_satisfaction | length > 0 %}
+   {% if (total_sat / sat_count) < 7 %}
+   - Investigate low satisfaction scores (avg {{ (total_sat / sat_count) | round(precision=1) }}/10)
+   - Focus on features with scores < 6
+   {% else %}
+   - Maintain current satisfaction levels
+   {% endif %}
+   {% else %}
+   - Survey {{ persona }} users to establish satisfaction baseline
+   {% endif %}
+
+---
+
+{% endfor %}
+
+## Cross-Persona Insights
+
+### Shared Jobs
+
+Jobs that appear across multiple personas:
+
+{% set all_jobs = results | map(attribute="jobTitle") %}
+{% set unique_jobs = all_jobs | unique %}
+{% for job in unique_jobs %}
+{% set job_personas = results | filter(attribute="jobTitle", value=job) | map(attribute="personaName") | unique %}
+{% if job_personas | length > 1 %}
+- **{{ job }}**
+  - Shared by: {{ job_personas | join(sep=", ") }}
+  - Total features: {{ results | filter(attribute="jobTitle", value=job) | map(attribute="featureName") | unique | length }}
+{% endif %}
+{% endfor %}
+
+### Shared Pain Points
+
+Pain points affecting multiple personas:
+
+{% set all_pains = results | map(attribute="painpoint") | unique %}
+{% for pain in all_pains %}
+{% set pain_personas = results | filter(attribute="painpoint", value=pain) | map(attribute="personaName") | unique %}
+{% if pain_personas | length > 1 %}
+- **{{ pain }}**
+  - Affects: {{ pain_personas | join(sep=", ") }}
+  - Severity: {{ results | filter(attribute="painpoint", value=pain) | first | get(key="painpointSeverity") | default(value="Medium") }}
+{% endif %}
+{% endfor %}
+
+---
+
+*Persona report generated from JTBD specifications | Review quarterly for persona evolution*

@@ -19,7 +19,7 @@ from __future__ import annotations
 
 import time
 from pathlib import Path
-from typing import Any, Dict, Optional
+from typing import Any
 
 try:
     from SpiffWorkflow.bpmn.parser import BpmnParser
@@ -27,22 +27,22 @@ try:
     from SpiffWorkflow.task import Task, TaskState
 except ImportError:
     raise ImportError(
-        "SpiffWorkflow is required for SPIFF support. "
-        "Install with: pip install specify-cli[spiff]"
+        "SpiffWorkflow is required for SPIFF support. Install with: pip install specify-cli[spiff]"
     )
 
-from ..core.shell import colour
+from specify_cli.core.shell import colour
 
 __all__ = [
+    "get_workflow_stats",
     "run_bpmn",
     "validate_bpmn_file",
-    "get_workflow_stats",
 ]
 
 # Optional OTEL instrumentation (graceful degradation if not available)
 try:
-    from ..core.telemetry import metric_counter, metric_histogram, span
-    from ..core.instrumentation import add_span_attributes, add_span_event
+    from specify_cli.core.instrumentation import add_span_attributes, add_span_event
+    from specify_cli.core.telemetry import metric_counter, metric_histogram, span
+
     _otel_available = True
 except ImportError:
     _otel_available = False
@@ -50,19 +50,23 @@ except ImportError:
     # Mock OTEL functions if not available
     def span(*args, **kwargs):
         from contextlib import contextmanager
+
         @contextmanager
         def _no_op():
             yield
+
         return _no_op()
 
     def metric_counter(name):
         def _no_op(value=1):
             return None
+
         return _no_op
 
     def metric_histogram(name):
         def _no_op(value):
             return None
+
         return _no_op
 
     def add_span_attributes(**kwargs):
@@ -84,7 +88,7 @@ def _load(path: Path) -> BpmnWorkflow:
         # Try to get the first available process spec
         process_parsers = parser.process_parsers
         if process_parsers:
-            process_id = list(process_parsers.keys())[0]
+            process_id = next(iter(process_parsers.keys()))
             wf_spec = parser.get_spec(process_id)
         else:
             # Fallback to empty string for legacy compatibility
@@ -99,10 +103,13 @@ def _load(path: Path) -> BpmnWorkflow:
             workflow_instance_id=str(id(workflow)),
         )
 
-        add_span_event("workflow.parsing.completed", {
-            "workflow_name": wf_spec.name or path.stem,
-            "task_count": len(list(wf_spec.task_specs)),
-        })
+        add_span_event(
+            "workflow.parsing.completed",
+            {
+                "workflow_name": wf_spec.name or path.stem,
+                "task_count": len(list(wf_spec.task_specs)),
+            },
+        )
 
         metric_counter("workflow.instances.created")(1)
 
@@ -122,10 +129,13 @@ def _step(wf: BpmnWorkflow) -> None:
             _process_task(wf, next_task, task_type)
             tasks_processed = 1
 
-            add_span_event("workflow.task.executed", {
-                "task_name": getattr(next_task.task_spec, "name", str(next_task)),
-                "task_type": task_type,
-            })
+            add_span_event(
+                "workflow.task.executed",
+                {
+                    "task_name": getattr(next_task.task_spec, "name", str(next_task)),
+                    "task_type": task_type,
+                },
+            )
         else:
             # No tasks ready, workflow might be waiting or complete
             add_span_event("workflow.step.no_tasks", {"workflow_completed": wf.is_completed()})
@@ -154,11 +164,14 @@ def _process_task(wf: BpmnWorkflow, task: Task, task_type: str) -> None:
     ):
         task_start = time.time()
 
-        add_span_event("task.started", {
-            "task_name": task_name,
-            "task_type": task_type,
-            "task_state": str(task.state),
-        })
+        add_span_event(
+            "task.started",
+            {
+                "task_name": task_name,
+                "task_type": task_type,
+                "task_state": str(task.state),
+            },
+        )
 
         try:
             # Execute the task based on its type
@@ -173,20 +186,26 @@ def _process_task(wf: BpmnWorkflow, task: Task, task_type: str) -> None:
 
             task_duration = time.time() - task_start
 
-            add_span_event("task.completed", {
-                "task_name": task_name,
-                "duration_ms": int(task_duration * 1000),
-            })
+            add_span_event(
+                "task.completed",
+                {
+                    "task_name": task_name,
+                    "duration_ms": int(task_duration * 1000),
+                },
+            )
 
             # Record task metrics
             metric_histogram(f"workflow.task.{task_type}.duration")(task_duration)
             metric_counter(f"workflow.task.{task_type}.completed")(1)
 
         except Exception as e:
-            add_span_event("task.failed", {
-                "task_name": task_name,
-                "error": str(e),
-            })
+            add_span_event(
+                "task.failed",
+                {
+                    "task_name": task_name,
+                    "error": str(e),
+                },
+            )
             metric_counter(f"workflow.task.{task_type}.failed")(1)
             raise
 
@@ -244,15 +263,18 @@ def run_bpmn(path: Path | str) -> dict[str, Any]:
                 # Check for infinite loop (same task repeating)
                 current_task_id = next_task.id
                 if current_task_id == last_task_id:
-                    add_span_event("workflow.infinite_loop_detected", {
-                        "task_id": str(current_task_id),
-                        "task_name": getattr(next_task.task_spec, "name", "unknown"),
-                        "iteration": iterations
-                    })
+                    add_span_event(
+                        "workflow.infinite_loop_detected",
+                        {
+                            "task_id": str(current_task_id),
+                            "task_name": getattr(next_task.task_spec, "name", "unknown"),
+                            "iteration": iterations,
+                        },
+                    )
                     break
 
                 last_task_id = current_task_id
-                all_tasks_before = len(list(wf.get_tasks()))
+                len(list(wf.get_tasks()))
 
                 # Execute step
                 _step(wf)
@@ -262,20 +284,23 @@ def run_bpmn(path: Path | str) -> dict[str, Any]:
                 total_tasks += all_tasks_after
 
                 # Add progress update
-                add_span_event("workflow.step.completed", {
-                    "step_number": steps,
-                    "iteration": iterations,
-                    "total_tasks": all_tasks_after,
-                })
+                add_span_event(
+                    "workflow.step.completed",
+                    {
+                        "step_number": steps,
+                        "iteration": iterations,
+                        "total_tasks": all_tasks_after,
+                    },
+                )
 
                 # Safety: Add small delay to prevent CPU spinning
                 time.sleep(0.001)
 
             if iterations >= max_iterations:
-                add_span_event("workflow.max_iterations_reached", {
-                    "max_iterations": max_iterations,
-                    "steps": steps
-                })
+                add_span_event(
+                    "workflow.max_iterations_reached",
+                    {"max_iterations": max_iterations, "steps": steps},
+                )
 
             execution_duration = time.time() - execution_start
 
@@ -295,10 +320,13 @@ def run_bpmn(path: Path | str) -> dict[str, Any]:
                 "workflow_name": path.stem,
             }
 
-            add_span_attributes(**{
-                f"workflow.{k}": v for k, v in stats.items()
-                if isinstance(v, (str, int, float, bool))
-            })
+            add_span_attributes(
+                **{
+                    f"workflow.{k}": v
+                    for k, v in stats.items()
+                    if isinstance(v, (str, int, float, bool))
+                }
+            )
 
             add_span_event("workflow.execution.completed", stats)
 
@@ -307,7 +335,10 @@ def run_bpmn(path: Path | str) -> dict[str, Any]:
             metric_counter("workflow.executions.completed")(1)
 
             colour("✔ BPMN workflow completed", "green")
-            colour(f"  Duration: {execution_duration:.2f}s, Steps: {steps}, Tasks: {len(completed_tasks)}", "blue")
+            colour(
+                f"  Duration: {execution_duration:.2f}s, Steps: {steps}, Tasks: {len(completed_tasks)}",
+                "blue",
+            )
 
             return stats
 
@@ -375,18 +406,23 @@ def get_workflow_stats(wf: BpmnWorkflow) -> dict[str, Any]:
         metric_counter("workflow.stats.requests")(1)
         metric_histogram("workflow.stats.collection_duration")(duration)
 
-        add_span_attributes(**{
-            "workflow.name": stats["workflow_name"],
-            "workflow.total_tasks": stats["total_tasks"],
-            "workflow.completed_tasks": stats["completed_tasks"],
-            "workflow.is_completed": stats["is_completed"],
-            "workflow.stats_duration": duration,
-        })
+        add_span_attributes(
+            **{
+                "workflow.name": stats["workflow_name"],
+                "workflow.total_tasks": stats["total_tasks"],
+                "workflow.completed_tasks": stats["completed_tasks"],
+                "workflow.is_completed": stats["is_completed"],
+                "workflow.stats_duration": duration,
+            }
+        )
 
-        add_span_event("workflow.stats.collected", {
-            **stats,
-            "collection_duration": duration,
-        })
+        add_span_event(
+            "workflow.stats.collected",
+            {
+                **stats,
+                "collection_duration": duration,
+            },
+        )
 
         return stats
 
@@ -411,25 +447,31 @@ def validate_bpmn_file(path: Path | str) -> bool:
             # Try to get the first available process spec
             process_parsers = parser.process_parsers
             if process_parsers:
-                process_id = list(process_parsers.keys())[0]
+                process_id = next(iter(process_parsers.keys()))
                 spec = parser.get_spec(process_id)
             else:
                 # Fallback to empty string for legacy compatibility
                 spec = parser.get_spec("")
 
-            add_span_event("workflow.validation.success", {
-                "workflow_name": spec.name or path.stem,
-                "task_specs": len(list(spec.task_specs)),
-            })
+            add_span_event(
+                "workflow.validation.success",
+                {
+                    "workflow_name": spec.name or path.stem,
+                    "task_specs": len(list(spec.task_specs)),
+                },
+            )
 
             metric_counter("workflow.validations.passed")(1)
             return True
 
         except Exception as e:
-            add_span_event("workflow.validation.failed", {
-                "error": str(e),
-                "file_path": str(path),
-            })
+            add_span_event(
+                "workflow.validation.failed",
+                {
+                    "error": str(e),
+                    "file_path": str(path),
+                },
+            )
 
             metric_counter("workflow.validations.failed")(1)
             return False

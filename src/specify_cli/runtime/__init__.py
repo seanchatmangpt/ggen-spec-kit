@@ -83,6 +83,25 @@ from .github import (
     parse_rate_limit_headers,
 )
 
+# JTBD operations
+from .jtbd import (
+    JTBDError,
+    export_jtbd_metrics,
+    get_jtbd_data_dir,
+    load_job_completions,
+    load_outcome_achievements,
+    load_painpoint_resolutions,
+    load_satisfaction_records,
+    load_time_to_outcome_records,
+    query_jtbd_sparql,
+    save_job_completion,
+    save_outcome_achievement,
+    save_painpoint_resolution,
+    save_satisfaction_record,
+    save_time_to_outcome,
+    sync_jtbd_to_rdf,
+)
+
 # Template operations
 from .template import (
     TemplateError,
@@ -110,6 +129,7 @@ __all__ = [
     "GgenError",
     "GitError",
     "GitHubError",
+    "JTBDError",
     "RateLimitError",
     "TemplateError",
     "add_all",
@@ -119,6 +139,7 @@ __all__ = [
     "commit",
     "download_asset",
     "ensure_executable_scripts",
+    "export_jtbd_metrics",
     # Template
     "extract_template",
     "fetch_latest_release",
@@ -126,6 +147,7 @@ __all__ = [
     "format_rate_limit_error",
     "get_current_branch",
     "get_ggen_version",
+    "get_jtbd_data_dir",
     "get_tool_versions",
     "github_auth_headers",
     # GitHub
@@ -136,8 +158,21 @@ __all__ = [
     "is_ggen_available",
     # Git
     "is_repo",
+    # JTBD
+    "load_job_completions",
+    "load_outcome_achievements",
+    "load_painpoint_resolutions",
+    "load_satisfaction_records",
+    "load_time_to_outcome_records",
     "merge_json_files",
     "parse_rate_limit_headers",
+    "query_jtbd_sparql",
+    "save_job_completion",
+    "save_outcome_achievement",
+    "save_painpoint_resolution",
+    "save_satisfaction_record",
+    "save_time_to_outcome",
+    "sync_jtbd_to_rdf",
     "sync_specs",
     "which_tool",
 ]

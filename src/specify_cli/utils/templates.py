@@ -6,13 +6,14 @@ import shutil
 import tempfile
 import zipfile
 from pathlib import Path
+from typing import Any
 
 import httpx
 import typer
 from rich.console import Console
 from rich.panel import Panel
 
-from ..core.github import download_template_from_github
+from specify_cli.core.github import download_template_from_github
 
 console = Console()
 
@@ -25,7 +26,7 @@ def handle_vscode_settings(sub_item, dest_file, rel_path, verbose=False, tracker
             console.print(f"[{color}]{message}[/] {rel_path}")
 
     try:
-        with open(sub_item, "r", encoding="utf-8") as f:
+        with open(sub_item, encoding="utf-8") as f:
             new_settings = json.load(f)
 
         if dest_file.exists():
@@ -43,7 +44,9 @@ def handle_vscode_settings(sub_item, dest_file, rel_path, verbose=False, tracker
         shutil.copy2(sub_item, dest_file)
 
 
-def merge_json_files(existing_path: Path, new_content: dict, verbose: bool = False) -> dict:
+def merge_json_files(
+    existing_path: Path, new_content: dict[str, Any], verbose: bool = False
+) -> dict:
     """Merge new JSON content into existing JSON file.
 
     Performs a deep merge where:
@@ -61,13 +64,13 @@ def merge_json_files(existing_path: Path, new_content: dict, verbose: bool = Fal
         Merged JSON content as dict
     """
     try:
-        with open(existing_path, "r", encoding="utf-8") as f:
+        with open(existing_path, encoding="utf-8") as f:
             existing_content = json.load(f)
     except (FileNotFoundError, json.JSONDecodeError):
         # If file doesn't exist or is invalid, just use new content
         return new_content
 
-    def deep_merge(base: dict, update: dict) -> dict:
+    def deep_merge(base: dict[str, Any], update: dict[str, Any]) -> dict:
         """Recursively merge update dict into base dict."""
         result = base.copy()
         for key, value in update.items():
@@ -95,9 +98,9 @@ def download_and_extract_template(
     *,
     verbose: bool = True,
     tracker=None,
-    client: httpx.Client = None,
+    client: httpx.Client | None = None,
     debug: bool = False,
-    github_token: str = None,
+    github_token: str | None = None,
 ) -> Path:
     """Download the latest release and extract it to create a new project.
 
@@ -139,9 +142,8 @@ def download_and_extract_template(
     except Exception as e:
         if tracker:
             tracker.error("fetch", str(e))
-        else:
-            if verbose:
-                console.print(f"[red]Error downloading template:[/red] {e}")
+        elif verbose:
+            console.print(f"[red]Error downloading template:[/red] {e}")
         raise
 
     if tracker:
@@ -172,7 +174,9 @@ def download_and_extract_template(
                         tracker.start("extracted-summary")
                         tracker.complete("extracted-summary", f"temp {len(extracted_items)} items")
                     elif verbose:
-                        console.print(f"[cyan]Extracted {len(extracted_items)} items to temp location[/cyan]")
+                        console.print(
+                            f"[cyan]Extracted {len(extracted_items)} items to temp location[/cyan]"
+                        )
 
                     source_dir = temp_path
                     if len(extracted_items) == 1 and extracted_items[0].is_dir():
@@ -181,14 +185,16 @@ def download_and_extract_template(
                             tracker.add("flatten", "Flatten nested directory")
                             tracker.complete("flatten")
                         elif verbose:
-                            console.print(f"[cyan]Found nested directory structure[/cyan]")
+                            console.print("[cyan]Found nested directory structure[/cyan]")
 
                     for item in source_dir.iterdir():
                         dest_path = project_path / item.name
                         if item.is_dir():
                             if dest_path.exists():
                                 if verbose and not tracker:
-                                    console.print(f"[yellow]Merging directory:[/yellow] {item.name}")
+                                    console.print(
+                                        f"[yellow]Merging directory:[/yellow] {item.name}"
+                                    )
                                 for sub_item in item.rglob("*"):
                                     if sub_item.is_file():
                                         rel_path = sub_item.relative_to(item)
@@ -199,7 +205,9 @@ def download_and_extract_template(
                                             dest_file.name == "settings.json"
                                             and dest_file.parent.name == ".vscode"
                                         ):
-                                            handle_vscode_settings(sub_item, dest_file, rel_path, verbose, tracker)
+                                            handle_vscode_settings(
+                                                sub_item, dest_file, rel_path, verbose, tracker
+                                            )
                                         else:
                                             shutil.copy2(sub_item, dest_file)
                             else:
@@ -209,7 +217,7 @@ def download_and_extract_template(
                                 console.print(f"[yellow]Overwriting file:[/yellow] {item.name}")
                             shutil.copy2(item, dest_path)
                     if verbose and not tracker:
-                        console.print(f"[cyan]Template files merged into current directory[/cyan]")
+                        console.print("[cyan]Template files merged into current directory[/cyan]")
             else:
                 zip_ref.extractall(project_path)
 
@@ -218,7 +226,9 @@ def download_and_extract_template(
                     tracker.start("extracted-summary")
                     tracker.complete("extracted-summary", f"{len(extracted_items)} top-level items")
                 elif verbose:
-                    console.print(f"[cyan]Extracted {len(extracted_items)} items to {project_path}:[/cyan]")
+                    console.print(
+                        f"[cyan]Extracted {len(extracted_items)} items to {project_path}:[/cyan]"
+                    )
                     for item in extracted_items:
                         console.print(f"  - {item.name} ({'dir' if item.is_dir() else 'file'})")
 
@@ -235,16 +245,15 @@ def download_and_extract_template(
                         tracker.add("flatten", "Flatten nested directory")
                         tracker.complete("flatten")
                     elif verbose:
-                        console.print(f"[cyan]Flattened nested directory structure[/cyan]")
+                        console.print("[cyan]Flattened nested directory structure[/cyan]")
 
     except Exception as e:
         if tracker:
             tracker.error("extract", str(e))
-        else:
-            if verbose:
-                console.print(f"[red]Error extracting template:[/red] {e}")
-                if debug:
-                    console.print(Panel(str(e), title="Extraction Error", border_style="red"))
+        elif verbose:
+            console.print(f"[red]Error extracting template:[/red] {e}")
+            if debug:
+                console.print(Panel(str(e), title="Extraction Error", border_style="red"))
 
         if not is_current_dir and project_path.exists():
             shutil.rmtree(project_path)
@@ -308,7 +317,9 @@ def ensure_executable_scripts(project_path: Path, tracker=None) -> None:
         (tracker.error if failures else tracker.complete)("chmod", detail)
     else:
         if updated:
-            console.print(f"[cyan]Updated execute permissions on {updated} script(s) recursively[/cyan]")
+            console.print(
+                f"[cyan]Updated execute permissions on {updated} script(s) recursively[/cyan]"
+            )
         if failures:
             console.print("[yellow]Some scripts could not be updated:[/yellow]")
             for f in failures:

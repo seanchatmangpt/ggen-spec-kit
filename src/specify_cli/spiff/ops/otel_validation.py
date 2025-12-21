@@ -29,27 +29,32 @@ __all__ = [
 
 # Optional OTEL instrumentation
 try:
-    from ...core.instrumentation import add_span_attributes, add_span_event
-    from ...core.telemetry import metric_counter, metric_histogram, span
+    from specify_cli.core.instrumentation import add_span_attributes, add_span_event
+    from specify_cli.core.telemetry import metric_counter, metric_histogram, span
+
     _otel_available = True
 except ImportError:
     _otel_available = False
 
     def span(*args, **kwargs):
         from contextlib import contextmanager
+
         @contextmanager
         def _no_op():
             yield
+
         return _no_op()
 
     def metric_counter(name):
         def _no_op(value=1):
             return None
+
         return _no_op
 
     def metric_histogram(name):
         def _no_op(value):
             return None
+
         return _no_op
 
     def add_span_attributes(**kwargs):
@@ -180,28 +185,33 @@ def execute_otel_validation_workflow(
             add_span_event("validation.step.bpmn_validation.started", {})
 
             try:
-                from ..runtime import validate_bpmn_file
+                from specify_cli.spiff.runtime import validate_bpmn_file
+
                 bpmn_valid = validate_bpmn_file(workflow_path)
                 step_duration = time.time() - step_start
 
-                validation_steps.append(TestValidationStep(
-                    key="bpmn_validation",
-                    name="BPMN File Validation",
-                    type="setup",
-                    success=bpmn_valid,
-                    duration_seconds=step_duration,
-                    details=f"Validated workflow definition from {workflow_path.name}",
-                ))
+                validation_steps.append(
+                    TestValidationStep(
+                        key="bpmn_validation",
+                        name="BPMN File Validation",
+                        type="setup",
+                        success=bpmn_valid,
+                        duration_seconds=step_duration,
+                        details=f"Validated workflow definition from {workflow_path.name}",
+                    )
+                )
                 metric_histogram("validation.step.duration")(step_duration)
             except Exception as e:
-                validation_steps.append(TestValidationStep(
-                    key="bpmn_validation",
-                    name="BPMN File Validation",
-                    type="setup",
-                    success=False,
-                    duration_seconds=time.time() - step_start,
-                    error=str(e),
-                ))
+                validation_steps.append(
+                    TestValidationStep(
+                        key="bpmn_validation",
+                        name="BPMN File Validation",
+                        type="setup",
+                        success=False,
+                        duration_seconds=time.time() - step_start,
+                        error=str(e),
+                    )
+                )
                 raise
 
             # Step 2: Execute workflow
@@ -209,41 +219,47 @@ def execute_otel_validation_workflow(
             add_span_event("validation.step.workflow_execution.started", {})
 
             try:
-                from ..runtime import run_bpmn
+                from specify_cli.spiff.runtime import run_bpmn
+
                 workflow_result = run_bpmn(workflow_path)
                 step_duration = time.time() - step_start
 
-                validation_steps.append(TestValidationStep(
-                    key="workflow_execution",
-                    name="Workflow Execution",
-                    type="execution",
-                    success=workflow_result.get("status") == "completed",
-                    duration_seconds=step_duration,
-                    details=f"Executed {workflow_result.get('steps_executed', 0)} steps",
-                ))
+                validation_steps.append(
+                    TestValidationStep(
+                        key="workflow_execution",
+                        name="Workflow Execution",
+                        type="execution",
+                        success=workflow_result.get("status") == "completed",
+                        duration_seconds=step_duration,
+                        details=f"Executed {workflow_result.get('steps_executed', 0)} steps",
+                    )
+                )
             except Exception as e:
-                validation_steps.append(TestValidationStep(
-                    key="workflow_execution",
-                    name="Workflow Execution",
-                    type="execution",
-                    success=False,
-                    duration_seconds=time.time() - step_start,
-                    error=str(e),
-                ))
+                validation_steps.append(
+                    TestValidationStep(
+                        key="workflow_execution",
+                        name="Workflow Execution",
+                        type="execution",
+                        success=False,
+                        duration_seconds=time.time() - step_start,
+                        error=str(e),
+                    )
+                )
                 raise
 
             # Step 3: Execute test commands
             step_start = time.time()
-            add_span_event("validation.step.test_execution.started", {
-                "num_tests": len(test_commands)
-            })
+            add_span_event(
+                "validation.step.test_execution.started", {"num_tests": len(test_commands)}
+            )
 
             test_results = {}
-            for i, cmd in enumerate(test_commands):
+            for _i, cmd in enumerate(test_commands):
                 try:
                     result_text = subprocess.run(
                         cmd,
-                        check=False, shell=True,
+                        check=False,
+                        shell=True,
                         capture_output=True,
                         text=True,
                         timeout=timeout_seconds,
@@ -255,14 +271,16 @@ def execute_otel_validation_workflow(
             step_duration = time.time() - step_start
             passed_tests = sum(1 for v in test_results.values() if v)
 
-            validation_steps.append(TestValidationStep(
-                key="test_execution",
-                name="Test Command Execution",
-                type="execution",
-                success=passed_tests == len(test_commands),
-                duration_seconds=step_duration,
-                details=f"Executed {len(test_commands)} test commands, {passed_tests} passed",
-            ))
+            validation_steps.append(
+                TestValidationStep(
+                    key="test_execution",
+                    name="Test Command Execution",
+                    type="execution",
+                    success=passed_tests == len(test_commands),
+                    duration_seconds=step_duration,
+                    details=f"Executed {len(test_commands)} test commands, {passed_tests} passed",
+                )
+            )
 
             # Step 4: OTEL system health check
             step_start = time.time()
@@ -272,23 +290,27 @@ def execute_otel_validation_workflow(
                 otel_health = _validate_otel_system_health()
                 step_duration = time.time() - step_start
 
-                validation_steps.append(TestValidationStep(
-                    key="otel_health",
-                    name="OTEL System Health",
-                    type="validation",
-                    success=otel_health["healthy"],
-                    duration_seconds=step_duration,
-                    details=otel_health.get("details", ""),
-                ))
+                validation_steps.append(
+                    TestValidationStep(
+                        key="otel_health",
+                        name="OTEL System Health",
+                        type="validation",
+                        success=otel_health["healthy"],
+                        duration_seconds=step_duration,
+                        details=otel_health.get("details", ""),
+                    )
+                )
             except Exception as e:
-                validation_steps.append(TestValidationStep(
-                    key="otel_health",
-                    name="OTEL System Health",
-                    type="validation",
-                    success=False,
-                    duration_seconds=time.time() - step_start,
-                    error=str(e),
-                ))
+                validation_steps.append(
+                    TestValidationStep(
+                        key="otel_health",
+                        name="OTEL System Health",
+                        type="validation",
+                        success=False,
+                        duration_seconds=time.time() - step_start,
+                        error=str(e),
+                    )
+                )
 
             # Calculate result
             result.validation_steps = validation_steps
@@ -302,11 +324,14 @@ def execute_otel_validation_workflow(
                 "successful_tests": passed_tests,
             }
 
-            add_span_event("validation.execution.completed", {
-                "success": result.success,
-                "steps": len(validation_steps),
-                "duration": result.duration_seconds,
-            })
+            add_span_event(
+                "validation.execution.completed",
+                {
+                    "success": result.success,
+                    "steps": len(validation_steps),
+                    "duration": result.duration_seconds,
+                },
+            )
 
             metric_counter("validation.executions.completed")(1)
             metric_histogram("validation.execution.duration")(result.duration_seconds)
@@ -317,10 +342,13 @@ def execute_otel_validation_workflow(
             result.errors.append(str(e))
             result.duration_seconds = time.time() - start_time
 
-            add_span_event("validation.execution.failed", {
-                "error": str(e),
-                "duration": result.duration_seconds,
-            })
+            add_span_event(
+                "validation.execution.failed",
+                {
+                    "error": str(e),
+                    "duration": result.duration_seconds,
+                },
+            )
 
             metric_counter("validation.executions.failed")(1)
             return result
@@ -397,13 +425,15 @@ def run_8020_otel_validation(
 
 def _generate_otel_validation_bpmn(workflow_name: str, test_commands: list[str]) -> str:
     """Generate BPMN XML for OTEL validation workflow."""
-    task_list = "\n".join([
-        f"""        <bpmn:ServiceTask id="Task_{i}" name="Test: {cmd[:50]}...">
+    task_list = "\n".join(
+        [
+            f"""        <bpmn:ServiceTask id="Task_{i}" name="Test: {cmd[:50]}...">
           <bpmn:outgoing>Flow_{i}</bpmn:outgoing>
         </bpmn:ServiceTask>
-        <bpmn:SequenceFlow id="Flow_{i}" sourceRef="Task_{i}" targetRef="{'Task_' + str(i+1) if i+1 < len(test_commands) else 'End'}"/>"""
-        for i, cmd in enumerate(test_commands)
-    ])
+        <bpmn:SequenceFlow id="Flow_{i}" sourceRef="Task_{i}" targetRef="{"Task_" + str(i + 1) if i + 1 < len(test_commands) else "End"}"/>"""
+            for i, cmd in enumerate(test_commands)
+        ]
+    )
 
     first_task_ref = "Task_0" if test_commands else "End"
 
@@ -420,7 +450,7 @@ def _generate_otel_validation_bpmn(workflow_name: str, test_commands: list[str])
     <bpmn:sequenceFlow id="StartFlow" sourceRef="Start" targetRef="{first_task_ref}"/>
 {task_list}
     <bpmn:endEvent id="End" name="OTEL Validation Complete">
-      <bpmn:incoming>Flow_{len(test_commands)-1 if test_commands else '0'}</bpmn:incoming>
+      <bpmn:incoming>Flow_{len(test_commands) - 1 if test_commands else "0"}</bpmn:incoming>
     </bpmn:endEvent>
   </bpmn:process>
 </bpmn:definitions>

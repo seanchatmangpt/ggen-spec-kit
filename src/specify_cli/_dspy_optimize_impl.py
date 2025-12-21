@@ -14,6 +14,7 @@ from specify_cli.core.telemetry import metric_counter, metric_histogram, span
 
 try:
     import dspy
+
     DSPY_AVAILABLE = True
 except ImportError:
     DSPY_AVAILABLE = False
@@ -159,7 +160,9 @@ def optimize_spec(  # noqa: PLR0911, PLR0912, PLR0915
         """Optimize a specification based on a given metric."""
 
         spec: str = dspy.InputField(desc="The specification to optimize")
-        metric: str = dspy.InputField(desc="The optimization metric: coverage, clarity, brevity, or performance")
+        metric: str = dspy.InputField(
+            desc="The optimization metric: coverage, clarity, brevity, or performance"
+        )
         format_type: str = dspy.InputField(desc="The spec format: ttl or json")
         iteration: int = dspy.InputField(desc="Current iteration number")
 
@@ -175,7 +178,9 @@ def optimize_spec(  # noqa: PLR0911, PLR0912, PLR0915
             super().__init__()
             self.optimize = dspy.ChainOfThought(SpecOptimizer)
 
-        def forward(self, spec: str, metric: str, format_type: str, iteration: int) -> dspy.Prediction:
+        def forward(
+            self, spec: str, metric: str, format_type: str, iteration: int
+        ) -> dspy.Prediction:
             """Run one optimization iteration."""
             return self.optimize(
                 spec=spec,
@@ -195,7 +200,7 @@ def optimize_spec(  # noqa: PLR0911, PLR0912, PLR0915
             optimizer = SpecOptimizerModule()
 
             for i in range(iterations):
-                with span(f"dspy.optimize_spec.iteration_{i+1}", iteration=i+1):
+                with span(f"dspy.optimize_spec.iteration_{i + 1}", iteration=i + 1):
                     iteration_start = time.perf_counter()
 
                     try:
@@ -225,19 +230,23 @@ def optimize_spec(  # noqa: PLR0911, PLR0912, PLR0915
 
                         # Record metrics
                         iteration_duration = time.perf_counter() - iteration_start
-                        metric_histogram("dspy.optimize_spec.iteration.duration")(iteration_duration)
+                        metric_histogram("dspy.optimize_spec.iteration.duration")(
+                            iteration_duration
+                        )
                         metric_counter("dspy.optimize_spec.iteration.completed")(1)
 
                         # Calculate iteration metrics
-                        iteration_metrics.append({
-                            "iteration": i + 1,
-                            "score": score,
-                            "reasoning": reasoning,
-                            "duration": iteration_duration,
-                        })
+                        iteration_metrics.append(
+                            {
+                                "iteration": i + 1,
+                                "score": score,
+                                "reasoning": reasoning,
+                                "duration": iteration_duration,
+                            }
+                        )
 
                     except Exception as e:
-                        error_msg = f"Iteration {i+1} failed: {e}"
+                        error_msg = f"Iteration {i + 1} failed: {e}"
                         errors.append(error_msg)
                         metric_counter("dspy.optimize_spec.iteration.failed")(1)
                         # Continue with current spec
@@ -331,7 +340,9 @@ def _calculate_optimization_metrics(
         optimized_coverage = sum(optimized_spec.count(kw) for kw in coverage_keywords)
         metrics["coverage"] = optimized_coverage / max(original_coverage, 1)
     else:
-        metrics["coverage"] = sum(iteration_scores) / len(iteration_scores) if iteration_scores else 0.0
+        metrics["coverage"] = (
+            sum(iteration_scores) / len(iteration_scores) if iteration_scores else 0.0
+        )
 
     # Clarity metric (estimated by comment density and structure)
     if metric == "clarity":
@@ -339,13 +350,19 @@ def _calculate_optimization_metrics(
         optimized_comments = optimized_spec.count("#")
         metrics["clarity"] = min(1.0, optimized_comments / max(original_comments, 1))
     else:
-        metrics["clarity"] = sum(iteration_scores) / len(iteration_scores) if iteration_scores else 0.0
+        metrics["clarity"] = (
+            sum(iteration_scores) / len(iteration_scores) if iteration_scores else 0.0
+        )
 
     # Brevity metric (measured by compression)
     if metric == "brevity":
-        metrics["brevity"] = 1.0 - (metrics["length_ratio"] - 1.0) if metrics["length_ratio"] < 1.0 else 0.0
+        metrics["brevity"] = (
+            1.0 - (metrics["length_ratio"] - 1.0) if metrics["length_ratio"] < 1.0 else 0.0
+        )
     else:
-        metrics["brevity"] = sum(iteration_scores) / len(iteration_scores) if iteration_scores else 0.0
+        metrics["brevity"] = (
+            sum(iteration_scores) / len(iteration_scores) if iteration_scores else 0.0
+        )
 
     # Performance metric (estimated by parse complexity)
     if metric == "performance":
@@ -354,7 +371,9 @@ def _calculate_optimization_metrics(
         optimized_nesting = optimized_spec.count("  ") + optimized_spec.count("\t")
         metrics["performance"] = 1.0 - (optimized_nesting / max(original_nesting, 1))
     else:
-        metrics["performance"] = sum(iteration_scores) / len(iteration_scores) if iteration_scores else 0.0
+        metrics["performance"] = (
+            sum(iteration_scores) / len(iteration_scores) if iteration_scores else 0.0
+        )
 
     # Average score across iterations
     if iteration_scores:

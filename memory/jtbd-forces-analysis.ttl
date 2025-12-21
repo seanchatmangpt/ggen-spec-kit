@@ -1,0 +1,776 @@
+@prefix sk: <http://github.com/github/spec-kit#> .
+@prefix jtbd: <http://github.com/github/spec-kit/jtbd#> .
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
+@prefix dcterms: <http://purl.org/dc/terms/> .
+
+# ============================================================================
+# Jobs-To-Be-Done Forces Analysis
+# ============================================================================
+# Comprehensive analysis of painpoints and progress makers in spec-kit adoption
+# Organized by persona and job, following JTBD forces framework
+# ============================================================================
+
+# ----------------------------------------------------------------------------
+# Ontology Extension: Forces Classes
+# ----------------------------------------------------------------------------
+
+jtbd:Persona a rdfs:Class ;
+    rdfs:label "JTBD Persona" ;
+    rdfs:comment "User archetype with specific context, skills, and goals" .
+
+jtbd:Job a rdfs:Class ;
+    rdfs:label "Job to be Done" ;
+    rdfs:comment "The progress a persona is trying to make in a specific situation" .
+
+jtbd:Painpoint a rdfs:Class ;
+    rdfs:label "Painpoint" ;
+    rdfs:comment "Force blocking job completion (current solutions gap, anxiety, friction, quality concerns)" .
+
+jtbd:ProgressMaker a rdfs:Class ;
+    rdfs:label "Progress Maker" ;
+    rdfs:comment "Force pushing toward job completion (time savings, quality, confidence, team benefits)" .
+
+jtbd:ForceType a rdfs:Class ;
+    rdfs:label "Force Type" ;
+    rdfs:comment "Category of blocking or enabling force" .
+
+# Painpoint Types (Forces Against Switching)
+jtbd:CurrentSolutionsGap a jtbd:ForceType ;
+    rdfs:label "Current Solutions Gap" ;
+    rdfs:comment "Manual steps, time-consuming processes, quality gaps in current workflow" .
+
+jtbd:SwitchingAnxiety a jtbd:ForceType ;
+    rdfs:label "Switching Anxiety" ;
+    rdfs:comment "Fears and worries about adopting the new solution" .
+
+jtbd:WorkflowFriction a jtbd:ForceType ;
+    rdfs:label "Workflow Friction" ;
+    rdfs:comment "Obstacles, unclear interfaces, integration gaps" .
+
+jtbd:QualityConcerns a jtbd:ForceType ;
+    rdfs:label "Quality Concerns" ;
+    rdfs:comment "Worries about quality, standards, completeness" .
+
+# Progress Maker Types (Forces For Switching)
+jtbd:TimeSavings a jtbd:ForceType ;
+    rdfs:label "Time Savings" ;
+    rdfs:comment "Quantifiable time and effort reduction" .
+
+jtbd:QualityImprovement a jtbd:ForceType ;
+    rdfs:label "Quality Improvement" ;
+    rdfs:comment "Better consistency, coverage, traceability" .
+
+jtbd:ConfidenceBenefit a jtbd:ForceType ;
+    rdfs:label "Confidence Benefit" ;
+    rdfs:comment "Increased confidence, single source of truth, verification" .
+
+jtbd:TeamBenefit a jtbd:ForceType ;
+    rdfs:label "Team Benefit" ;
+    rdfs:comment "Collaboration, onboarding, reduced rework" .
+
+# Properties
+jtbd:hasPersona a rdfs:Property ;
+    rdfs:label "has persona" ;
+    rdfs:domain jtbd:Job ;
+    rdfs:range jtbd:Persona .
+
+jtbd:hasPainpoint a rdfs:Property ;
+    rdfs:label "has painpoint" ;
+    rdfs:domain jtbd:Job ;
+    rdfs:range jtbd:Painpoint .
+
+jtbd:hasProgressMaker a rdfs:Property ;
+    rdfs:label "has progress maker" ;
+    rdfs:domain jtbd:Job ;
+    rdfs:range jtbd:ProgressMaker .
+
+jtbd:forceType a rdfs:Property ;
+    rdfs:label "force type" ;
+    rdfs:range jtbd:ForceType .
+
+jtbd:severity a rdfs:Property ;
+    rdfs:label "severity" ;
+    rdfs:comment "Low, Medium, High, Critical" ;
+    rdfs:range xsd:string .
+
+jtbd:impact a rdfs:Property ;
+    rdfs:label "impact" ;
+    rdfs:comment "Quantified or qualitative impact measure" ;
+    rdfs:range xsd:string .
+
+jtbd:personaContext a rdfs:Property ;
+    rdfs:label "persona context" ;
+    rdfs:comment "Situational context for this persona" ;
+    rdfs:range xsd:string .
+
+jtbd:skillLevel a rdfs:Property ;
+    rdfs:label "skill level" ;
+    rdfs:comment "Novice, Intermediate, Advanced, Expert" ;
+    rdfs:range xsd:string .
+
+# ----------------------------------------------------------------------------
+# PERSONAS
+# ----------------------------------------------------------------------------
+
+jtbd:SoloFullStackDeveloper a jtbd:Persona ;
+    rdfs:label "Solo Full-Stack Developer" ;
+    rdfs:comment "Individual developer building complete features alone" ;
+    jtbd:personaContext "Building MVP, rapid prototyping, no team to delegate to" ;
+    jtbd:skillLevel "Intermediate to Advanced" ;
+    dcterms:description "Working alone on full-stack features, responsible for specs through deployment" .
+
+jtbd:TechnicalLead a jtbd:Persona ;
+    rdfs:label "Technical Lead / Architect" ;
+    rdfs:comment "Senior engineer responsible for architectural decisions and team guidance" ;
+    jtbd:personaContext "Leading team of 3-8 developers, making tech stack decisions" ;
+    jtbd:skillLevel "Advanced to Expert" ;
+    dcterms:description "Responsible for architecture, tech stack, and guiding team implementation" .
+
+jtbd:ProductManager a jtbd:Persona ;
+    rdfs:label "Product Manager" ;
+    rdfs:comment "Non-technical stakeholder defining requirements and priorities" ;
+    jtbd:personaContext "Translating business needs to development team" ;
+    jtbd:skillLevel "Novice (technical), Expert (domain)" ;
+    dcterms:description "Defines requirements, user stories, and success criteria without writing code" .
+
+jtbd:JuniorDeveloper a jtbd:Persona ;
+    rdfs:label "Junior Developer" ;
+    rdfs:comment "Early-career developer learning patterns and practices" ;
+    jtbd:personaContext "Learning to build production-quality code, needs guidance" ;
+    jtbd:skillLevel "Novice to Intermediate" ;
+    dcterms:description "Learning software engineering, needs clear structure and examples" .
+
+jtbd:EnterpriseArchitect a jtbd:Persona ;
+    rdfs:label "Enterprise Architect" ;
+    rdfs:comment "Organization-wide standards and governance role" ;
+    jtbd:personaContext "Multiple teams, standardization, compliance requirements" ;
+    jtbd:skillLevel "Expert" ;
+    dcterms:description "Ensuring consistency, compliance, and architectural standards across teams" .
+
+jtbd:DevOpsSRE a jtbd:Persona ;
+    rdfs:label "DevOps / SRE Engineer" ;
+    rdfs:comment "Operations-focused engineer responsible for deployment and reliability" ;
+    jtbd:personaContext "CI/CD pipelines, infrastructure, production stability" ;
+    jtbd:skillLevel "Advanced" ;
+    dcterms:description "Deploying and operating systems, ensuring reliability and observability" .
+
+# ----------------------------------------------------------------------------
+# JOB 1: Solo Developer - Build Complete Feature Spec-to-Code
+# ----------------------------------------------------------------------------
+
+jtbd:Job_SoloDev_SpecToCode a jtbd:Job ;
+    rdfs:label "Build complete feature from spec to production-ready code" ;
+    jtbd:hasPersona jtbd:SoloFullStackDeveloper ;
+    dcterms:description "When I'm building a feature alone, I need to go from idea to production-ready code without a team, so I can ship faster and maintain quality standards" .
+
+# Painpoints for Solo Developer
+jtbd:Pain_SoloDev_ManualSpecWriting a jtbd:Painpoint ;
+    rdfs:label "Manual specification writing is time-consuming and incomplete" ;
+    jtbd:forceType jtbd:CurrentSolutionsGap ;
+    jtbd:severity "High" ;
+    dcterms:description "Currently: Write specs manually in Markdown/Google Docs, often skip edge cases, no validation. Takes 2-4 hours per feature. Specs become stale immediately." .
+
+jtbd:Pain_SoloDev_RDFLearningCurve a jtbd:Painpoint ;
+    rdfs:label "Fear of learning RDF/Turtle syntax" ;
+    jtbd:forceType jtbd:SwitchingAnxiety ;
+    jtbd:severity "Medium" ;
+    dcterms:description "RDF/Turtle looks unfamiliar compared to JSON/YAML. Worried about steep learning curve taking weeks away from shipping features." .
+
+jtbd:Pain_SoloDev_AIGenQuality a jtbd:Painpoint ;
+    rdfs:label "Worry that AI-generated code won't meet quality standards" ;
+    jtbd:forceType jtbd:QualityConcerns ;
+    jtbd:severity "High" ;
+    dcterms:description "Concerned generated code will have security issues, poor patterns, or require extensive refactoring. Don't trust automation for production code." .
+
+jtbd:Pain_SoloDev_TestGaps a jtbd:Painpoint ;
+    rdfs:label "Manual test writing is tedious and often skipped" ;
+    jtbd:forceType jtbd:CurrentSolutionsGap ;
+    jtbd:severity "Critical" ;
+    dcterms:description "Writing tests takes as long as implementation. Under time pressure, tests are skipped. Coverage typically <50%. No systematic edge case coverage." .
+
+jtbd:Pain_SoloDev_SpecCodeDrift a jtbd:Painpoint ;
+    rdfs:label "Specs and code diverge immediately after first iteration" ;
+    jtbd:forceType jtbd:WorkflowFriction ;
+    jtbd:severity "High" ;
+    dcterms:description "After initial implementation, code changes but specs don't get updated. Within 2 weeks, specs are unreliable. Manual sync is too time-consuming." .
+
+jtbd:Pain_SoloDev_ToolIntegration a jtbd:Painpoint ;
+    rdfs:label "Unclear how spec-kit integrates with existing tools (TypeScript, pytest, etc.)" ;
+    jtbd:forceType jtbd:WorkflowFriction ;
+    jtbd:severity "Medium" ;
+    dcterms:description "Existing workflow: VSCode, TypeScript, Jest, GitHub Actions. Unclear if spec-kit replaces these or augments them. Fear of vendor lock-in." .
+
+# Associate painpoints with job
+jtbd:Job_SoloDev_SpecToCode jtbd:hasPainpoint jtbd:Pain_SoloDev_ManualSpecWriting ;
+    jtbd:hasPainpoint jtbd:Pain_SoloDev_RDFLearningCurve ;
+    jtbd:hasPainpoint jtbd:Pain_SoloDev_AIGenQuality ;
+    jtbd:hasPainpoint jtbd:Pain_SoloDev_TestGaps ;
+    jtbd:hasPainpoint jtbd:Pain_SoloDev_SpecCodeDrift ;
+    jtbd:hasPainpoint jtbd:Pain_SoloDev_ToolIntegration .
+
+# Progress Makers for Solo Developer
+jtbd:Progress_SoloDev_SpecGenSpeed a jtbd:ProgressMaker ;
+    rdfs:label "Specification generation in minutes instead of hours" ;
+    jtbd:forceType jtbd:TimeSavings ;
+    jtbd:impact "75% time reduction: 2-4 hours → 30 minutes" ;
+    dcterms:description "AI generates complete spec with user stories, requirements, edge cases in 30 minutes. Saves 1.5-3.5 hours per feature." .
+
+jtbd:Progress_SoloDev_EdgeCaseCoverage a jtbd:ProgressMaker ;
+    rdfs:label "Systematic edge case coverage" ;
+    jtbd:forceType jtbd:QualityImprovement ;
+    jtbd:impact "2-3× more edge cases identified" ;
+    dcterms:description "AI identifies edge cases developer would miss. Security scenarios, error conditions, boundary cases systematically enumerated." .
+
+jtbd:Progress_SoloDev_SingleSourceTruth a jtbd:ProgressMaker ;
+    rdfs:label "RDF as single source of truth eliminates drift" ;
+    jtbd:forceType jtbd:ConfidenceBenefit ;
+    jtbd:impact "Specs never stale, always in sync" ;
+    dcterms:description "Constitutional equation spec.md = μ(feature.ttl) guarantees specs stay current. Regenerate docs from RDF anytime. Zero drift." .
+
+jtbd:Progress_SoloDev_TestFirstDiscipline a jtbd:ProgressMaker ;
+    rdfs:label "Test-first discipline enforced automatically" ;
+    jtbd:forceType jtbd:QualityImprovement ;
+    jtbd:impact "80%+ test coverage by default" ;
+    dcterms:description "Constitutional Article III ensures tests written before code. No skipping tests under pressure. Coverage built into workflow." .
+
+jtbd:Progress_SoloDev_TypeSafety a jtbd:ProgressMaker ;
+    rdfs:label "Multi-language type safety from single RDF source" ;
+    jtbd:forceType jtbd:QualityImprovement ;
+    jtbd:impact "Zero type mismatches across stack" ;
+    dcterms:description "RDF compiles to TypeScript, Python, Rust types simultaneously. Frontend/backend types guaranteed consistent." .
+
+jtbd:Progress_SoloDev_FasterShipping a jtbd:ProgressMaker ;
+    rdfs:label "Ship features 2-3× faster with higher quality" ;
+    jtbd:forceType jtbd:TimeSavings ;
+    jtbd:impact "50-70% faster feature delivery" ;
+    dcterms:description "Combine spec generation (75% faster), test generation (60% faster), type safety (40% fewer bugs). Net 2-3× speed improvement." .
+
+# Associate progress makers with job
+jtbd:Job_SoloDev_SpecToCode jtbd:hasProgressMaker jtbd:Progress_SoloDev_SpecGenSpeed ;
+    jtbd:hasProgressMaker jtbd:Progress_SoloDev_EdgeCaseCoverage ;
+    jtbd:hasProgressMaker jtbd:Progress_SoloDev_SingleSourceTruth ;
+    jtbd:hasProgressMaker jtbd:Progress_SoloDev_TestFirstDiscipline ;
+    jtbd:hasProgressMaker jtbd:Progress_SoloDev_TypeSafety ;
+    jtbd:hasProgressMaker jtbd:Progress_SoloDev_FasterShipping .
+
+# ----------------------------------------------------------------------------
+# JOB 2: Technical Lead - Establish Consistent Architecture
+# ----------------------------------------------------------------------------
+
+jtbd:Job_TechLead_Architecture a jtbd:Job ;
+    rdfs:label "Establish and enforce consistent architecture patterns across team" ;
+    jtbd:hasPersona jtbd:TechnicalLead ;
+    dcterms:description "When leading a team, I need to ensure everyone follows the same patterns and quality standards, so we avoid architectural debt and maintain velocity" .
+
+# Painpoints for Technical Lead
+jtbd:Pain_TechLead_PatternEnforcement a jtbd:Painpoint ;
+    rdfs:label "Manual code reviews are time-consuming and inconsistent" ;
+    jtbd:forceType jtbd:CurrentSolutionsGap ;
+    jtbd:severity "Critical" ;
+    dcterms:description "Currently: Spend 8-12 hours/week reviewing PRs for architectural violations. Different reviewers apply different standards. Violations slip through." .
+
+jtbd:Pain_TechLead_TeamSkillGap a jtbd:Painpoint ;
+    rdfs:label "Junior developers don't know architectural best practices" ;
+    jtbd:forceType jtbd:CurrentSolutionsGap ;
+    jtbd:severity "High" ;
+    dcterms:description "Juniors create tight coupling, skip tests, over-abstract. Requires extensive mentoring (4-6 hours/week). Slows team velocity 30-40%." .
+
+jtbd:Pain_TechLead_AutomationTrust a jtbd:Painpoint ;
+    rdfs:label "Worry that automation won't catch architectural violations" ;
+    jtbd:forceType jtbd:SwitchingAnxiety ;
+    jtbd:severity "High" ;
+    dcterms:description "Skeptical that AI understands three-tier architecture, dependency rules, or when to abstract. Fear of shipping bad architecture at scale." .
+
+jtbd:Pain_TechLead_ConstitutionSetup a jtbd:Painpoint ;
+    rdfs:label "Setting up constitutional principles takes time upfront" ;
+    jtbd:forceType jtbd:WorkflowFriction ;
+    jtbd:severity "Medium" ;
+    dcterms:description "Need to define team-specific rules, quality gates, standards. Worried this takes 1-2 weeks of setup before value." .
+
+jtbd:Pain_TechLead_ExistingCodebase a jtbd:Painpoint ;
+    rdfs:label "Unclear how to adopt spec-kit in brownfield codebase" ;
+    jtbd:forceType jtbd:WorkflowFriction ;
+    jtbd:severity "High" ;
+    dcterms:description "Existing codebase has 50K+ lines. Can't rewrite everything. Need incremental adoption path. Unclear how to migrate existing features to RDF specs." .
+
+# Associate painpoints
+jtbd:Job_TechLead_Architecture jtbd:hasPainpoint jtbd:Pain_TechLead_PatternEnforcement ;
+    jtbd:hasPainpoint jtbd:Pain_TechLead_TeamSkillGap ;
+    jtbd:hasPainpoint jtbd:Pain_TechLead_AutomationTrust ;
+    jtbd:hasPainpoint jtbd:Pain_TechLead_ConstitutionSetup ;
+    jtbd:hasPainpoint jtbd:Pain_TechLead_ExistingCodebase .
+
+# Progress Makers for Technical Lead
+jtbd:Progress_TechLead_AutomatedEnforcement a jtbd:ProgressMaker ;
+    rdfs:label "Constitutional principles enforced automatically" ;
+    jtbd:forceType jtbd:QualityImprovement ;
+    jtbd:impact "100% architectural consistency" ;
+    dcterms:description "Library-First, CLI Interface, Test-First principles enforced at generation time. Impossible to violate constitution. No manual review needed." .
+
+jtbd:Progress_TechLead_OnboardingSpeed a jtbd:ProgressMaker ;
+    rdfs:label "Junior developers produce senior-quality code immediately" ;
+    jtbd:forceType jtbd:TeamBenefit ;
+    jtbd:impact "50% faster onboarding, 3× better first-PR quality" ;
+    dcterms:description "Juniors work with AI that knows architectural patterns. Generated code follows senior-level practices. Mentoring time reduced from 4-6 hours/week to 1-2 hours." .
+
+jtbd:Progress_TechLead_ReviewTimeReduction a jtbd:ProgressMaker ;
+    rdfs:label "Code review time reduced by 60-70%" ;
+    jtbd:forceType jtbd:TimeSavings ;
+    jtbd:impact "Save 5-8 hours/week" ;
+    dcterms:description "No need to check architectural patterns (automated). Review focuses on business logic only. 8-12 hours/week → 3-4 hours/week." .
+
+jtbd:Progress_TechLead_Traceability a jtbd:ProgressMaker ;
+    rdfs:label "Complete traceability from requirement to code" ;
+    jtbd:forceType jtbd:ConfidenceBenefit ;
+    jtbd:impact "Audit compliance in minutes, not days" ;
+    dcterms:description "SPARQL queries trace any requirement to implementation. Security audit: Which code implements FR-042? Answer in seconds, not manual search." .
+
+jtbd:Progress_TechLead_TeamVelocity a jtbd:ProgressMaker ;
+    rdfs:label "Team velocity increases 40-60% with consistent quality" ;
+    jtbd:forceType jtbd:TeamBenefit ;
+    jtbd:impact "40-60% more features shipped per quarter" ;
+    dcterms:description "Faster specs, faster tests, less refactoring, less review time. Team ships 10-15 features/quarter instead of 6-10." .
+
+# Associate progress makers
+jtbd:Job_TechLead_Architecture jtbd:hasProgressMaker jtbd:Progress_TechLead_AutomatedEnforcement ;
+    jtbd:hasProgressMaker jtbd:Progress_TechLead_OnboardingSpeed ;
+    jtbd:hasProgressMaker jtbd:Progress_TechLead_ReviewTimeReduction ;
+    jtbd:hasProgressMaker jtbd:Progress_TechLead_Traceability ;
+    jtbd:hasProgressMaker jtbd:Progress_TechLead_TeamVelocity .
+
+# ----------------------------------------------------------------------------
+# JOB 3: Product Manager - Define Requirements Without Technical Knowledge
+# ----------------------------------------------------------------------------
+
+jtbd:Job_PM_Requirements a jtbd:Job ;
+    rdfs:label "Define complete, unambiguous requirements without technical expertise" ;
+    jtbd:hasPersona jtbd:ProductManager ;
+    dcterms:description "When defining product requirements, I need to ensure developers understand exactly what to build, so we avoid building the wrong thing and costly rework" .
+
+# Painpoints for Product Manager
+jtbd:Pain_PM_AmbiguousRequirements a jtbd:Painpoint ;
+    rdfs:label "Requirements are interpreted differently by each developer" ;
+    jtbd:forceType jtbd:CurrentSolutionsGap ;
+    jtbd:severity "Critical" ;
+    dcterms:description "Write PRD in prose. Developers interpret differently. Discover misalignment in demo 2 weeks later. Requires 30-50% rework. Wastes 1-2 sprint cycles." .
+
+jtbd:Pain_PM_EdgeCaseBlindness a jtbd:Painpoint ;
+    rdfs:label "Don't know what edge cases to specify" ;
+    jtbd:forceType jtbd:CurrentSolutionsGap ;
+    jtbd:severity "High" ;
+    dcterms:description "Not a technical expert. Don't know which error conditions, boundary cases, or security scenarios to specify. Developers discover gaps during implementation, causing delays." .
+
+jtbd:Pain_PM_LearningRDF a jtbd:Painpoint ;
+    rdfs:label "Fear that RDF/Turtle is too technical for non-engineers" ;
+    jtbd:forceType jtbd:SwitchingAnxiety ;
+    jtbd:severity "High" ;
+    dcterms:description "RDF looks like code. Worried need to learn programming to write specs. Don't want to become technical writer instead of product strategist." .
+
+jtbd:Pain_PM_LosingControl a jtbd:Painpoint ;
+    rdfs:label "Anxiety about losing control of requirements to automation" ;
+    jtbd:forceType jtbd:SwitchingAnxiety ;
+    jtbd:severity "Medium" ;
+    dcterms:description "If AI generates specs, does PM become unnecessary? Worry about being replaced. Need to maintain ownership of product vision and priorities." .
+
+jtbd:Pain_PM_DevHandoff a jtbd:Painpoint ;
+    rdfs:label "Requirements get lost in translation to developers" ;
+    jtbd:forceType jtbd:WorkflowFriction ;
+    jtbd:severity "High" ;
+    dcterms:description "Write PRD → Eng Lead creates tech spec → Developers implement. Each handoff loses context. Final product doesn't match original vision. 3-5 rounds of clarification needed." .
+
+# Associate painpoints
+jtbd:Job_PM_Requirements jtbd:hasPainpoint jtbd:Pain_PM_AmbiguousRequirements ;
+    jtbd:hasPainpoint jtbd:Pain_PM_EdgeCaseBlindness ;
+    jtbd:hasPainpoint jtbd:Pain_PM_LearningRDF ;
+    jtbd:hasPainpoint jtbd:Pain_PM_LosingControl ;
+    jtbd:hasPainpoint jtbd:Pain_PM_DevHandoff .
+
+# Progress Makers for Product Manager
+jtbd:Progress_PM_NaturalLanguageInput a jtbd:ProgressMaker ;
+    rdfs:label "Define requirements in natural language, not RDF" ;
+    jtbd:forceType jtbd:ConfidenceBenefit ;
+    jtbd:impact "Zero technical knowledge required" ;
+    dcterms:description "/speckit.specify command accepts plain English descriptions. AI converts to structured RDF. PM never sees Turtle syntax. Natural workflow preserved." .
+
+jtbd:Progress_PM_AIEdgeCases a jtbd:ProgressMaker ;
+    rdfs:label "AI identifies edge cases PM wouldn't think of" ;
+    jtbd:forceType jtbd:QualityImprovement ;
+    jtbd:impact "3-4× more complete requirements" ;
+    dcterms:description "AI generates security scenarios, error conditions, boundary cases automatically. PM reviews and approves, but doesn't need to invent them. Completeness without technical expertise." .
+
+jtbd:Progress_PM_ClarificationWorkflow a jtbd:ProgressMaker ;
+    rdfs:label "Structured clarification process reveals ambiguities" ;
+    jtbd:forceType jtbd:QualityImprovement ;
+    jtbd:impact "80% fewer implementation surprises" ;
+    dcterms:description "/speckit.clarify asks targeted questions about unclear areas. PM answers in context. Ambiguities resolved before development. Reduces rework from 30-50% to 5-10%." .
+
+jtbd:Progress_PM_InstantFeedback a jtbd:ProgressMaker ;
+    rdfs:label "See generated implementation plan before development starts" ;
+    jtbd:forceType jtbd:ConfidenceBenefit ;
+    jtbd:impact "Catch misunderstandings in hours, not weeks" ;
+    dcterms:description "/speckit.plan shows exact technical approach. PM validates against vision before coding. Course-correct in 2 hours instead of 2 weeks. 90% faster feedback loop." .
+
+jtbd:Progress_PM_ReworkReduction a jtbd:ProgressMaker ;
+    rdfs:label "Rework reduced from 30-50% to <10%" ;
+    jtbd:forceType jtbd:TimeSavings ;
+    jtbd:impact "2-3× faster time-to-market" ;
+    dcterms:description "Unambiguous specs + early validation + edge case coverage = building right thing first time. Ship in 4-6 weeks instead of 12-16 weeks (with rework cycles)." .
+
+# Associate progress makers
+jtbd:Job_PM_Requirements jtbd:hasProgressMaker jtbd:Progress_PM_NaturalLanguageInput ;
+    jtbd:hasProgressMaker jtbd:Progress_PM_AIEdgeCases ;
+    jtbd:hasProgressMaker jtbd:Progress_PM_ClarificationWorkflow ;
+    jtbd:hasProgressMaker jtbd:Progress_PM_InstantFeedback ;
+    jtbd:hasProgressMaker jtbd:Progress_PM_ReworkReduction .
+
+# ----------------------------------------------------------------------------
+# JOB 4: Junior Developer - Learn Best Practices While Building
+# ----------------------------------------------------------------------------
+
+jtbd:Job_Junior_LearnPatterns a jtbd:Job ;
+    rdfs:label "Learn architectural patterns and quality practices while building features" ;
+    jtbd:hasPersona jtbd:JuniorDeveloper ;
+    dcterms:description "When building my first production features, I need to learn best practices through guided examples, so I become productive quickly without making costly mistakes" .
+
+# Painpoints for Junior Developer
+jtbd:Pain_Junior_DontKnowPatterns a jtbd:Painpoint ;
+    rdfs:label "Don't know which architectural patterns to use when" ;
+    jtbd:forceType jtbd:CurrentSolutionsGap ;
+    jtbd:severity "Critical" ;
+    dcterms:description "Read about patterns in books, but don't know when to apply them. Create tight coupling, over-abstract, or under-abstract. Senior devs reject PRs, but unclear how to fix." .
+
+jtbd:Pain_Junior_TestingSkipped a jtbd:Painpoint ;
+    rdfs:label "Testing feels overwhelming, often skip it" ;
+    jtbd:forceType jtbd:CurrentSolutionsGap ;
+    jtbd:severity "High" ;
+    dcterms:description "Don't know how to test async code, mocks, edge cases. Writing tests takes 2× longer than code. Under deadline pressure, skip tests. PRs rejected for missing coverage." .
+
+jtbd:Pain_Junior_MentorTime a jtbd:Painpoint ;
+    rdfs:label "Limited senior developer time for mentoring" ;
+    jtbd:forceType jtbd:WorkflowFriction ;
+    jtbd:severity "High" ;
+    dcterms:description "Seniors are busy. Get 30 minutes of mentoring per week. Stuck on problems for hours without guidance. Learning is slow and frustrating." .
+
+jtbd:Pain_Junior_AutomationSkepticism a jtbd:Painpoint ;
+    rdfs:label "Worry that AI-generated code won't teach me to be a good developer" ;
+    jtbd:forceType jtbd:SwitchingAnxiety ;
+    jtbd:severity "Medium" ;
+    dcterms:description "If AI writes code for me, will I learn? Or become dependent on tools and never develop expertise? Concerned about career development." .
+
+jtbd:Pain_Junior_Overwhelm a jtbd:Painpoint ;
+    rdfs:label "Overwhelmed by all the tools, frameworks, and concepts to learn" ;
+    jtbd:forceType jtbd:WorkflowFriction ;
+    jtbd:severity "High" ;
+    dcterms:description "Need to learn: git, TypeScript, React, testing, CI/CD, Docker, databases, APIs. Now also RDF/ggen/spec-kit? Feels like too much. Paralyzed by complexity." .
+
+# Associate painpoints
+jtbd:Job_Junior_LearnPatterns jtbd:hasPainpoint jtbd:Pain_Junior_DontKnowPatterns ;
+    jtbd:hasPainpoint jtbd:Pain_Junior_TestingSkipped ;
+    jtbd:hasPainpoint jtbd:Pain_Junior_MentorTime ;
+    jtbd:hasPainpoint jtbd:Pain_Junior_AutomationSkepticism ;
+    jtbd:hasPainpoint jtbd:Pain_Junior_Overwhelm .
+
+# Progress Makers for Junior Developer
+jtbd:Progress_Junior_PatternsByExample a jtbd:ProgressMaker ;
+    rdfs:label "Learn patterns through high-quality generated examples" ;
+    jtbd:forceType jtbd:QualityImprovement ;
+    jtbd:impact "3-6 months faster to senior-level code quality" ;
+    dcterms:description "Generated code follows constitutional principles. See three-tier architecture, test-first, library-first in practice. Learn by reading and modifying production-quality examples." .
+
+jtbd:Progress_Junior_TestGuidance a jtbd:ProgressMaker ;
+    rdfs:label "Tests generated automatically, teaching testing patterns" ;
+    jtbd:forceType jtbd:TeamBenefit ;
+    jtbd:impact "80%+ test coverage from day one" ;
+    dcterms:description "AI generates comprehensive test suites. Junior reads tests to understand expected behavior. Modifies tests as requirements change. Testing becomes natural workflow, not intimidating." .
+
+jtbd:Progress_Junior_AIAsMentor a jtbd:ProgressMaker ;
+    rdfs:label "AI acts as 24/7 senior developer mentor" ;
+    jtbd:forceType jtbd:ConfidenceBenefit ;
+    jtbd:impact "Unlimited guidance, immediate answers" ;
+    dcterms:description "Stuck on architectural decision? Ask AI. Don't know how to test something? AI generates example. No waiting for senior dev availability. Learn at own pace." .
+
+jtbd:Progress_Junior_ReducedCognitiveLoad a jtbd:ProgressMaker ;
+    rdfs:label "Focus on business logic, not boilerplate and architecture" ;
+    jtbd:forceType jtbd:TimeSavings ;
+    jtbd:impact "2× faster feature completion" ;
+    dcterms:description "AI handles architectural structure, test scaffolding, type safety. Junior focuses on implementing business rules. Learn one thing at a time instead of everything simultaneously." .
+
+jtbd:Progress_Junior_PRApprovalRate a jtbd:ProgressMaker ;
+    rdfs:label "PRs approved 3× faster with fewer revision rounds" ;
+    jtbd:forceType jtbd:TeamBenefit ;
+    jtbd:impact "From 3-5 revision rounds to 1-2 rounds" ;
+    dcterms:description "Generated code follows team standards automatically. Seniors review business logic, not architectural patterns. Faster approvals build confidence and momentum." .
+
+# Associate progress makers
+jtbd:Job_Junior_LearnPatterns jtbd:hasProgressMaker jtbd:Progress_Junior_PatternsByExample ;
+    jtbd:hasProgressMaker jtbd:Progress_Junior_TestGuidance ;
+    jtbd:hasProgressMaker jtbd:Progress_Junior_AIAsMentor ;
+    jtbd:hasProgressMaker jtbd:Progress_Junior_ReducedCognitiveLoad ;
+    jtbd:hasProgressMaker jtbd:Progress_Junior_PRApprovalRate .
+
+# ----------------------------------------------------------------------------
+# JOB 5: Enterprise Architect - Enforce Standards Across Teams
+# ----------------------------------------------------------------------------
+
+jtbd:Job_Enterprise_Standards a jtbd:Job ;
+    rdfs:label "Enforce architectural standards and compliance across multiple teams" ;
+    jtbd:hasPersona jtbd:EnterpriseArchitect ;
+    dcterms:description "When governing 10-50 teams, I need to ensure everyone follows security, compliance, and architectural standards, so we avoid audit failures and technical debt at scale" .
+
+# Painpoints for Enterprise Architect
+jtbd:Pain_Enterprise_InconsistentStandards a jtbd:Painpoint ;
+    rdfs:label "Each team implements standards differently" ;
+    jtbd:forceType jtbd:CurrentSolutionsGap ;
+    jtbd:severity "Critical" ;
+    dcterms:description "20 teams, 20 different interpretations of 'secure API'. Audits find violations across 40% of services. Cost to remediate: $2M-5M/year. Manual governance doesn't scale." .
+
+jtbd:Pain_Enterprise_AuditPrep a jtbd:Painpoint ;
+    rdfs:label "Audit preparation takes months of manual evidence gathering" ;
+    jtbd:forceType jtbd:CurrentSolutionsGap ;
+    jtbd:severity "High" ;
+    dcterms:description "SOC2/ISO27001 audits require tracing requirements to code. 3-4 months of manual work gathering evidence. Consultants cost $200K-500K per audit cycle." .
+
+jtbd:Pain_Enterprise_TechnicalDebt a jtbd:Painpoint ;
+    rdfs:label "Technical debt accumulates faster than teams can remediate" ;
+    jtbd:forceType jtbd:QualityConcerns ;
+    jtbd:severity "Critical" ;
+    dcterms:description "Teams create debt at 2-3× rate of paydown. Legacy services become unmaintainable. Rewrites cost $5M-20M. No systematic prevention mechanism." .
+
+jtbd:Pain_Enterprise_ChangeResistance a jtbd:Painpoint ;
+    rdfs:label "Teams resist new tooling and process changes" ;
+    jtbd:forceType jtbd:SwitchingAnxiety ;
+    jtbd:severity "High" ;
+    dcterms:description "Tried to roll out new standards tools before. 30-40% adoption after 6 months. Teams say 'too much overhead, slows us down.' Need executive mandate to enforce." .
+
+jtbd:Pain_Enterprise_ROIMeasurement a jtbd:Painpoint ;
+    rdfs:label "Hard to measure ROI of architectural investments" ;
+    jtbd:forceType jtbd:WorkflowFriction ;
+    jtbd:severity "Medium" ;
+    dcterms:description "Executives ask: what's the business value of RDF-first architecture? Hard to quantify. Risks being cut as 'nice to have' during budget pressure." .
+
+# Associate painpoints
+jtbd:Job_Enterprise_Standards jtbd:hasPainpoint jtbd:Pain_Enterprise_InconsistentStandards ;
+    jtbd:hasPainpoint jtbd:Pain_Enterprise_AuditPrep ;
+    jtbd:hasPainpoint jtbd:Pain_Enterprise_TechnicalDebt ;
+    jtbd:hasPainpoint jtbd:Pain_Enterprise_ChangeResistance ;
+    jtbd:hasPainpoint jtbd:Pain_Enterprise_ROIMeasurement .
+
+# Progress Makers for Enterprise Architect
+jtbd:Progress_Enterprise_UniformEnforcement a jtbd:ProgressMaker ;
+    rdfs:label "Constitutional principles enforced uniformly across all teams" ;
+    jtbd:forceType jtbd:QualityImprovement ;
+    jtbd:impact "100% compliance, zero variance" ;
+    dcterms:description "All teams use spec-kit with same constitutional principles. Impossible to violate standards (enforced at generation time). Audit violations drop from 40% to <1%." .
+
+jtbd:Progress_Enterprise_InstantAuditEvidence a jtbd:ProgressMaker ;
+    rdfs:label "Audit evidence generated via SPARQL queries in minutes" ;
+    jtbd:forceType jtbd:TimeSavings ;
+    jtbd:impact "3-4 months → 2-3 days" ;
+    dcterms:description "SPARQL queries trace any requirement to implementation. Security control SC-042 implemented where? Query returns evidence in 30 seconds. Audit prep: 3 months → 3 days. Save $200K-500K." .
+
+jtbd:Progress_Enterprise_DebtPrevention a jtbd:ProgressMaker ;
+    rdfs:label "Technical debt prevented at source through constitutional enforcement" ;
+    jtbd:forceType jtbd:QualityImprovement ;
+    jtbd:impact "90% reduction in new debt creation" ;
+    dcterms:description "Can't create tight coupling (Library-First enforced). Can't skip tests (Test-First enforced). Can't violate three-tier architecture. Debt creation rate: 2-3× → 0.2-0.3×." .
+
+jtbd:Progress_Enterprise_TeamVelocity a jtbd:ProgressMaker ;
+    rdfs:label "Teams ship faster with standards, not slower" ;
+    jtbd:forceType jtbd:TeamBenefit ;
+    jtbd:impact "40-60% velocity increase despite stronger governance" ;
+    dcterms:description "Standards enforced automatically, no manual compliance work. Teams focus on features. Velocity increases while quality improves. Adoption resistance eliminated - teams want to use it." .
+
+jtbd:Progress_Enterprise_QuantifiableROI a jtbd:ProgressMaker ;
+    rdfs:label "ROI measurable through saved audit costs and prevented rewrites" ;
+    jtbd:forceType jtbd:ConfidenceBenefit ;
+    jtbd:impact "$2M-5M/year savings for 20-team org" ;
+    dcterms:description "Audit savings: $200K-500K/year. Prevented rewrites: $5M-20M over 3 years. Reduced defects: 30-50% drop in production incidents. ROI: 5-10× in year one." .
+
+# Associate progress makers
+jtbd:Job_Enterprise_Standards jtbd:hasProgressMaker jtbd:Progress_Enterprise_UniformEnforcement ;
+    jtbd:hasProgressMaker jtbd:Progress_Enterprise_InstantAuditEvidence ;
+    jtbd:hasProgressMaker jtbd:Progress_Enterprise_DebtPrevention ;
+    jtbd:hasProgressMaker jtbd:Progress_Enterprise_TeamVelocity ;
+    jtbd:hasProgressMaker jtbd:Progress_Enterprise_QuantifiableROI .
+
+# ----------------------------------------------------------------------------
+# JOB 6: DevOps/SRE - Ensure Deployment Reliability and Observability
+# ----------------------------------------------------------------------------
+
+jtbd:Job_DevOps_Observability a jtbd:Job ;
+    rdfs:label "Ensure production systems are observable, reliable, and compliant with SLOs" ;
+    jtbd:hasPersona jtbd:DevOpsSRE ;
+    dcterms:description "When operating production systems, I need complete observability and automated validation, so we meet SLOs and catch issues before users do" .
+
+# Painpoints for DevOps/SRE
+jtbd:Pain_DevOps_ManualInstrumentation a jtbd:Painpoint ;
+    rdfs:label "Developers forget to add telemetry and logging" ;
+    jtbd:forceType jtbd:CurrentSolutionsGap ;
+    jtbd:severity "High" ;
+    dcterms:description "Remind developers in every PR review to add metrics, traces, logs. 30-40% of services have incomplete instrumentation. Debug production issues without sufficient telemetry." .
+
+jtbd:Pain_DevOps_InconsistentMetrics a jtbd:Painpoint ;
+    rdfs:label "Each service uses different metric names and conventions" ;
+    jtbd:forceType jtbd:QualityConcerns ;
+    jtbd:severity "High" ;
+    dcterms:description "20 services, 15 different naming conventions. Dashboards break when teams rename metrics. Cannot aggregate metrics across services. Chaos during incidents." .
+
+jtbd:Pain_DevOps_ValidationGaps a jtbd:Painpoint ;
+    rdfs:label "No automated way to validate deployment readiness" ;
+    jtbd:forceType jtbd:WorkflowFriction ;
+    jtbd:severity "Critical" ;
+    dcterms:description "Manual checklist: Health checks? Metrics? Alerts? Runbooks? 60% compliance. Production incidents from missing validation. 3-5 production issues/month from deployment gaps." .
+
+jtbd:Pain_DevOps_ToolComplexity a jtbd:Painpoint ;
+    rdfs:label "Observability stack is complex (OTEL, Prometheus, Grafana, Jaeger)" ;
+    jtbd:forceType jtbd:WorkflowFriction ;
+    jtbd:severity "Medium" ;
+    dcterms:description "OTEL Collector config is YAML. Prometheus queries are complex. Developers don't understand. SRE becomes bottleneck for instrumentation." .
+
+jtbd:Pain_DevOps_SLOTracking a jtbd:Painpoint ;
+    rdfs:label "Tracking SLO compliance is manual and error-prone" ;
+    jtbd:forceType jtbd:CurrentSolutionsGap ;
+    jtbd:severity "Medium" ;
+    dcterms:description "Export Prometheus data monthly, calculate SLO in spreadsheets. Error rate in calculations: 10-15%. Cannot detect SLO violations in real-time." .
+
+# Associate painpoints
+jtbd:Job_DevOps_Observability jtbd:hasPainpoint jtbd:Pain_DevOps_ManualInstrumentation ;
+    jtbd:hasPainpoint jtbd:Pain_DevOps_InconsistentMetrics ;
+    jtbd:hasPainpoint jtbd:Pain_DevOps_ValidationGaps ;
+    jtbd:hasPainpoint jtbd:Pain_DevOps_ToolComplexity ;
+    jtbd:hasPainpoint jtbd:Pain_DevOps_SLOTracking .
+
+# Progress Makers for DevOps/SRE
+jtbd:Progress_DevOps_AutoInstrumentation a jtbd:ProgressMaker ;
+    rdfs:label "Telemetry instrumentation generated automatically with code" ;
+    jtbd:forceType jtbd:QualityImprovement ;
+    jtbd:impact "100% instrumentation coverage" ;
+    dcterms:description "OTEL spans, metrics, traces generated alongside application code. Impossible to deploy without instrumentation. Coverage: 30-40% → 100%." .
+
+jtbd:Progress_DevOps_SemanticConventions a jtbd:ProgressMaker ;
+    rdfs:label "Semantic conventions enforced via RDF ontology" ;
+    jtbd:forceType jtbd:QualityImprovement ;
+    jtbd:impact "Zero metric naming inconsistency" ;
+    dcterms:description "Metric names, dimensions, units defined in RDF ontology. All services use same conventions. Dashboards never break. Cross-service aggregation works perfectly." .
+
+jtbd:Progress_DevOps_ValidationAutomation a jtbd:ProgressMaker ;
+    rdfs:label "Deployment readiness validated automatically via BPMN workflows" ;
+    jtbd:forceType jtbd:ConfidenceBenefit ;
+    jtbd:impact "90% reduction in deployment-related incidents" ;
+    dcterms:description "SpiffWorkflow BPMN validates: health checks, metrics, alerts, runbooks, SLOs before deployment. Compliance: 60% → 100%. Production incidents: 3-5/month → 0-1/month." .
+
+jtbd:Progress_DevOps_DeveloperEnablement a jtbd:ProgressMaker ;
+    rdfs:label "Developers get correct instrumentation without understanding OTEL" ;
+    jtbd:forceType jtbd:TeamBenefit ;
+    jtbd:impact "SRE bottleneck eliminated" ;
+    dcterms:description "Developers specify what to instrument in RDF. AI generates OTEL config. Developers never write YAML or Prometheus queries. SRE reviews, doesn't implement." .
+
+jtbd:Progress_DevOps_RealTimeSLO a jtbd:ProgressMaker ;
+    rdfs:label "SLO tracking automated through semantic queries" ;
+    jtbd:forceType jtbd:TimeSavings ;
+    jtbd:impact "Real-time SLO visibility, zero manual calculation" ;
+    dcterms:description "SPARQL queries compute SLOs from telemetry RDF. Real-time dashboards. Alerts when SLO at risk. Manual calculation eliminated. Error rate: 10-15% → 0%." .
+
+# Associate progress makers
+jtbd:Job_DevOps_Observability jtbd:hasProgressMaker jtbd:Progress_DevOps_AutoInstrumentation ;
+    jtbd:hasProgressMaker jtbd:Progress_DevOps_SemanticConventions ;
+    jtbd:hasProgressMaker jtbd:Progress_DevOps_ValidationAutomation ;
+    jtbd:hasProgressMaker jtbd:Progress_DevOps_DeveloperEnablement ;
+    jtbd:hasProgressMaker jtbd:Progress_DevOps_RealTimeSLO .
+
+# ----------------------------------------------------------------------------
+# CROSS-CUTTING FORCES (Apply to Multiple Personas)
+# ----------------------------------------------------------------------------
+
+# Universal Painpoint: Learning Curve
+jtbd:Pain_Universal_LearningCurve a jtbd:Painpoint ;
+    rdfs:label "RDF/Turtle/SPARQL learning curve feels steep" ;
+    jtbd:forceType jtbd:SwitchingAnxiety ;
+    jtbd:severity "Medium" ;
+    dcterms:description "Everyone worries: How long to learn RDF? Weeks? Months? Will it slow me down initially? Counter: Most work via natural language (/speckit.* commands), not direct RDF editing." .
+
+# Universal Progress Maker: Constitutional Equation
+jtbd:Progress_Universal_ConstitutionalEquation a jtbd:ProgressMaker ;
+    rdfs:label "spec.md = μ(feature.ttl) guarantees specs never stale" ;
+    jtbd:forceType jtbd:ConfidenceBenefit ;
+    jtbd:impact "100% spec-code synchronization" ;
+    dcterms:description "Biggest pain in traditional dev: specs drift from code. Constitutional equation makes drift mathematically impossible. Specs are generated artifacts, always current." .
+
+# Universal Progress Maker: Multi-Language Support
+jtbd:Progress_Universal_MultiLanguage a jtbd:ProgressMaker ;
+    rdfs:label "One RDF spec compiles to Python, TypeScript, Rust, Java, C#, Go" ;
+    jtbd:forceType jtbd:QualityImprovement ;
+    jtbd:impact "Polyglot teams share single source of truth" ;
+    dcterms:description "Frontend (TypeScript), backend (Python), infrastructure (Rust) all use same ontology. Zero type mismatches. Perfect API contracts. Full-stack consistency." .
+
+# Universal Painpoint: Vendor Lock-in Concern
+jtbd:Pain_Universal_VendorLockin a jtbd:Painpoint ;
+    rdfs:label "Concern about being locked into spec-kit tooling" ;
+    jtbd:forceType jtbd:SwitchingAnxiety ;
+    jtbd:severity "Medium" ;
+    dcterms:description "What if spec-kit goes away? What if ggen stops being maintained? Counter: RDF is W3C standard, SPARQL is ISO standard. Not vendor-specific. Can use any RDF tools." .
+
+# ----------------------------------------------------------------------------
+# METADATA
+# ----------------------------------------------------------------------------
+
+jtbd:ForcesAnalysisDoc a sk:Documentation ;
+    rdfs:label "JTBD Forces Analysis" ;
+    sk:documentTitle "Jobs-To-Be-Done Forces Analysis for Spec-Kit" ;
+    sk:documentDescription "Comprehensive analysis of painpoints (blocking forces) and progress makers (enabling forces) for spec-kit adoption across six key personas and six primary jobs"@en ;
+    sk:documentVersion "1.0" ;
+    sk:createdDate "2025-12-21T00:00:00Z"^^xsd:dateTime ;
+    sk:authorName "Spec-Kit JTBD Analysis Team" ;
+    sk:maintenanceStatus "Current" ;
+    sk:category "Research" ;
+    dcterms:description "This analysis identifies the forces at play when users consider adopting spec-kit. For each persona and job-to-be-done, we enumerate the painpoints (current solutions gaps, anxieties, frictions, quality concerns) that block adoption, and the progress makers (time savings, quality improvements, confidence benefits, team benefits) that enable it. Understanding these forces allows us to address blockers and amplify enablers."@en .
+
+# Summary Statistics
+jtbd:AnalysisSummary a jtbd:Documentation ;
+    rdfs:label "Forces Analysis Summary" ;
+    dcterms:description """
+Summary of Forces Analysis:
+
+Personas: 6
+- Solo Full-Stack Developer
+- Technical Lead / Architect
+- Product Manager
+- Junior Developer
+- Enterprise Architect
+- DevOps / SRE Engineer
+
+Jobs-To-Be-Done: 6
+- Build complete feature spec-to-code (Solo Dev)
+- Establish consistent architecture (Tech Lead)
+- Define unambiguous requirements (PM)
+- Learn best practices while building (Junior)
+- Enforce standards across teams (Enterprise)
+- Ensure deployment reliability (DevOps)
+
+Painpoints Identified: 30+
+- Current Solutions Gaps: 12 (40%)
+- Switching Anxieties: 8 (27%)
+- Workflow Frictions: 7 (23%)
+- Quality Concerns: 3 (10%)
+
+Progress Makers Identified: 30+
+- Quality Improvements: 11 (37%)
+- Time Savings: 7 (23%)
+- Confidence Benefits: 7 (23%)
+- Team Benefits: 5 (17%)
+
+Key Insights:
+1. Largest painpoint category: Current solutions gaps (manual, time-consuming, incomplete)
+2. Largest progress maker category: Quality improvements (consistency, coverage, traceability)
+3. Top anxiety: Learning curve for RDF/Turtle (addressed via natural language interfaces)
+4. Top time saving: Spec generation 75% faster (2-4 hours → 30 minutes)
+5. Universal benefit: Constitutional equation eliminates spec-code drift
+
+Critical Success Factors:
+- Reduce RDF visibility (natural language interfaces dominant)
+- Emphasize quality improvements over just speed
+- Show ROI quantification for enterprise adoption
+- Demonstrate incremental adoption path for brownfield codebases
+- Prove AI-generated code quality exceeds manual code
+"""@en .

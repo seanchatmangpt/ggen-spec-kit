@@ -22,17 +22,17 @@ from .otel_validation import (
 )
 
 __all__ = [
-    # OTEL validation
-    "OTELValidationResult",
-    "TestValidationStep",
-    "create_otel_validation_workflow",
-    "execute_otel_validation_workflow",
-    "run_8020_otel_validation",
     # External projects
     "ExternalProjectInfo",
     "ExternalValidationResult",
-    "discover_external_projects",
-    "validate_external_project_with_spiff",
+    # OTEL validation
+    "OTELValidationResult",
+    "TestValidationStep",
     "batch_validate_external_projects",
+    "create_otel_validation_workflow",
+    "discover_external_projects",
+    "execute_otel_validation_workflow",
     "run_8020_external_project_validation",
+    "run_8020_otel_validation",
+    "validate_external_project_with_spiff",
 ]

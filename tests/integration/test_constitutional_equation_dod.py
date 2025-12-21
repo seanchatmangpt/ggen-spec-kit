@@ -1,7 +1,11 @@
 """Constitutional equation test for dod"""
+
 import hashlib
 from pathlib import Path
 
+import pytest
+
+rdflib = pytest.importorskip("rdflib", reason="rdflib not installed")
 from rdflib import Graph
 
 
@@ -46,24 +50,30 @@ def test_rdf_specification_exists() -> None:
 def test_cli_module_importable() -> None:
     """CLI module should be importable."""
     import sys
+
     sys.path.insert(0, "src")
     from specify_cli.commands import dod
+
     assert dod.app is not None
 
 
 def test_ops_module_importable() -> None:
     """Ops module should be importable."""
     import sys
+
     sys.path.insert(0, "src")
     from specify_cli.ops import dod
+
     assert dod is not None
 
 
 def test_runtime_module_importable() -> None:
     """Runtime module should be importable."""
     import sys
+
     sys.path.insert(0, "src")
     from specify_cli.runtime import dod
+
     assert dod is not None
 
 
@@ -112,4 +122,3 @@ def test_constitutional_equation_integrity() -> None:
     assert cli_hash is not None
     assert ops_hash is not None
     assert runtime_hash is not None
-

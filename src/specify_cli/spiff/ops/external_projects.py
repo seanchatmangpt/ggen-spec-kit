@@ -9,6 +9,7 @@ Adapted from uvmgr's external project validation framework.
 
 from __future__ import annotations
 
+import contextlib
 import tempfile
 from concurrent.futures import ThreadPoolExecutor, as_completed
 from dataclasses import dataclass, field
@@ -17,8 +18,8 @@ from typing import Any
 
 # Optional OTEL instrumentation
 try:
-    from ...core.instrumentation import add_span_attributes, add_span_event
-    from ...core.telemetry import metric_counter, metric_histogram, span
+    from specify_cli.core.instrumentation import add_span_attributes, add_span_event
+    from specify_cli.core.telemetry import metric_counter, metric_histogram, span
 
     _otel_available = True
 except ImportError:
@@ -257,10 +258,8 @@ def validate_external_project_with_spiff(
             result.metrics = validation_result.metrics
 
             # Step 4: Cleanup
-            try:
+            with contextlib.suppress(Exception):
                 workflow_path.unlink()
-            except Exception:
-                pass
 
             result.success = validation_result.success
             result.duration_seconds = time.time() - start_time
@@ -467,7 +466,6 @@ def _is_python_project(path: Path) -> ExternalProjectInfo | None:
         return None
 
     confidence = 0.0
-    has_requirements = False
     has_tests = False
     has_dependencies = False
     package_manager = "pip"

@@ -1,0 +1,469 @@
+{# JTBD Satisfaction Score Visualization Template
+   Generates satisfaction score charts and analysis across personas, jobs, and features
+
+   Expected SPARQL result variables:
+   - personaName: Customer segment/persona
+   - jobTitle: The job to be done
+   - featureName: Feature being rated
+   - featureStatus: Status (Planned, In Progress, Released)
+   - outcome: Expected outcome
+   - satisfactionScore: User satisfaction (1-10 scale)
+   - satisfactionDate: When satisfaction measured (optional)
+   - responseCount: Number of user responses (optional)
+   - npsScore: Net Promoter Score -100 to 100 (optional)
+   - painpointResolved: Whether pain point was resolved (true/false, optional)
+   - emotionalBenefit: Emotional benefit delivered
+   - usageFrequency: How often user uses feature (Daily, Weekly, Monthly, optional)
+   - recommendationRate: % who would recommend (optional)
+#}
+# JTBD Satisfaction Score Visualization
+
+> **User Voice**: Track and visualize satisfaction scores across personas, jobs, and features
+
+**Report Generated**: {{ now() | date(format="%Y-%m-%d %H:%M") }}
+
+---
+
+## Overall Satisfaction
+
+{% set all_scores = results | filter(attribute="satisfactionScore") %}
+{% set total_satisfaction = 0 %}
+{% set count = 0 %}
+{% for item in all_scores %}
+{% set_global total_satisfaction = total_satisfaction + (item.satisfactionScore | float) %}
+{% set_global count = count + 1 %}
+{% endfor %}
+
+{% if count > 0 %}
+{% set avg_satisfaction = total_satisfaction / count %}
+
+### Average Satisfaction Score
+
+```
+{{ avg_satisfaction | round(precision=1) }}/10
+{% set bar_length = 20 %}
+{% set filled = (avg_satisfaction / 10 * bar_length) | round %}
+{% set empty = bar_length - filled %}
+{% if filled > 0 %}{{ "█" | repeat(count=filled) }}{% endif %}{% if empty > 0 %}{{ "░" | repeat(count=empty) }}{% endif %}
+```
+
+**Status**: {% if avg_satisfaction >= 8 %}✅ Excellent{% elif avg_satisfaction >= 6 %}⚠️ Good{% else %}🔴 Needs Improvement{% endif %}
+
+{% set excellent = all_scores | filter(attribute="satisfactionScore", value="10") | length + all_scores | filter(attribute="satisfactionScore", value="9") | length + all_scores | filter(attribute="satisfactionScore", value="8") | length %}
+{% set good = all_scores | filter(attribute="satisfactionScore", value="7") | length + all_scores | filter(attribute="satisfactionScore", value="6") | length %}
+{% set poor = count - excellent - good %}
+
+| Category | Count | Percentage |
+|----------|-------|------------|
+| Excellent (8-10) | {{ excellent }} | {{ (excellent / count * 100) | round }}% |
+| Good (6-7) | {{ good }} | {{ (good / count * 100) | round }}% |
+| Poor (0-5) | {{ poor }} | {{ (poor / count * 100) | round }}% |
+
+{% if results | filter(attribute="responseCount") | length > 0 %}
+{% set total_responses = 0 %}
+{% for item in results | filter(attribute="responseCount") %}
+{% set_global total_responses = total_responses + (item.responseCount | int) %}
+{% endfor %}
+
+**Total Responses**: {{ total_responses }}
+{% endif %}
+
+{% else %}
+
+**Status**: 🔵 No satisfaction data available
+
+*Implement user satisfaction surveys to track feedback.*
+
+{% endif %}
+
+---
+
+## Satisfaction by Persona
+
+{% set personas = results | map(attribute="personaName") | unique | sort %}
+
+{% for persona in personas %}
+{% set persona_scores = results | filter(attribute="personaName", value=persona) | filter(attribute="satisfactionScore") %}
+
+### {{ persona }}
+
+{% if persona_scores | length > 0 %}
+
+{% set persona_total = 0 %}
+{% set persona_count = 0 %}
+{% for item in persona_scores %}
+{% set_global persona_total = persona_total + (item.satisfactionScore | float) %}
+{% set_global persona_count = persona_count + 1 %}
+{% endfor %}
+{% set persona_avg = persona_total / persona_count %}
+
+**Average Score**: {{ persona_avg | round(precision=1) }}/10 {% if persona_avg >= 8 %}✅{% elif persona_avg >= 6 %}⚠️{% else %}🔴{% endif %}
+
+**Responses**: {{ persona_count }}
+
+#### Score Distribution
+
+```
+10 ██████ {{ persona_scores | filter(attribute="satisfactionScore", value="10") | length }} ({{ (persona_scores | filter(attribute="satisfactionScore", value="10") | length / persona_count * 100) | round }}%)
+ 9 █████  {{ persona_scores | filter(attribute="satisfactionScore", value="9") | length }} ({{ (persona_scores | filter(attribute="satisfactionScore", value="9") | length / persona_count * 100) | round }}%)
+ 8 ████   {{ persona_scores | filter(attribute="satisfactionScore", value="8") | length }} ({{ (persona_scores | filter(attribute="satisfactionScore", value="8") | length / persona_count * 100) | round }}%)
+ 7 ███    {{ persona_scores | filter(attribute="satisfactionScore", value="7") | length }} ({{ (persona_scores | filter(attribute="satisfactionScore", value="7") | length / persona_count * 100) | round }}%)
+ 6 ██     {{ persona_scores | filter(attribute="satisfactionScore", value="6") | length }} ({{ (persona_scores | filter(attribute="satisfactionScore", value="6") | length / persona_count * 100) | round }}%)
+ 5 █      {{ persona_scores | filter(attribute="satisfactionScore", value="5") | length }} ({{ (persona_scores | filter(attribute="satisfactionScore", value="5") | length / persona_count * 100) | round }}%)
+ 4 █      {{ persona_scores | filter(attribute="satisfactionScore", value="4") | length }} ({{ (persona_scores | filter(attribute="satisfactionScore", value="4") | length / persona_count * 100) | round }}%)
+ 3        {{ persona_scores | filter(attribute="satisfactionScore", value="3") | length }} ({{ (persona_scores | filter(attribute="satisfactionScore", value="3") | length / persona_count * 100) | round }}%)
+ 2        {{ persona_scores | filter(attribute="satisfactionScore", value="2") | length }} ({{ (persona_scores | filter(attribute="satisfactionScore", value="2") | length / persona_count * 100) | round }}%)
+ 1        {{ persona_scores | filter(attribute="satisfactionScore", value="1") | length }} ({{ (persona_scores | filter(attribute="satisfactionScore", value="1") | length / persona_count * 100) | round }}%)
+ 0        {{ persona_scores | filter(attribute="satisfactionScore", value="0") | length }} ({{ (persona_scores | filter(attribute="satisfactionScore", value="0") | length / persona_count * 100) | round }}%)
+```
+
+#### Top Features for {{ persona }}
+
+| Feature | Job | Score | Responses |
+|---------|-----|-------|-----------|
+{% for feature_name in persona_scores | map(attribute="featureName") | unique | first(n=5) %}
+{% set feature_scores = persona_scores | filter(attribute="featureName", value=feature_name) %}
+{% set feature_total = 0 %}
+{% set feature_count = 0 %}
+{% for item in feature_scores %}
+{% set_global feature_total = feature_total + (item.satisfactionScore | float) %}
+{% set_global feature_count = feature_count + 1 %}
+{% endfor %}
+{% set feature = feature_scores | first %}
+| {{ feature_name }} | {{ feature.jobTitle }} | {{ (feature_total / feature_count) | round(precision=1) }}/10 | {{ feature_count }} |
+{% endfor %}
+
+{% if persona_avg < 7 %}
+
+#### ⚠️ Attention Required
+
+{{ persona }} satisfaction is below target. Review:
+- Features with scores < 6
+- Pain points not being resolved
+- Job-feature alignment issues
+
+{% endif %}
+
+{% else %}
+
+*No satisfaction data available for {{ persona }}. Target this persona in next survey round.*
+
+{% endif %}
+
+{% endfor %}
+
+---
+
+## Satisfaction by Job
+
+{% set jobs = results | map(attribute="jobTitle") | unique | sort %}
+
+{% for job in jobs %}
+{% set job_scores = results | filter(attribute="jobTitle", value=job) | filter(attribute="satisfactionScore") %}
+
+### {{ job }}
+
+{% if job_scores | length > 0 %}
+
+{% set job_total = 0 %}
+{% set job_count = 0 %}
+{% for item in job_scores %}
+{% set_global job_total = job_total + (item.satisfactionScore | float) %}
+{% set_global job_count = job_count + 1 %}
+{% endfor %}
+{% set job_avg = job_total / job_count %}
+
+**Average Satisfaction**: {{ job_avg | round(precision=1) }}/10
+
+**Features Addressing This Job**: {{ job_scores | map(attribute="featureName") | unique | length }}
+
+**Personas Affected**: {{ job_scores | map(attribute="personaName") | unique | join(sep=", ") }}
+
+#### Performance Chart
+
+```
+{% set bar_length = 20 %}
+{% set filled = (job_avg / 10 * bar_length) | round %}
+{% set empty = bar_length - filled %}
+{% if filled > 0 %}{{ "█" | repeat(count=filled) }}{% endif %}{% if empty > 0 %}{{ "░" | repeat(count=empty) }}{% endif %} {{ job_avg | round(precision=1) }}/10
+```
+
+{% if job_avg >= 8 %}
+✅ **Strong Satisfaction** - Job is well-served by current features
+{% elif job_avg >= 6 %}
+⚠️ **Moderate Satisfaction** - Room for improvement in feature effectiveness
+{% else %}
+🔴 **Low Satisfaction** - Critical review needed for features addressing this job
+{% endif %}
+
+{% else %}
+
+*No satisfaction data available for this job.*
+
+{% endif %}
+
+{% endfor %}
+
+---
+
+## Feature Satisfaction Ranking
+
+{% set features_with_scores = results | filter(attribute="satisfactionScore") %}
+{% set feature_names = features_with_scores | map(attribute="featureName") | unique %}
+
+### Top 10 Highest-Rated Features
+
+| Rank | Feature | Avg Score | Job | Personas | Responses |
+|------|---------|-----------|-----|----------|-----------|
+{% for feature_name in feature_names %}
+{% set feature_scores = features_with_scores | filter(attribute="featureName", value=feature_name) %}
+{% set feature_total = 0 %}
+{% set feature_count = 0 %}
+{% for item in feature_scores %}
+{% set_global feature_total = feature_total + (item.satisfactionScore | float) %}
+{% set_global feature_count = feature_count + 1 %}
+{% endfor %}
+{# Conceptual sort - showing first 10 #}
+{% if loop.index <= 10 %}
+{% set feature = feature_scores | first %}
+| {{ loop.index }} | {{ feature_name }} | {{ (feature_total / feature_count) | round(precision=1) }}/10 | {{ feature.jobTitle }} | {{ feature_scores | map(attribute="personaName") | unique | join(sep=", ") }} | {{ feature_count }} |
+{% endif %}
+{% endfor %}
+
+### Bottom 5 Features (Need Attention)
+
+{% for feature_name in feature_names %}
+{% set feature_scores = features_with_scores | filter(attribute="featureName", value=feature_name) %}
+{% set feature_total = 0 %}
+{% set feature_count = 0 %}
+{% for item in feature_scores %}
+{% set_global feature_total = feature_total + (item.satisfactionScore | float) %}
+{% set_global feature_count = feature_count + 1 %}
+{% endfor %}
+{% set feature_avg = feature_total / feature_count %}
+{# Show only features with avg < 6 #}
+{% if feature_avg < 6 %}
+{% set feature = feature_scores | first %}
+
+#### 🔴 {{ feature_name }} ({{ feature_avg | round(precision=1) }}/10)
+
+**Job**: {{ feature.jobTitle }}
+
+**Why Low Satisfaction**:
+{% set low_scorers = feature_scores | filter(attribute="satisfactionScore", value="5") | length + feature_scores | filter(attribute="satisfactionScore", value="4") | length + feature_scores | filter(attribute="satisfactionScore", value="3") | length + feature_scores | filter(attribute="satisfactionScore", value="2") | length + feature_scores | filter(attribute="satisfactionScore", value="1") | length + feature_scores | filter(attribute="satisfactionScore", value="0") | length %}
+- {{ low_scorers }} of {{ feature_count }} responses rated ≤ 5/10
+- Review pain point resolution
+- Check outcome achievement metrics
+- Consider feature redesign or replacement
+
+{% endif %}
+{% endfor %}
+
+---
+
+## Net Promoter Score (NPS)
+
+{% set nps_data = results | filter(attribute="npsScore") %}
+
+{% if nps_data | length > 0 %}
+
+{% set total_nps = 0 %}
+{% set nps_count = 0 %}
+{% for item in nps_data %}
+{% set_global total_nps = total_nps + (item.npsScore | float) %}
+{% set_global nps_count = nps_count + 1 %}
+{% endfor %}
+{% set avg_nps = total_nps / nps_count %}
+
+### Overall NPS
+
+**Score**: {{ avg_nps | round(precision=1) }}
+
+```
+{% if avg_nps >= 50 %}
+Excellent (50-100)  ████████████████████ {{ avg_nps | round }}
+{% elif avg_nps >= 0 %}
+Good (0-49)         ██████████░░░░░░░░░░ {{ avg_nps | round }}
+{% else %}
+Needs Work (-100-0) █████░░░░░░░░░░░░░░░ {{ avg_nps | round }}
+{% endif %}
+```
+
+**Classification**: {% if avg_nps >= 50 %}✅ Excellent (World-class){% elif avg_nps >= 30 %}⚠️ Good{% elif avg_nps >= 0 %}🟡 Fair{% else %}🔴 Poor{% endif %}
+
+### NPS by Persona
+
+| Persona | NPS | Classification |
+|---------|-----|----------------|
+{% set nps_personas = nps_data | map(attribute="personaName") | unique %}
+{% for persona in nps_personas %}
+{% set persona_nps_data = nps_data | filter(attribute="personaName", value=persona) %}
+{% set persona_nps_total = 0 %}
+{% set persona_nps_count = 0 %}
+{% for item in persona_nps_data %}
+{% set_global persona_nps_total = persona_nps_total + (item.npsScore | float) %}
+{% set_global persona_nps_count = persona_nps_count + 1 %}
+{% endfor %}
+{% set persona_nps = persona_nps_total / persona_nps_count %}
+| {{ persona }} | {{ persona_nps | round }} | {% if persona_nps >= 50 %}✅ Excellent{% elif persona_nps >= 30 %}⚠️ Good{% elif persona_nps >= 0 %}🟡 Fair{% else %}🔴 Poor{% endif %} |
+{% endfor %}
+
+{% else %}
+
+*No NPS data available. Implement NPS surveys with "How likely are you to recommend?" question (0-10 scale).*
+
+**NPS Calculation**:
+- Promoters (9-10): +1
+- Passives (7-8): 0
+- Detractors (0-6): -1
+- NPS = (% Promoters - % Detractors)
+
+{% endif %}
+
+---
+
+## Satisfaction Trends
+
+{% set scores_with_dates = results | filter(attribute="satisfactionDate") | filter(attribute="satisfactionScore") %}
+
+{% if scores_with_dates | length > 0 %}
+
+### Satisfaction Over Time
+
+| Date | Avg Score | Responses | Trend |
+|------|-----------|-----------|-------|
+{% for date in scores_with_dates | map(attribute="satisfactionDate") | unique | sort %}
+{% set date_scores = scores_with_dates | filter(attribute="satisfactionDate", value=date) %}
+{% set date_total = 0 %}
+{% set date_count = 0 %}
+{% for item in date_scores %}
+{% set_global date_total = date_total + (item.satisfactionScore | float) %}
+{% set_global date_count = date_count + 1 %}
+{% endfor %}
+| {{ date }} | {{ (date_total / date_count) | round(precision=1) }}/10 | {{ date_count }} | {% if loop.index > 1 %}TBD{% else %}-{% endif %} |
+{% endfor %}
+
+*Add trend analysis by comparing sequential measurements*
+
+{% else %}
+
+*No satisfaction date tracking. Add satisfactionDate to enable trend analysis.*
+
+{% endif %}
+
+---
+
+## Pain Point Resolution Impact
+
+{% set resolved_pains = results | filter(attribute="painpointResolved", value="true") | filter(attribute="satisfactionScore") %}
+{% set unresolved_pains = results | filter(attribute="painpointResolved", value="false") | filter(attribute="satisfactionScore") %}
+
+{% if resolved_pains | length > 0 or unresolved_pains | length > 0 %}
+
+### Satisfaction: Resolved vs. Unresolved Pain Points
+
+{% if resolved_pains | length > 0 %}
+{% set resolved_total = 0 %}
+{% set resolved_count = 0 %}
+{% for item in resolved_pains %}
+{% set_global resolved_total = resolved_total + (item.satisfactionScore | float) %}
+{% set_global resolved_count = resolved_count + 1 %}
+{% endfor %}
+{% set resolved_avg = resolved_total / resolved_count %}
+{% endif %}
+
+{% if unresolved_pains | length > 0 %}
+{% set unresolved_total = 0 %}
+{% set unresolved_count = 0 %}
+{% for item in unresolved_pains %}
+{% set_global unresolved_total = unresolved_total + (item.satisfactionScore | float) %}
+{% set_global unresolved_count = unresolved_count + 1 %}
+{% endfor %}
+{% set unresolved_avg = unresolved_total / unresolved_count %}
+{% endif %}
+
+| Pain Point Status | Avg Satisfaction | Responses |
+|-------------------|------------------|-----------|
+{% if resolved_pains | length > 0 %}| ✅ Resolved | {{ resolved_avg | round(precision=1) }}/10 | {{ resolved_count }} |{% endif %}
+{% if unresolved_pains | length > 0 %}| 🔴 Unresolved | {{ unresolved_avg | round(precision=1) }}/10 | {{ unresolved_count }} |{% endif %}
+
+{% if resolved_pains | length > 0 and unresolved_pains | length > 0 %}
+**Impact**: Resolving pain points increases satisfaction by {{ ((resolved_avg - unresolved_avg) / unresolved_avg * 100) | round(precision=1) }}%
+
+**Key Insight**: Pain point resolution is {% if (resolved_avg - unresolved_avg) > 2 %}strongly{% elif (resolved_avg - unresolved_avg) > 1 %}moderately{% else %}weakly{% endif %} correlated with user satisfaction.
+{% endif %}
+
+{% endif %}
+
+---
+
+## Recommendations
+
+### Immediate Actions
+
+1. **Low-Scoring Features** (< 6/10)
+   {% set low_features = 0 %}
+   {% for feature_name in features_with_scores | map(attribute="featureName") | unique %}
+   {% set feature_scores = features_with_scores | filter(attribute="featureName", value=feature_name) %}
+   {% set feature_total = 0 %}
+   {% set feature_count = 0 %}
+   {% for item in feature_scores %}
+   {% set_global feature_total = feature_total + (item.satisfactionScore | float) %}
+   {% set_global feature_count = feature_count + 1 %}
+   {% endfor %}
+   {% if (feature_total / feature_count) < 6 %}
+   {% set_global low_features = low_features + 1 %}
+   {% endif %}
+   {% endfor %}
+   {% if low_features > 0 %}
+   - Review {{ low_features }} features with satisfaction < 6/10
+   - Investigate root causes of dissatisfaction
+   - Prioritize improvements or replacements
+   {% else %}
+   - All features meeting minimum satisfaction threshold ✅
+   {% endif %}
+
+2. **Persona-Specific Issues**
+   {% for persona in personas %}
+   {% set persona_scores_check = results | filter(attribute="personaName", value=persona) | filter(attribute="satisfactionScore") %}
+   {% if persona_scores_check | length > 0 %}
+   {% set persona_total_check = 0 %}
+   {% set persona_count_check = 0 %}
+   {% for item in persona_scores_check %}
+   {% set_global persona_total_check = persona_total_check + (item.satisfactionScore | float) %}
+   {% set_global persona_count_check = persona_count_check + 1 %}
+   {% endfor %}
+   {% if (persona_total_check / persona_count_check) < 7 %}
+   - **{{ persona }}**: Satisfaction {{ (persona_total_check / persona_count_check) | round(precision=1) }}/10 - requires targeted improvements
+   {% endif %}
+   {% endif %}
+   {% endfor %}
+
+3. **Survey Coverage**
+   {% if count == 0 %}
+   - Implement satisfaction surveys for released features
+   - Target response rate: 20%+ of users
+   {% elif count < 100 %}
+   - Increase survey response rate (current: {{ count }} responses)
+   - Consider in-app satisfaction prompts
+   {% endif %}
+
+### Strategic Improvements
+
+1. **Benchmark Against Best**
+   - Replicate patterns from highest-rated features (8-10/10)
+   - Apply successful job-outcome alignment to struggling features
+
+2. **Continuous Measurement**
+   - Survey users 30 days post-release
+   - Track satisfaction trends over time
+   - Correlate with usage metrics
+
+3. **Close the Loop**
+   - Share satisfaction insights with development teams
+   - Prioritize feature improvements based on satisfaction gaps
+   - Celebrate teams delivering high-satisfaction features
+
+---
+
+*Satisfaction visualization generated from JTBD survey data | Update monthly for trend tracking*

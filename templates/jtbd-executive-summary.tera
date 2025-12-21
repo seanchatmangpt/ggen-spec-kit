@@ -1,0 +1,304 @@
+{# JTBD Executive Summary Template
+   Generates high-level JTBD metrics summary for leadership
+
+   Expected SPARQL result variables:
+   - personaName: Customer segment/persona
+   - jobTitle: The job to be done
+   - jobFrequency: How often job occurs (High, Medium, Low)
+   - jobImportance: How critical job is (Critical, High, Medium, Low)
+   - featureName: Feature addressing this job
+   - featureStatus: Status (Planned, In Progress, Released)
+   - outcome: Expected outcome
+   - outcomeMetric: Quantifiable success metric
+   - currentValue: Current measured performance (optional)
+   - targetValue: Target performance value
+   - satisfactionScore: User satisfaction (1-10 scale, optional)
+   - painpoint: Pain point being addressed
+   - painpointSeverity: Severity (Critical, High, Medium, Low)
+   - emotionalBenefit: Emotional benefit delivered
+#}
+# JTBD Executive Summary
+
+> **Strategic Overview**: Jobs-to-be-Done metrics, feature-outcome alignment, and customer satisfaction
+
+**Report Date**: {{ now() | date(format="%Y-%m-%d %H:%M") }}
+
+---
+
+## Key Metrics at a Glance
+
+{% set total_jobs = results | map(attribute="jobTitle") | unique | length %}
+{% set total_features = results | map(attribute="featureName") | unique | length %}
+{% set total_personas = results | map(attribute="personaName") | unique | length %}
+{% set released_features = results | filter(attribute="featureStatus", value="Released") %}
+{% set in_progress_features = results | filter(attribute="featureStatus", value="In Progress") %}
+{% set planned_features = results | filter(attribute="featureStatus", value="Planned") %}
+
+| Metric | Count | Percentage |
+|--------|-------|------------|
+| **Total Jobs Tracked** | {{ total_jobs }} | 100% |
+| **Features Released** | {{ released_features | length }} | {{ (released_features | length / total_features * 100) | round(precision=1) }}% |
+| **Features In Progress** | {{ in_progress_features | length }} | {{ (in_progress_features | length / total_features * 100) | round(precision=1) }}% |
+| **Features Planned** | {{ planned_features | length }} | {{ (planned_features | length / total_features * 100) | round(precision=1) }}% |
+| **Customer Personas** | {{ total_personas }} | - |
+
+---
+
+## Strategic Alignment
+
+### Job Priority Matrix
+
+Jobs prioritized by Frequency × Importance:
+
+{% set critical_high_freq = results | filter(attribute="jobImportance", value="Critical") | filter(attribute="jobFrequency", value="High") | map(attribute="jobTitle") | unique %}
+{% set high_high_freq = results | filter(attribute="jobImportance", value="High") | filter(attribute="jobFrequency", value="High") | map(attribute="jobTitle") | unique %}
+{% set critical_medium_freq = results | filter(attribute="jobImportance", value="Critical") | filter(attribute="jobFrequency", value="Medium") | map(attribute="jobTitle") | unique %}
+
+| Priority Tier | Job Count | Status |
+|---------------|-----------|--------|
+| **P0: Critical × High-Frequency** | {{ critical_high_freq | length }} | {% if critical_high_freq | length > 0 %}🔴 Focus Required{% else %}✅ Clear{% endif %} |
+| **P1: High × High-Frequency** | {{ high_high_freq | length }} | {% if high_high_freq | length > 3 %}⚠️ Monitor{% else %}✅ Manageable{% endif %} |
+| **P2: Critical × Medium-Frequency** | {{ critical_medium_freq | length }} | {% if critical_medium_freq | length > 5 %}⚠️ Address Soon{% else %}✅ On Track{% endif %} |
+
+#### P0 Jobs (Immediate Attention Required)
+
+{% if critical_high_freq | length > 0 %}
+{% for job in critical_high_freq %}
+{% set job_features = results | filter(attribute="jobTitle", value=job) %}
+{% set job_released = job_features | filter(attribute="featureStatus", value="Released") | length %}
+- **{{ job }}**
+  - Features: {{ job_features | length }} ({{ job_released }} released)
+  - Coverage: {{ (job_released / job_features | length * 100) | round }}%
+{% endfor %}
+{% else %}
+*No P0 jobs identified - excellent strategic position.*
+{% endif %}
+
+---
+
+## Outcome Performance
+
+### Performance Against Targets
+
+{% set features_with_metrics = results | filter(attribute="currentValue") | filter(attribute="targetValue") %}
+{% if features_with_metrics | length > 0 %}
+
+{% set met_targets = 0 %}
+{% set total_targets = 0 %}
+{% for feature in features_with_metrics %}
+{% set_global total_targets = total_targets + 1 %}
+{% if feature.currentValue | float >= feature.targetValue | float %}
+{% set_global met_targets = met_targets + 1 %}
+{% endif %}
+{% endfor %}
+
+**Target Achievement Rate**: {{ (met_targets / total_targets * 100) | round(precision=1) }}% ({{ met_targets }}/{{ total_targets }} outcomes)
+
+| Outcome Category | Target Met | In Progress | Not Met |
+|------------------|------------|-------------|---------|
+{% set outcome_categories = features_with_metrics | map(attribute="outcome") | unique %}
+{% for outcome in outcome_categories %}
+{% set outcome_features = features_with_metrics | filter(attribute="outcome", value=outcome) %}
+{% set outcome_met = 0 %}
+{% set outcome_in_progress = 0 %}
+{% set outcome_not_met = 0 %}
+{% for feature in outcome_features %}
+{% if feature.currentValue | float >= feature.targetValue | float %}
+{% set_global outcome_met = outcome_met + 1 %}
+{% elif feature.currentValue | float >= (feature.targetValue | float * 0.7) %}
+{% set_global outcome_in_progress = outcome_in_progress + 1 %}
+{% else %}
+{% set_global outcome_not_met = outcome_not_met + 1 %}
+{% endif %}
+{% endfor %}
+| {{ outcome }} | {{ outcome_met }} ✅ | {{ outcome_in_progress }} ⚠️ | {{ outcome_not_met }} ❌ |
+{% endfor %}
+
+{% else %}
+*No current performance data available. Implement outcome tracking to measure impact.*
+{% endif %}
+
+---
+
+## Customer Satisfaction
+
+{% set satisfaction_data = results | filter(attribute="satisfactionScore") %}
+{% if satisfaction_data | length > 0 %}
+
+{% set total_satisfaction = 0 %}
+{% set count = 0 %}
+{% for item in satisfaction_data %}
+{% set_global total_satisfaction = total_satisfaction + (item.satisfactionScore | float) %}
+{% set_global count = count + 1 %}
+{% endfor %}
+{% set avg_satisfaction = total_satisfaction / count %}
+
+**Average Satisfaction Score**: {{ avg_satisfaction | round(precision=2) }}/10
+
+### Satisfaction by Persona
+
+| Persona | Avg Score | Status |
+|---------|-----------|--------|
+{% set personas = satisfaction_data | map(attribute="personaName") | unique %}
+{% for persona in personas %}
+{% set persona_data = satisfaction_data | filter(attribute="personaName", value=persona) %}
+{% set persona_total = 0 %}
+{% set persona_count = 0 %}
+{% for item in persona_data %}
+{% set_global persona_total = persona_total + (item.satisfactionScore | float) %}
+{% set_global persona_count = persona_count + 1 %}
+{% endfor %}
+{% set persona_avg = persona_total / persona_count %}
+| {{ persona }} | {{ persona_avg | round(precision=1) }} | {% if persona_avg >= 8 %}✅ Excellent{% elif persona_avg >= 6 %}⚠️ Good{% else %}🔴 Needs Attention{% endif %} |
+{% endfor %}
+
+### Satisfaction Distribution
+
+```
+Excellent (8-10): {{ satisfaction_data | filter(attribute="satisfactionScore", value="8") | length + satisfaction_data | filter(attribute="satisfactionScore", value="9") | length + satisfaction_data | filter(attribute="satisfactionScore", value="10") | length }} ████████████████
+Good (6-7):       {{ satisfaction_data | filter(attribute="satisfactionScore", value="6") | length + satisfaction_data | filter(attribute="satisfactionScore", value="7") | length }} ████████
+Poor (0-5):       {{ satisfaction_data | filter(attribute="satisfactionScore", value="0") | length + satisfaction_data | filter(attribute="satisfactionScore", value="1") | length + satisfaction_data | filter(attribute="satisfactionScore", value="2") | length + satisfaction_data | filter(attribute="satisfactionScore", value="3") | length + satisfaction_data | filter(attribute="satisfactionScore", value="4") | length + satisfaction_data | filter(attribute="satisfactionScore", value="5") | length }} ████
+```
+
+{% else %}
+*No satisfaction data available. Survey users to track satisfaction scores.*
+{% endif %}
+
+---
+
+## Pain Point Analysis
+
+### Critical Pain Points
+
+{% set critical_painpoints = results | filter(attribute="painpointSeverity", value="Critical") | map(attribute="painpoint") | unique %}
+{% set high_painpoints = results | filter(attribute="painpointSeverity", value="High") | map(attribute="painpoint") | unique %}
+
+{% if critical_painpoints | length > 0 %}
+**Critical Severity** ({{ critical_painpoints | length }} unique pain points):
+
+{% for painpoint in critical_painpoints %}
+{% set painpoint_features = results | filter(attribute="painpoint", value=painpoint) %}
+{% set painpoint_released = painpoint_features | filter(attribute="featureStatus", value="Released") | length %}
+- **{{ painpoint }}**
+  - Affects: {{ painpoint_features | map(attribute="personaName") | unique | join(sep=", ") }}
+  - Addressed by: {{ painpoint_features | length }} feature(s)
+  - Resolution: {% if painpoint_released == painpoint_features | length %}✅ Complete{% elif painpoint_released > 0 %}⚠️ Partial ({{ painpoint_released }}/{{ painpoint_features | length }}){% else %}🔴 Planned{% endif %}
+{% endfor %}
+{% else %}
+*No critical pain points - strong product-market fit.*
+{% endif %}
+
+### Resolution Progress
+
+```
+Critical Painpoints: {{ critical_painpoints | length }} █████████████████
+High Painpoints:     {{ high_painpoints | length }} ████████████
+Medium Painpoints:   {{ results | filter(attribute="painpointSeverity", value="Medium") | map(attribute="painpoint") | unique | length }} ████████
+```
+
+---
+
+## Feature Development Health
+
+### Velocity Metrics
+
+{% set total_features_count = total_features %}
+{% set released_count = released_features | length %}
+{% set in_progress_count = in_progress_features | length %}
+
+**Development Pipeline**:
+
+```
+Released:     {{ released_count }} ({{ (released_count / total_features_count * 100) | round }}%) ████████████████
+In Progress:  {{ in_progress_count }} ({{ (in_progress_count / total_features_count * 100) | round }}%) ████████
+Planned:      {{ planned_features | length }} ({{ (planned_features | length / total_features_count * 100) | round }}%) ████
+```
+
+### Jobs-to-Features Ratio
+
+| Metric | Value | Assessment |
+|--------|-------|------------|
+| Total Jobs | {{ total_jobs }} | - |
+| Total Features | {{ total_features }} | - |
+| Features per Job | {{ (total_features / total_jobs) | round(precision=1) }} | {% if (total_features / total_jobs) < 1.5 %}🔴 Under-resourced{% elif (total_features / total_jobs) < 3 %}⚠️ Adequate{% else %}✅ Well-covered{% endif %} |
+| Jobs per Persona | {{ (total_jobs / total_personas) | round(precision=1) }} | {% if (total_jobs / total_personas) > 5 %}⚠️ Complex personas{% else %}✅ Focused{% endif %} |
+
+---
+
+## Strategic Recommendations
+
+### Immediate Actions (Next 30 Days)
+
+1. **High-Priority Jobs**
+   {% if critical_high_freq | length > 0 %}
+   - Address {{ critical_high_freq | length }} P0 jobs (Critical × High-Frequency)
+   - Prioritize features with < 70% target achievement
+   {% else %}
+   - Maintain current job coverage
+   {% endif %}
+
+2. **Customer Satisfaction**
+   {% if satisfaction_data | length > 0 and avg_satisfaction < 7 %}
+   - Investigate personas with satisfaction < 7/10
+   - Review feature-outcome alignment for low-satisfaction areas
+   {% elif satisfaction_data | length == 0 %}
+   - Implement satisfaction tracking across all personas
+   {% else %}
+   - Continue monitoring; maintain current quality
+   {% endif %}
+
+3. **Pain Point Resolution**
+   {% if critical_painpoints | length > 0 %}
+   - Complete resolution for {{ critical_painpoints | length }} critical pain points
+   - Fast-track features addressing critical severity
+   {% else %}
+   - Focus on high-severity pain points
+   {% endif %}
+
+### Strategic Focus (Next Quarter)
+
+{% set jobs_needing_features = 0 %}
+{% for job in total_jobs %}
+{% set job_features = results | filter(attribute="jobTitle", value=job) %}
+{% if job_features | length < 2 %}
+{% set_global jobs_needing_features = jobs_needing_features + 1 %}
+{% endif %}
+{% endfor %}
+
+- **Coverage Gaps**: {{ jobs_needing_features }} jobs with < 2 features ({{ (jobs_needing_features / total_jobs * 100) | round }}%)
+- **Outcome Tracking**: {% if features_with_metrics | length == 0 %}Implement baseline metrics{% elif (features_with_metrics | length / total_features * 100) < 50 %}Expand to 50%+ features{% else %}Maintain current coverage{% endif %}
+- **Persona Balance**: Ensure each persona receives features quarterly
+
+---
+
+## Appendix: Calculation Methodology
+
+### Priority Scoring
+
+Jobs are prioritized using:
+```
+Priority Score = (Frequency Weight) × (Importance Weight)
+
+Frequency:   High=3, Medium=2, Low=1
+Importance:  Critical=4, High=3, Medium=2, Low=1
+
+P0: Score ≥ 12 (Critical × High)
+P1: Score 9-11 (High × High)
+P2: Score 6-8
+```
+
+### Target Achievement
+
+- **Met**: Current ≥ Target (100%+)
+- **In Progress**: Current ≥ 70% of Target
+- **Not Met**: Current < 70% of Target
+
+### Satisfaction Tiers
+
+- **Excellent**: 8-10/10
+- **Good**: 6-7/10
+- **Poor**: 0-5/10
+
+---
+
+*Executive Summary generated from JTBD specifications | Refresh weekly for strategic alignment*

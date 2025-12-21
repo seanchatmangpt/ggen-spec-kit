@@ -1,0 +1,433 @@
+{# JTBD Trend Analysis Template
+   Generates time-series trend analysis for jobs, outcomes, satisfaction, and performance
+
+   Expected SPARQL result variables:
+   - reportPeriod: Time period (e.g., "2025-Q1", "2025-01", "2025-W01")
+   - periodType: Type of period (Quarter, Month, Week)
+   - jobTitle: The job to be done
+   - jobFrequency: How often job occurs (High, Medium, Low)
+   - jobImportance: How critical job is (Critical, High, Medium, Low)
+   - personaName: Customer segment/persona
+   - featureName: Feature addressing this job
+   - featureStatus: Status (Planned, In Progress, Released)
+   - outcome: Expected outcome
+   - outcomeMetric: Quantifiable success metric
+   - targetValue: Target performance value
+   - currentValue: Current measured performance
+   - satisfactionScore: User satisfaction (1-10 scale, optional)
+   - adoptionRate: % of target users using (optional)
+   - usageCount: Usage metrics (optional)
+   - painpointSeverity: Pain point severity (Critical, High, Medium, Low, optional)
+   - resolutionCount: Number of pain points resolved in period (optional)
+#}
+# JTBD Trend Analysis
+
+> **Time-Series Insights**: Track evolution of jobs, outcomes, satisfaction, and performance over time
+
+**Analysis Period**: {{ results | map(attribute="reportPeriod") | unique | sort | first }} - {{ results | map(attribute="reportPeriod") | unique | sort | last }}
+
+**Report Generated**: {{ now() | date(format="%Y-%m-%d %H:%M") }}
+
+---
+
+## Executive Trend Summary
+
+{% set periods = results | map(attribute="reportPeriod") | unique | sort %}
+{% set total_periods = periods | length %}
+
+**Periods Analyzed**: {{ total_periods }} ({{ results | first | get(key="periodType") | default(value="Period") }})
+
+{% set latest_period = periods | last %}
+{% set previous_period = periods | slice(start=total_periods - 2) | first %}
+
+{% if latest_period and previous_period %}
+{% set latest_data = results | filter(attribute="reportPeriod", value=latest_period) %}
+{% set previous_data = results | filter(attribute="reportPeriod", value=previous_period) %}
+
+### Period-over-Period Change
+
+| Metric | Previous | Latest | Change |
+|--------|----------|--------|--------|
+| Features Released | {{ previous_data | filter(attribute="featureStatus", value="Released") | map(attribute="featureName") | unique | length }} | {{ latest_data | filter(attribute="featureStatus", value="Released") | map(attribute="featureName") | unique | length }} | {% set prev_rel = previous_data | filter(attribute="featureStatus", value="Released") | map(attribute="featureName") | unique | length %}{% set curr_rel = latest_data | filter(attribute="featureStatus", value="Released") | map(attribute="featureName") | unique | length %}{% if curr_rel > prev_rel %}📈 +{{ curr_rel - prev_rel }}{% elif curr_rel < prev_rel %}📉 {{ curr_rel - prev_rel }}{% else %}➡️ 0{% endif %} |
+{% set latest_sat = latest_data | filter(attribute="satisfactionScore") %}
+{% set previous_sat = previous_data | filter(attribute="satisfactionScore") %}
+{% if latest_sat | length > 0 and previous_sat | length > 0 %}
+{% set latest_sat_total = 0 %}
+{% set latest_sat_count = 0 %}
+{% for item in latest_sat %}
+{% set_global latest_sat_total = latest_sat_total + (item.satisfactionScore | float) %}
+{% set_global latest_sat_count = latest_sat_count + 1 %}
+{% endfor %}
+{% set previous_sat_total = 0 %}
+{% set previous_sat_count = 0 %}
+{% for item in previous_sat %}
+{% set_global previous_sat_total = previous_sat_total + (item.satisfactionScore | float) %}
+{% set_global previous_sat_count = previous_sat_count + 1 %}
+{% endfor %}
+{% set latest_avg = latest_sat_total / latest_sat_count %}
+{% set previous_avg = previous_sat_total / previous_sat_count %}
+| Avg Satisfaction | {{ previous_avg | round(precision=1) }}/10 | {{ latest_avg | round(precision=1) }}/10 | {% if latest_avg > previous_avg %}📈 +{{ (latest_avg - previous_avg) | round(precision=1) }}{% elif latest_avg < previous_avg %}📉 {{ (latest_avg - previous_avg) | round(precision=1) }}{% else %}➡️ 0{% endif %} |
+{% endif %}
+{% set latest_outcomes = latest_data | filter(attribute="currentValue") | filter(attribute="targetValue") %}
+{% set previous_outcomes = previous_data | filter(attribute="currentValue") | filter(attribute="targetValue") %}
+{% if latest_outcomes | length > 0 and previous_outcomes | length > 0 %}
+{% set latest_met = 0 %}
+{% for item in latest_outcomes %}
+{% if item.currentValue | float >= item.targetValue | float %}
+{% set_global latest_met = latest_met + 1 %}
+{% endif %}
+{% endfor %}
+{% set previous_met = 0 %}
+{% for item in previous_outcomes %}
+{% if item.currentValue | float >= item.targetValue | float %}
+{% set_global previous_met = previous_met + 1 %}
+{% endif %}
+{% endfor %}
+{% set latest_pct = (latest_met / latest_outcomes | length * 100) %}
+{% set previous_pct = (previous_met / previous_outcomes | length * 100) %}
+| Target Achievement | {{ previous_pct | round }}% | {{ latest_pct | round }}% | {% if latest_pct > previous_pct %}📈 +{{ (latest_pct - previous_pct) | round }}%{% elif latest_pct < previous_pct %}📉 {{ (latest_pct - previous_pct) | round }}%{% else %}➡️ 0%{% endif %} |
+{% endif %}
+
+{% endif %}
+
+---
+
+## Feature Release Trends
+
+### Features Released by Period
+
+| Period | Released | In Progress | Planned | Total |
+|--------|----------|-------------|---------|-------|
+{% for period in periods %}
+{% set period_data = results | filter(attribute="reportPeriod", value=period) %}
+{% set released = period_data | filter(attribute="featureStatus", value="Released") | map(attribute="featureName") | unique | length %}
+{% set in_progress = period_data | filter(attribute="featureStatus", value="In Progress") | map(attribute="featureName") | unique | length %}
+{% set planned = period_data | filter(attribute="featureStatus", value="Planned") | map(attribute="featureName") | unique | length %}
+{% set total = released + in_progress + planned %}
+| {{ period }} | {{ released }} | {{ in_progress }} | {{ planned }} | {{ total }} |
+{% endfor %}
+
+### Release Velocity Chart
+
+```
+{% for period in periods %}
+{{ period }}: {% set released = results | filter(attribute="reportPeriod", value=period) | filter(attribute="featureStatus", value="Released") | map(attribute="featureName") | unique | length %}{% if released > 0 %}{{ "█" | repeat(count=released) }}{% endif %} {{ released }}
+{% endfor %}
+```
+
+### Cumulative Features Released
+
+```
+{% set cumulative = 0 %}
+{% for period in periods %}
+{% set released = results | filter(attribute="reportPeriod", value=period) | filter(attribute="featureStatus", value="Released") | map(attribute="featureName") | unique | length %}
+{% set_global cumulative = cumulative + released %}
+{{ period }}: {{ cumulative }} features
+{% endfor %}
+```
+
+---
+
+## Satisfaction Score Trends
+
+{% set satisfaction_by_period = [] %}
+{% for period in periods %}
+{% set period_sat = results | filter(attribute="reportPeriod", value=period) | filter(attribute="satisfactionScore") %}
+{% if period_sat | length > 0 %}
+{% set period_total = 0 %}
+{% set period_count = 0 %}
+{% for item in period_sat %}
+{% set_global period_total = period_total + (item.satisfactionScore | float) %}
+{% set_global period_count = period_count + 1 %}
+{% endfor %}
+{% set_global satisfaction_by_period = satisfaction_by_period | concat(with=[{"period": period, "avg": (period_total / period_count), "count": period_count}]) %}
+{% endif %}
+{% endfor %}
+
+{% if satisfaction_by_period | length > 0 %}
+
+### Average Satisfaction Over Time
+
+| Period | Avg Score | Responses | Trend |
+|--------|-----------|-----------|-------|
+{% for item in satisfaction_by_period %}
+| {{ item.period }} | {{ item.avg | round(precision=1) }}/10 | {{ item.count }} | {% if loop.index > 1 %}{% set prev = satisfaction_by_period[loop.index - 2] %}{% if item.avg > prev.avg %}📈 +{{ (item.avg - prev.avg) | round(precision=1) }}{% elif item.avg < prev.avg %}📉 {{ (item.avg - prev.avg) | round(precision=1) }}{% else %}➡️{% endif %}{% else %}-{% endif %} |
+{% endfor %}
+
+### Satisfaction Trend Chart
+
+```
+{% for item in satisfaction_by_period %}
+{{ item.period }}: {% set bar_length = (item.avg / 10 * 20) | round %}{% if bar_length > 0 %}{{ "█" | repeat(count=bar_length) }}{% endif %}{% set empty = 20 - bar_length %}{% if empty > 0 %}{{ "░" | repeat(count=empty) }}{% endif %} {{ item.avg | round(precision=1) }}
+{% endfor %}
+```
+
+### Satisfaction Trend Analysis
+
+{% set first_period_sat = satisfaction_by_period | first %}
+{% set last_period_sat = satisfaction_by_period | last %}
+
+{% if last_period_sat.avg > first_period_sat.avg %}
+📈 **Improving Trend**: Satisfaction increased from {{ first_period_sat.avg | round(precision=1) }} to {{ last_period_sat.avg | round(precision=1) }} (+{{ ((last_period_sat.avg - first_period_sat.avg) / first_period_sat.avg * 100) | round(precision=1) }}%)
+{% elif last_period_sat.avg < first_period_sat.avg %}
+📉 **Declining Trend**: Satisfaction decreased from {{ first_period_sat.avg | round(precision=1) }} to {{ last_period_sat.avg | round(precision=1) }} ({{ ((last_period_sat.avg - first_period_sat.avg) / first_period_sat.avg * 100) | round(precision=1) }}%)
+{% else %}
+➡️ **Stable Trend**: Satisfaction maintained at {{ last_period_sat.avg | round(precision=1) }}
+{% endif %}
+
+{% else %}
+
+*No satisfaction data tracked over time. Implement periodic satisfaction surveys.*
+
+{% endif %}
+
+---
+
+## Outcome Performance Trends
+
+### Target Achievement by Period
+
+{% set achievement_by_period = [] %}
+{% for period in periods %}
+{% set period_outcomes = results | filter(attribute="reportPeriod", value=period) | filter(attribute="currentValue") | filter(attribute="targetValue") %}
+{% if period_outcomes | length > 0 %}
+{% set met_targets = 0 %}
+{% for item in period_outcomes %}
+{% if item.currentValue | float >= item.targetValue | float %}
+{% set_global met_targets = met_targets + 1 %}
+{% endif %}
+{% endfor %}
+{% set achievement_pct = (met_targets / period_outcomes | length * 100) %}
+{% set_global achievement_by_period = achievement_by_period | concat(with=[{"period": period, "pct": achievement_pct, "met": met_targets, "total": period_outcomes | length}]) %}
+{% endif %}
+{% endfor %}
+
+{% if achievement_by_period | length > 0 %}
+
+| Period | Outcomes Met | Total Outcomes | Achievement Rate |
+|--------|--------------|----------------|------------------|
+{% for item in achievement_by_period %}
+| {{ item.period }} | {{ item.met }} | {{ item.total }} | {{ item.pct | round }}% |
+{% endfor %}
+
+### Achievement Trend
+
+```
+{% for item in achievement_by_period %}
+{{ item.period }}: {% set bar = (item.pct / 5) | round %}{% if bar > 0 %}{{ "█" | repeat(count=bar) }}{% endif %} {{ item.pct | round }}%
+{% endfor %}
+```
+
+{% set first_achievement = achievement_by_period | first %}
+{% set last_achievement = achievement_by_period | last %}
+
+**Trend**: {% if last_achievement.pct > first_achievement.pct %}📈 Improving (+{{ (last_achievement.pct - first_achievement.pct) | round }}%){% elif last_achievement.pct < first_achievement.pct %}📉 Declining ({{ (last_achievement.pct - first_achievement.pct) | round }}%){% else %}➡️ Stable{% endif %}
+
+{% else %}
+
+*No outcome tracking data over time. Implement periodic outcome measurements.*
+
+{% endif %}
+
+---
+
+## Job Priority Evolution
+
+### High-Priority Jobs Over Time
+
+{% for period in periods %}
+
+#### {{ period }}
+
+{% set period_data = results | filter(attribute="reportPeriod", value=period) %}
+{% set period_critical_high = period_data | filter(attribute="jobImportance", value="Critical") | filter(attribute="jobFrequency", value="High") | map(attribute="jobTitle") | unique %}
+{% set period_high_high = period_data | filter(attribute="jobImportance", value="High") | filter(attribute="jobFrequency", value="High") | map(attribute="jobTitle") | unique %}
+
+**P0 Jobs (Critical × High-Freq)**: {{ period_critical_high | length }}
+{% for job in period_critical_high %}
+- {{ job }}
+{% endfor %}
+
+**P1 Jobs (High × High-Freq)**: {{ period_high_high | length }}
+
+{% endfor %}
+
+---
+
+## Persona Satisfaction Trends
+
+{% set personas = results | map(attribute="personaName") | unique | sort %}
+
+{% for persona in personas %}
+
+### {{ persona }}
+
+| Period | Avg Satisfaction | Features Released | Trend |
+|--------|------------------|-------------------|-------|
+{% for period in periods %}
+{% set persona_period_sat = results | filter(attribute="reportPeriod", value=period) | filter(attribute="personaName", value=persona) | filter(attribute="satisfactionScore") %}
+{% if persona_period_sat | length > 0 %}
+{% set persona_total = 0 %}
+{% set persona_count = 0 %}
+{% for item in persona_period_sat %}
+{% set_global persona_total = persona_total + (item.satisfactionScore | float) %}
+{% set_global persona_count = persona_count + 1 %}
+{% endfor %}
+{% set persona_avg = persona_total / persona_count %}
+{% set persona_features = results | filter(attribute="reportPeriod", value=period) | filter(attribute="personaName", value=persona) | filter(attribute="featureStatus", value="Released") | map(attribute="featureName") | unique | length %}
+| {{ period }} | {{ persona_avg | round(precision=1) }}/10 | {{ persona_features }} | {% if loop.index > 1 %}TBD{% else %}-{% endif %} |
+{% else %}
+| {{ period }} | N/A | 0 | - |
+{% endif %}
+{% endfor %}
+
+{% endfor %}
+
+---
+
+## Pain Point Resolution Trends
+
+{% set resolution_by_period = [] %}
+{% for period in periods %}
+{% set period_data = results | filter(attribute="reportPeriod", value=period) %}
+{% if period_data | filter(attribute="resolutionCount") | length > 0 %}
+{% set resolved_count = period_data | first | get(key="resolutionCount") | int %}
+{% set_global resolution_by_period = resolution_by_period | concat(with=[{"period": period, "count": resolved_count}]) %}
+{% endif %}
+{% endfor %}
+
+{% if resolution_by_period | length > 0 %}
+
+### Pain Points Resolved by Period
+
+| Period | Resolved Count |
+|--------|----------------|
+{% for item in resolution_by_period %}
+| {{ item.period }} | {{ item.count }} |
+{% endfor %}
+
+```
+{% for item in resolution_by_period %}
+{{ item.period }}: {% if item.count > 0 %}{{ "█" | repeat(count=item.count) }}{% endif %} {{ item.count }}
+{% endfor %}
+```
+
+{% else %}
+
+*No pain point resolution tracking data. Add resolutionCount to track quarterly progress.*
+
+{% endif %}
+
+---
+
+## Adoption & Usage Trends
+
+{% set adoption_by_period = [] %}
+{% for period in periods %}
+{% set period_adoption = results | filter(attribute="reportPeriod", value=period) | filter(attribute="adoptionRate") %}
+{% if period_adoption | length > 0 %}
+{% set total_adoption = 0 %}
+{% set adoption_count = 0 %}
+{% for item in period_adoption %}
+{% set_global total_adoption = total_adoption + (item.adoptionRate | float) %}
+{% set_global adoption_count = adoption_count + 1 %}
+{% endfor %}
+{% set avg_adoption = total_adoption / adoption_count %}
+{% set_global adoption_by_period = adoption_by_period | concat(with=[{"period": period, "avg": avg_adoption}]) %}
+{% endif %}
+{% endfor %}
+
+{% if adoption_by_period | length > 0 %}
+
+### Average Adoption Rate Over Time
+
+| Period | Avg Adoption Rate |
+|--------|-------------------|
+{% for item in adoption_by_period %}
+| {{ item.period }} | {{ item.avg | round(precision=1) }}% |
+{% endfor %}
+
+```
+{% for item in adoption_by_period %}
+{{ item.period }}: {% set bar = (item.avg / 5) | round %}{% if bar > 0 %}{{ "█" | repeat(count=bar) }}{% endif %} {{ item.avg | round }}%
+{% endfor %}
+```
+
+{% else %}
+
+*No adoption rate tracking. Add adoptionRate to measure feature usage over time.*
+
+{% endif %}
+
+---
+
+## Predictive Insights
+
+### Trend Projections
+
+{% if satisfaction_by_period | length >= 3 %}
+
+**Satisfaction Projection**:
+- Current trend: {% set recent_periods = satisfaction_by_period | slice(start=satisfaction_by_period | length - 3) %}{% if recent_periods | last | get(key="avg") > recent_periods | first | get(key="avg") %}📈 Improving{% elif recent_periods | last | get(key="avg") < recent_periods | first | get(key="avg") %}📉 Declining{% else %}➡️ Stable{% endif %}
+- If trend continues: {% set last_sat = satisfaction_by_period | last | get(key="avg") %}{% set first_recent = recent_periods | first | get(key="avg") %}{% set delta = last_sat - first_recent %}Next period projected: {{ (last_sat + delta) | round(precision=1) }}/10
+
+{% endif %}
+
+{% if achievement_by_period | length >= 3 %}
+
+**Outcome Achievement Projection**:
+- Current trend: {% set recent_achievements = achievement_by_period | slice(start=achievement_by_period | length - 3) %}{% if recent_achievements | last | get(key="pct") > recent_achievements | first | get(key="pct") %}📈 Improving{% elif recent_achievements | last | get(key="pct") < recent_achievements | first | get(key="pct") %}📉 Declining{% else %}➡️ Stable{% endif %}
+
+{% endif %}
+
+---
+
+## Recommendations
+
+### Based on Trends
+
+1. **Feature Release Velocity**
+   {% if periods | length >= 2 %}
+   {% set recent_release = results | filter(attribute="reportPeriod", value=latest_period) | filter(attribute="featureStatus", value="Released") | map(attribute="featureName") | unique | length %}
+   {% set previous_release = results | filter(attribute="reportPeriod", value=previous_period) | filter(attribute="featureStatus", value="Released") | map(attribute="featureName") | unique | length %}
+   {% if recent_release > previous_release %}
+   - Velocity increasing ({{ recent_release }} vs {{ previous_release }}) - maintain momentum
+   {% elif recent_release < previous_release %}
+   - Velocity declining ({{ recent_release }} vs {{ previous_release }}) - investigate blockers
+   {% else %}
+   - Velocity stable - consider scaling if demand exists
+   {% endif %}
+   {% endif %}
+
+2. **Satisfaction Trends**
+   {% if satisfaction_by_period | length >= 2 %}
+   {% set recent_sat = satisfaction_by_period | last | get(key="avg") %}
+   {% set previous_sat = satisfaction_by_period | slice(start=satisfaction_by_period | length - 2) | first | get(key="avg") %}
+   {% if recent_sat < previous_sat %}
+   - 📉 Declining satisfaction - prioritize user feedback and feature improvements
+   {% elif recent_sat > previous_sat %}
+   - 📈 Improving satisfaction - replicate successful patterns
+   {% else %}
+   - ➡️ Stable satisfaction - maintain quality standards
+   {% endif %}
+   {% endif %}
+
+3. **Outcome Performance**
+   {% if achievement_by_period | length >= 2 %}
+   {% set recent_achievement = achievement_by_period | last | get(key="pct") %}
+   {% set previous_achievement = achievement_by_period | slice(start=achievement_by_period | length - 2) | first | get(key="pct") %}
+   {% if recent_achievement < previous_achievement %}
+   - Achievement declining - review feature effectiveness and targets
+   {% elif recent_achievement > previous_achievement %}
+   - Achievement improving - continue current strategies
+   {% endif %}
+   {% endif %}
+
+4. **Strategic Focus**
+   - Monitor high-priority job trends - ensure P0 jobs receive continuous attention
+   - Track persona-specific trends - address any persona falling behind
+   - Maintain measurement cadence - consistent data enables better decisions
+
+---
+
+*Trend analysis generated from JTBD time-series data | Update quarterly for strategic planning*

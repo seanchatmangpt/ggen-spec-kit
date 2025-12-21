@@ -25,6 +25,79 @@ Where μ is the five-stage transformation pipeline implemented by ggen.
 | `plan.tera` | Generate implementation plans | `tasks.ttl` | `plan.md` |
 | `tasks.tera` | Generate task breakdowns | `tasks.ttl` | `tasks.md` |
 
+### JTBD Templates (Jobs-to-be-Done)
+
+| Template | Purpose | Input | Output |
+|----------|---------|-------|--------|
+| `feature-outcome-card.tera` | Feature cards with outcomes | `features-jtbd.ttl` | Feature cards |
+| `jtbd-user-story.tera` | JTBD-formatted user stories | `user-stories-jtbd.ttl` | User stories |
+| `outcome-focused-docs.tera` | Job-focused feature docs | `features-jtbd.ttl` | Feature documentation |
+| `jtbd-metrics-dashboard.tera` | Outcome metrics dashboard | `features-jtbd.ttl` | Analytics dashboard |
+| `jtbd-roadmap.tera` | Job-prioritized roadmap | `roadmap-jtbd.ttl` | Product roadmap |
+
+See [jtbd/](jtbd/) directory for complete documentation and examples.
+
+### JTBD Framework Documentation
+
+The JTBD (Jobs-to-be-Done) metrics framework is integrated into spec-kit for tracking customer outcomes:
+
+**Core Documentation:**
+- **[JTBD User Guide](../docs/JTBD_USER_GUIDE.md)** - Getting started, CLI usage, best practices
+- **[JTBD API Reference](../docs/JTBD_API_REFERENCE.md)** - Complete API documentation
+- **[JTBD Examples](../docs/JTBD_EXAMPLES.md)** - Practical code examples
+- **[RDF Schema](../ontology/jtbd-schema.ttl)** - JTBD ontology specification
+
+**Key Features:**
+- Track job completions by persona
+- Measure outcome achievement vs. expectations
+- Analyze painpoint resolution effectiveness
+- Time-to-outcome measurements
+- User satisfaction tracking (NPS, CES)
+- OpenTelemetry integration for distributed tracing
+
+**Quick Start:**
+
+```python
+from specify_cli.core.jtbd_metrics import (
+    JobCompletion,
+    OutcomeAchieved,
+    track_job_completion,
+    track_outcome_achieved,
+)
+
+# Track a job
+job = JobCompletion(
+    job_id="deps-add",
+    persona="python-developer",
+    feature_used="specify deps add"
+)
+job.complete()
+track_job_completion(job)
+
+# Track outcome
+outcome = OutcomeAchieved(
+    outcome_id="faster-dependency-management",
+    metric="time_saved_seconds",
+    expected_value=30.0,
+    actual_value=8.5,
+    feature="specify deps add"
+)
+track_outcome_achieved(outcome)
+```
+
+**Metrics Tracked:**
+
+| Metric | What It Measures |
+|--------|------------------|
+| Job Completion | Which jobs users complete successfully |
+| Outcome Achievement | Desired results vs. expectations |
+| Painpoint Resolution | Problems eliminated by features |
+| Time-to-Outcome | Speed to achieve customer outcomes |
+| User Satisfaction | NPS, CES, and qualitative feedback |
+
+**Integration:**
+All metrics integrate with OpenTelemetry for distributed tracing across the customer journey. Metrics gracefully degrade when OTEL is unavailable.
+
 ### Code Generation Templates
 
 | Template | Purpose | Input | Output |

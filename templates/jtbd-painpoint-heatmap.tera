@@ -1,0 +1,415 @@
+{# JTBD Pain Point Heatmap Template
+   Generates visual heatmap of pain points by severity, frequency, and resolution status
+
+   Expected SPARQL result variables:
+   - painpoint: Pain point description
+   - painpointSeverity: Severity (Critical, High, Medium, Low)
+   - painpointFrequency: How often users experience (Always, Often, Sometimes, Rarely)
+   - personaName: Customer segment experiencing this pain
+   - jobTitle: Job where pain point occurs
+   - featureName: Feature addressing this pain point
+   - featureStatus: Status (Planned, In Progress, Released)
+   - releaseDate: When solution released (optional)
+   - impactScore: Impact score 1-10 (optional)
+   - userCount: Number of users affected (optional)
+   - reportCount: Number of reports/complaints (optional)
+   - resolutionTime: Days to resolution (optional)
+   - workaroundExists: Whether workaround available (true/false, optional)
+#}
+# JTBD Pain Point Heatmap
+
+> **Visual Analysis**: Identify and prioritize pain points by severity, frequency, and resolution status
+
+**Heatmap Generated**: {{ now() | date(format="%Y-%m-%d %H:%M") }}
+
+---
+
+## Executive Overview
+
+{% set total_painpoints = results | map(attribute="painpoint") | unique | length %}
+{% set critical_pains = results | filter(attribute="painpointSeverity", value="Critical") | map(attribute="painpoint") | unique %}
+{% set high_pains = results | filter(attribute="painpointSeverity", value="High") | map(attribute="painpoint") | unique %}
+{% set medium_pains = results | filter(attribute="painpointSeverity", value="Medium") | map(attribute="painpoint") | unique %}
+{% set low_pains = results | filter(attribute="painpointSeverity", value="Low") | map(attribute="painpoint") | unique %}
+
+{% set resolved = results | filter(attribute="featureStatus", value="Released") | map(attribute="painpoint") | unique | length %}
+{% set in_progress = results | filter(attribute="featureStatus", value="In Progress") | map(attribute="painpoint") | unique | length %}
+{% set planned = results | filter(attribute="featureStatus", value="Planned") | map(attribute="painpoint") | unique | length %}
+
+### Pain Point Summary
+
+| Metric | Value |
+|--------|-------|
+| **Total Pain Points** | {{ total_painpoints }} |
+| **Critical Severity** | {{ critical_pains | length }} 🔴 |
+| **High Severity** | {{ high_pains | length }} ⚠️ |
+| **Medium Severity** | {{ medium_pains | length }} 🟡 |
+| **Low Severity** | {{ low_pains | length }} 🟢 |
+
+### Resolution Status
+
+```
+Resolved:     {{ resolved }} ({{ (resolved / total_painpoints * 100) | round }}%) ████████████████
+In Progress:  {{ in_progress }} ({{ (in_progress / total_painpoints * 100) | round }}%) ████████
+Planned:      {{ planned }} ({{ (planned / total_painpoints * 100) | round }}%) ████
+```
+
+**Resolution Rate**: {{ (resolved / total_painpoints * 100) | round(precision=1) }}%
+
+---
+
+## Severity × Frequency Heatmap
+
+### Matrix View
+
+```
+                 FREQUENCY
+              Always  Often  Sometimes  Rarely
+           ┌──────────────────────────────────┐
+  Critical │  🔴🔴🔴   🔴🔴     🔴        ⚠️     │
+           │                                  │
+  High     │  🔴🔴     🔴      ⚠️        🟡     │
+SEVERITY   │                                  │
+  Medium   │  🔴      ⚠️      🟡        🟢     │
+           │                                  │
+  Low      │  ⚠️      🟡      🟢        🟢     │
+           └──────────────────────────────────┘
+
+Legend:
+🔴🔴🔴 P0: Immediate action required (Critical × Always/Often)
+🔴🔴  P1: High priority (Critical × Sometimes OR High × Always)
+🔴    P2: Important (High × Often OR Medium × Always)
+⚠️    P3: Monitor closely
+🟡   P4: Standard priority
+🟢   P5: Low priority
+```
+
+### P0 Pain Points (Critical × Always/Often)
+
+{% set p0_pains = [] %}
+{% for item in results %}
+{% if item.painpointSeverity == "Critical" and (item.painpointFrequency == "Always" or item.painpointFrequency == "Often") %}
+{% set_global p0_pains = p0_pains | concat(with=[item]) %}
+{% endif %}
+{% endfor %}
+
+{% if p0_pains | length > 0 %}
+
+{% for painpoint_name in p0_pains | map(attribute="painpoint") | unique %}
+{% set painpoint_data = p0_pains | filter(attribute="painpoint", value=painpoint_name) %}
+{% set painpoint = painpoint_data | first %}
+
+#### 🔴🔴🔴 {{ painpoint_name }}
+
+**Severity**: {{ painpoint.painpointSeverity }} | **Frequency**: {{ painpoint.painpointFrequency }}
+
+{% if painpoint.impactScore %}
+**Impact Score**: {{ painpoint.impactScore }}/10
+{% endif %}
+
+{% if painpoint.userCount %}
+**Users Affected**: {{ painpoint.userCount }}
+{% endif %}
+
+{% if painpoint.reportCount %}
+**Report Count**: {{ painpoint.reportCount }}
+{% endif %}
+
+**Affected Personas**: {{ painpoint_data | map(attribute="personaName") | unique | join(sep=", ") }}
+
+**Jobs Impacted**: {{ painpoint_data | map(attribute="jobTitle") | unique | join(sep=", ") }}
+
+**Resolution Status**:
+{% set painpoint_features = painpoint_data | unique(attribute="featureName") %}
+{% for feature in painpoint_features %}
+- **{{ feature.featureName }}** ({{ feature.featureStatus }}){% if feature.releaseDate %} - Released: {{ feature.releaseDate }}{% endif %}
+{% endfor %}
+
+{% set resolved_features = painpoint_features | filter(attribute="featureStatus", value="Released") | length %}
+{% set total_features = painpoint_features | length %}
+
+**Progress**: {{ (resolved_features / total_features * 100) | round }}% ({{ resolved_features }}/{{ total_features }} features released)
+
+{% if painpoint.workaroundExists == "true" %}
+✅ **Workaround Available** - Interim solution exists
+{% else %}
+🚨 **No Workaround** - Users completely blocked
+{% endif %}
+
+{% if painpoint.resolutionTime %}
+**Time to Resolution**: {{ painpoint.resolutionTime }} days
+{% endif %}
+
+---
+
+{% endfor %}
+
+{% else %}
+✅ **Excellent!** No P0 pain points identified.
+{% endif %}
+
+### P1 Pain Points (Critical × Sometimes OR High × Always)
+
+{% set p1_pains = [] %}
+{% for item in results %}
+{% if (item.painpointSeverity == "Critical" and item.painpointFrequency == "Sometimes") or (item.painpointSeverity == "High" and item.painpointFrequency == "Always") %}
+{% set_global p1_pains = p1_pains | concat(with=[item]) %}
+{% endif %}
+{% endfor %}
+
+{% if p1_pains | length > 0 %}
+
+| Pain Point | Severity × Frequency | Personas | Status | Progress |
+|------------|----------------------|----------|--------|----------|
+{% for painpoint_name in p1_pains | map(attribute="painpoint") | unique %}
+{% set painpoint_data = p1_pains | filter(attribute="painpoint", value=painpoint_name) %}
+{% set painpoint = painpoint_data | first %}
+{% set resolved_features = painpoint_data | filter(attribute="featureStatus", value="Released") | length %}
+{% set total_features = painpoint_data | map(attribute="featureName") | unique | length %}
+| {{ painpoint_name }} | {{ painpoint.painpointSeverity }} × {{ painpoint.painpointFrequency }} | {{ painpoint_data | map(attribute="personaName") | unique | length }} | {% if resolved_features == total_features %}✅ Resolved{% elif resolved_features > 0 %}⚠️ Partial{% else %}🔴 Planned{% endif %} | {{ (resolved_features / total_features * 100) | round }}% |
+{% endfor %}
+
+{% else %}
+✅ No P1 pain points.
+{% endif %}
+
+---
+
+## Pain Points by Persona
+
+{% set personas = results | map(attribute="personaName") | unique | sort %}
+
+{% for persona in personas %}
+{% set persona_pains = results | filter(attribute="personaName", value=persona) %}
+{% set persona_critical = persona_pains | filter(attribute="painpointSeverity", value="Critical") | map(attribute="painpoint") | unique %}
+{% set persona_high = persona_pains | filter(attribute="painpointSeverity", value="High") | map(attribute="painpoint") | unique %}
+
+### {{ persona }}
+
+**Total Pain Points**: {{ persona_pains | map(attribute="painpoint") | unique | length }}
+
+**Severity Breakdown**:
+- Critical: {{ persona_critical | length }} 🔴
+- High: {{ persona_high | length }} ⚠️
+- Medium: {{ persona_pains | filter(attribute="painpointSeverity", value="Medium") | map(attribute="painpoint") | unique | length }} 🟡
+- Low: {{ persona_pains | filter(attribute="painpointSeverity", value="Low") | map(attribute="painpoint") | unique | length }} 🟢
+
+{% if persona_critical | length > 0 %}
+**Critical Pain Points**:
+{% for pain in persona_critical %}
+{% set pain_data = persona_pains | filter(attribute="painpoint", value=pain) | first %}
+- **{{ pain }}** ({{ pain_data.painpointFrequency | default(value="Unknown") }} frequency)
+  - Solution: {{ pain_data.featureName }} ({{ pain_data.featureStatus }})
+{% endfor %}
+{% endif %}
+
+{% endfor %}
+
+---
+
+## Pain Point Resolution Timeline
+
+### Recently Resolved (Last 30 Days)
+
+{% set recently_resolved = results | filter(attribute="featureStatus", value="Released") | filter(attribute="releaseDate") %}
+
+{% if recently_resolved | length > 0 %}
+
+| Pain Point | Severity | Release Date | Resolution Time | Personas |
+|------------|----------|--------------|-----------------|----------|
+{% for item in recently_resolved | unique(attribute="painpoint") %}
+| {{ item.painpoint }} | {{ item.painpointSeverity }} | {{ item.releaseDate }} | {% if item.resolutionTime %}{{ item.resolutionTime }} days{% else %}TBD{% endif %} | {{ results | filter(attribute="painpoint", value=item.painpoint) | map(attribute="personaName") | unique | join(sep=", ") }} |
+{% endfor %}
+
+{% else %}
+*No release dates tracked. Add releaseDate to monitor resolution timeline.*
+{% endif %}
+
+### In Progress (Expected Resolution Soon)
+
+{% set in_progress_pains = results | filter(attribute="featureStatus", value="In Progress") | map(attribute="painpoint") | unique %}
+
+{% if in_progress_pains | length > 0 %}
+
+| Pain Point | Severity | Frequency | Features Addressing | Personas |
+|------------|----------|-----------|---------------------|----------|
+{% for pain in in_progress_pains %}
+{% set pain_data = results | filter(attribute="painpoint", value=pain) | first %}
+{% set pain_features = results | filter(attribute="painpoint", value=pain) %}
+| {{ pain }} | {{ pain_data.painpointSeverity }} | {{ pain_data.painpointFrequency | default(value="Unknown") }} | {{ pain_features | map(attribute="featureName") | unique | join(sep=", ") }} | {{ pain_features | map(attribute="personaName") | unique | join(sep=", ") }} |
+{% endfor %}
+
+{% else %}
+*No pain points currently in progress for resolution.*
+{% endif %}
+
+---
+
+## Impact Analysis
+
+### High-Impact Pain Points
+
+{% set high_impact = results | filter(attribute="impactScore") %}
+
+{% if high_impact | length > 0 %}
+
+Pain points sorted by impact score (1-10):
+
+| Pain Point | Impact Score | User Count | Report Count | Status |
+|------------|--------------|------------|--------------|--------|
+{% for item in high_impact | sort(attribute="impactScore", reverse=true) | unique(attribute="painpoint") %}
+{% set item_data = results | filter(attribute="painpoint", value=item.painpoint) | first %}
+| {{ item.painpoint }} | {{ item.impactScore }}/10 | {% if item.userCount %}{{ item.userCount }}{% else %}TBD{% endif %} | {% if item.reportCount %}{{ item.reportCount }}{% else %}TBD{% endif %} | {% if item_data.featureStatus == "Released" %}✅{% elif item_data.featureStatus == "In Progress" %}⚠️{% else %}🔴{% endif %} |
+{% endfor %}
+
+### Impact Distribution
+
+```
+High Impact (8-10):   {{ high_impact | filter(attribute="impactScore", value="8") | length + high_impact | filter(attribute="impactScore", value="9") | length + high_impact | filter(attribute="impactScore", value="10") | length }} ████████████████
+Medium Impact (5-7):  {{ high_impact | filter(attribute="impactScore", value="5") | length + high_impact | filter(attribute="impactScore", value="6") | length + high_impact | filter(attribute="impactScore", value="7") | length }} ████████
+Low Impact (1-4):     {{ high_impact | filter(attribute="impactScore", value="1") | length + high_impact | filter(attribute="impactScore", value="2") | length + high_impact | filter(attribute="impactScore", value="3") | length + high_impact | filter(attribute="impactScore", value="4") | length }} ████
+```
+
+{% else %}
+
+*No impact scores available. Add impactScore, userCount, and reportCount for better prioritization.*
+
+{% endif %}
+
+---
+
+## Workaround Analysis
+
+{% set with_workarounds = results | filter(attribute="workaroundExists", value="true") | map(attribute="painpoint") | unique %}
+{% set without_workarounds = results | filter(attribute="workaroundExists", value="false") | map(attribute="painpoint") | unique %}
+
+### Workaround Availability
+
+| Status | Count | Percentage |
+|--------|-------|------------|
+| ✅ Workaround Exists | {{ with_workarounds | length }} | {{ (with_workarounds | length / total_painpoints * 100) | round }}% |
+| 🚨 No Workaround | {{ without_workarounds | length }} | {{ (without_workarounds | length / total_painpoints * 100) | round }}% |
+
+{% if without_workarounds | length > 0 %}
+
+### Critical: Pain Points Without Workarounds
+
+These pain points have no interim solution - users are completely blocked:
+
+| Pain Point | Severity | Frequency | Personas | Status |
+|------------|----------|-----------|----------|--------|
+{% for pain in without_workarounds %}
+{% set pain_data = results | filter(attribute="painpoint", value=pain) | filter(attribute="workaroundExists", value="false") | first %}
+{% set pain_personas = results | filter(attribute="painpoint", value=pain) | map(attribute="personaName") | unique %}
+| {{ pain }} | {{ pain_data.painpointSeverity }} | {{ pain_data.painpointFrequency | default(value="Unknown") }} | {{ pain_personas | join(sep=", ") }} | {{ pain_data.featureStatus }} |
+{% endfor %}
+
+**Immediate Action Required**: Prioritize solutions or develop workarounds for these {{ without_workarounds | length }} pain points.
+
+{% endif %}
+
+---
+
+## Recommendations
+
+### Immediate Priorities (Next 7 Days)
+
+1. **P0 Pain Points** ({{ p0_pains | map(attribute="painpoint") | unique | length }})
+   {% if p0_pains | length > 0 %}
+   - Address Critical × Always/Often pain points immediately
+   - Escalate to leadership if resources needed
+   - Daily status updates on resolution progress
+   {% else %}
+   - No P0 pain points ✅
+   {% endif %}
+
+2. **No-Workaround Pain Points** ({{ without_workarounds | length }})
+   {% if without_workarounds | length > 0 %}
+   - Develop interim workarounds for {{ without_workarounds | length }} blocking issues
+   - Document workarounds in user-facing documentation
+   - Fast-track permanent solutions
+   {% else %}
+   - All pain points have workarounds or solutions ✅
+   {% endif %}
+
+3. **High-Impact Resolution** (Top 5 by impact score)
+   {% if high_impact | length > 0 %}
+   - Focus on pain points with impact score ≥ 8
+   - Prioritize based on user count and report frequency
+   {% else %}
+   - Implement impact scoring to guide prioritization
+   {% endif %}
+
+### Short-Term Focus (Next 30 Days)
+
+1. **P1 Pain Points** ({{ p1_pains | map(attribute="painpoint") | unique | length }})
+   - Complete in-progress solutions
+   - Begin work on planned features addressing P1 pains
+
+2. **Persona Balance**
+   - Ensure each persona's critical pain points are addressed
+   - No persona should have > 3 unresolved critical pains
+
+3. **Measurement**
+   {% if high_impact | length == 0 %}
+   - Implement impact scoring (1-10) for all pain points
+   - Track user count and report count
+   {% endif %}
+   - Monitor resolution time for continuous improvement
+
+### Long-Term Strategy
+
+1. **Prevention**
+   - Analyze patterns in resolved pain points
+   - Implement preventive measures in feature development
+   - Proactive user research to identify emerging pains
+
+2. **Resolution Acceleration**
+   {% if recently_resolved | length > 0 %}
+   - Current avg resolution time: TBD (implement tracking)
+   - Target: Reduce resolution time by 20% quarterly
+   {% else %}
+   - Track resolution time to establish baseline
+   {% endif %}
+
+3. **Workaround Reduction**
+   - Eliminate reliance on workarounds
+   - Convert workarounds to permanent solutions
+   - Target: 100% permanent solutions for critical pains
+
+---
+
+## Appendix: Prioritization Matrix
+
+### Priority Calculation
+
+```
+Priority Score = (Severity Weight) × (Frequency Weight) × (Impact Multiplier)
+
+Severity Weights:
+- Critical: 4
+- High: 3
+- Medium: 2
+- Low: 1
+
+Frequency Weights:
+- Always: 4
+- Often: 3
+- Sometimes: 2
+- Rarely: 1
+
+Impact Multiplier:
+- No Workaround: 2x
+- With Workaround: 1x
+
+Priority Tiers:
+- P0: Score ≥ 16 (Critical × Always, especially without workaround)
+- P1: Score 12-15
+- P2: Score 8-11
+- P3: Score 4-7
+- P4: Score 1-3
+```
+
+---
+
+*Pain point heatmap generated from JTBD specifications | Review weekly to track resolution progress*

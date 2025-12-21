@@ -35,6 +35,8 @@ dependencies = [
     # OTEL from day one (graceful degradation if not configured)
     "opentelemetry-sdk>=1.20.0",
     "opentelemetry-exporter-otlp>=0.41b0",
+    # NumPy for hyperdimensional computing and information-theoretic metrics
+    "numpy>=1.24.0",
 ]
 
 # External system dependencies (must be installed separately):
@@ -91,12 +93,24 @@ wf = [
     "SpiffWorkflow>=2.0.0",
 ]
 
+# Hyperdimensional dashboards (optional: uv sync --group hd)
+hd = [
+    "numpy>=1.24.0",
+    "scikit-learn>=1.3.0",
+    "matplotlib>=3.7.0",
+    "plotly>=5.18.0",
+]
+
 # All optional features
 all = [
     "pm4py>=2.7.0",
     "pandas>=2.0.0",
     "SpiffWorkflow>=2.0.0",
     "dspy>=2.5.0",
+    "numpy>=1.24.0",
+    "scikit-learn>=1.3.0",
+    "matplotlib>=3.7.0",
+    "plotly>=5.18.0",
 ]
 
 [build-system]

@@ -45,6 +45,9 @@ from .check import app as check_app
 # Core commands
 from .init import app as init_app
 
+# JTBD commands
+from .jtbd import app as jtbd_app
+
 # Workflow commands (SpiffWorkflow)
 from .spiff import app as spiff_app
 from .version import app as version_app
@@ -68,6 +71,15 @@ except ImportError:
     PM_COMMANDS_AVAILABLE = False
     pm_app = None
 
+# Hyperdimensional dashboard commands (optional)
+try:
+    from .dashboards import app as dashboards_app
+
+    DASHBOARDS_COMMANDS_AVAILABLE = True
+except ImportError:
+    DASHBOARDS_COMMANDS_AVAILABLE = False
+    dashboards_app = None
+
 # DSPy commands (optional)
 try:
     from specify_cli.dspy_commands import get_dspy_app
@@ -77,17 +89,34 @@ except ImportError:
     DSPY_COMMANDS_AVAILABLE = False
     get_dspy_app = None
 
+# Hyperdimensional analysis commands (optional, requires numpy/scikit-learn)
+try:
+    from .hd import app as hd_app
+
+    HD_COMMANDS_AVAILABLE = True
+except ImportError:
+    HD_COMMANDS_AVAILABLE = False
+    hd_app = None
+
 __all__ = [
+    "DASHBOARDS_COMMANDS_AVAILABLE",
     "DSPY_COMMANDS_AVAILABLE",
     "GGEN_COMMANDS_AVAILABLE",
+    "HD_COMMANDS_AVAILABLE",
     "PM_COMMANDS_AVAILABLE",
     "check_app",
+    # Dashboard commands
+    "dashboards_app",
     # DSPy commands
     "get_dspy_app",
     # ggen commands
     "ggen_app",
+    # Hyperdimensional commands
+    "hd_app",
     # Core commands
     "init_app",
+    # JTBD commands
+    "jtbd_app",
     # Process mining commands
     "pm_app",
     # Workflow commands

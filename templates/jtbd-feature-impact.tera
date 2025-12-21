@@ -1,0 +1,426 @@
+{# JTBD Feature Impact Analysis Template
+   Generates detailed impact analysis for features: outcomes, metrics, and ROI
+
+   Expected SPARQL result variables:
+   - featureName: Name of the feature
+   - featureDescription: Technical description
+   - featureStatus: Status (Planned, In Progress, Released)
+   - releaseDate: When released (optional)
+   - jobTitle: The job this feature helps accomplish
+   - jobFrequency: How often job occurs (High, Medium, Low)
+   - jobImportance: How critical job is (Critical, High, Medium, Low)
+   - personaName: Who this is for
+   - outcome: Outcome improvement
+   - outcomeMetric: How to measure
+   - successCriteria: Success definition
+   - targetValue: Performance target
+   - currentValue: Current measured performance (optional)
+   - baselineValue: Before-feature baseline (optional)
+   - painpoint: Problem solved
+   - painpointSeverity: Severity (Critical, High, Medium, Low)
+   - emotionalBenefit: Emotional benefit delivered
+   - satisfactionScore: User satisfaction (1-10 scale, optional)
+   - usageCount: Usage metrics (optional)
+   - adoptionRate: % of target users using (optional)
+   - estimatedValue: Business/user value score (optional)
+#}
+# JTBD Feature Impact Analysis
+
+> **Purpose**: Measure the real-world impact of features on jobs, outcomes, and user satisfaction
+
+**Analysis Date**: {{ now() | date(format="%Y-%m-%d %H:%M") }}
+
+---
+
+## Executive Impact Summary
+
+{% set total_features = results | map(attribute="featureName") | unique | length %}
+{% set released_features = results | filter(attribute="featureStatus", value="Released") %}
+{% set measured_features = results | filter(attribute="currentValue") %}
+
+| Metric | Value |
+|--------|-------|
+| **Total Features Analyzed** | {{ total_features }} |
+| **Released Features** | {{ released_features | map(attribute="featureName") | unique | length }} |
+| **Features with Metrics** | {{ measured_features | map(attribute="featureName") | unique | length }} |
+| **Measurement Coverage** | {{ (measured_features | map(attribute="featureName") | unique | length / total_features * 100) | round(precision=1) }}% |
+
+{% if measured_features | length > 0 %}
+{% set targets_met = 0 %}
+{% for feature in measured_features %}
+{% if feature.currentValue | float >= feature.targetValue | float %}
+{% set_global targets_met = targets_met + 1 %}
+{% endif %}
+{% endfor %}
+
+**Overall Target Achievement**: {{ (targets_met / measured_features | map(attribute="featureName") | unique | length * 100) | round(precision=1) }}%
+{% endif %}
+
+---
+
+## Feature-by-Feature Analysis
+
+{% set feature_names = results | map(attribute="featureName") | unique | sort %}
+
+{% for feature_name in feature_names %}
+{% set feature_data = results | filter(attribute="featureName", value=feature_name) %}
+{% set feature = feature_data | first %}
+
+### {{ feature_name }}
+
+**Status**: {{ feature.featureStatus }}{% if feature.releaseDate %} | Released: {{ feature.releaseDate }}{% endif %}
+
+{% if feature.featureDescription %}
+{{ feature.featureDescription }}
+{% endif %}
+
+#### Jobs & Personas Served
+
+{% set feature_jobs = feature_data | map(attribute="jobTitle") | unique %}
+{% set feature_personas = feature_data | map(attribute="personaName") | unique %}
+
+**Primary Jobs**:
+{% for job in feature_jobs %}
+{% set job_data = feature_data | filter(attribute="jobTitle", value=job) | first %}
+- **{{ job }}** ({{ job_data.jobFrequency | default(value="Medium") }} Frequency × {{ job_data.jobImportance | default(value="Medium") }} Importance)
+{% endfor %}
+
+**Target Personas**: {{ feature_personas | join(sep=", ") }}
+
+#### Outcomes Delivered
+
+{% set feature_outcomes = feature_data | map(attribute="outcome") | unique %}
+
+{% for outcome in feature_outcomes %}
+{% set outcome_data = feature_data | filter(attribute="outcome", value=outcome) | first %}
+
+**Outcome**: {{ outcome }}
+
+{% if outcome_data.outcomeMetric %}
+- **Metric**: {{ outcome_data.outcomeMetric }}
+- **Success Criteria**: {{ outcome_data.successCriteria | default(value="TBD") }}
+- **Target**: {{ outcome_data.targetValue | default(value="TBD") }}
+{% if outcome_data.currentValue %}
+- **Current Performance**: {{ outcome_data.currentValue }}
+{% if outcome_data.baselineValue %}
+- **Baseline (Before Feature)**: {{ outcome_data.baselineValue }}
+- **Improvement**: {% if outcome_data.baselineValue | float > 0 %}{{ ((outcome_data.currentValue | float - outcome_data.baselineValue | float) / outcome_data.baselineValue | float * 100) | round(precision=1) }}%{% else %}N/A{% endif %}
+{% endif %}
+- **Target Achievement**: {% if outcome_data.targetValue | float > 0 %}{{ (outcome_data.currentValue | float / outcome_data.targetValue | float * 100) | round(precision=1) }}%{% else %}N/A{% endif %}
+{% else %}
+- **Current Performance**: Not yet measured
+{% endif %}
+{% endif %}
+
+{% endfor %}
+
+#### Pain Point Impact
+
+{% set feature_pains = feature_data | map(attribute="painpoint") | unique %}
+
+**Pain Points Addressed**:
+{% for pain in feature_pains %}
+{% set pain_data = feature_data | filter(attribute="painpoint", value=pain) | first %}
+- **{{ pain }}** ({{ pain_data.painpointSeverity | default(value="Medium") }} severity)
+  - Status: {% if feature.featureStatus == "Released" %}✅ Resolved{% elif feature.featureStatus == "In Progress" %}⚠️ In Progress{% else %}🔴 Planned{% endif %}
+{% endfor %}
+
+#### Emotional Benefits
+
+{% set feature_benefits = feature_data | filter(attribute="emotionalBenefit") | map(attribute="emotionalBenefit") | unique %}
+
+{% if feature_benefits | length > 0 %}
+**Emotional Impact**:
+{% for benefit in feature_benefits %}
+- {{ benefit }}
+{% endfor %}
+{% endif %}
+
+#### Adoption & Usage
+
+{% if feature.usageCount or feature.adoptionRate %}
+
+{% if feature.usageCount %}
+**Usage Count**: {{ feature.usageCount }}
+{% endif %}
+
+{% if feature.adoptionRate %}
+**Adoption Rate**: {{ feature.adoptionRate }}%
+{% endif %}
+
+{% else %}
+*No adoption metrics available. Implement usage tracking to measure impact.*
+{% endif %}
+
+#### User Satisfaction
+
+{% set feature_satisfaction = feature_data | filter(attribute="satisfactionScore") %}
+{% if feature_satisfaction | length > 0 %}
+
+{% set total_sat = 0 %}
+{% set sat_count = 0 %}
+{% for item in feature_satisfaction %}
+{% set_global total_sat = total_sat + (item.satisfactionScore | float) %}
+{% set_global sat_count = sat_count + 1 %}
+{% endfor %}
+{% set avg_sat = total_sat / sat_count %}
+
+**Average Satisfaction**: {{ avg_sat | round(precision=1) }}/10 {% if avg_sat >= 8 %}✅ Excellent{% elif avg_sat >= 6 %}⚠️ Good{% else %}🔴 Needs Improvement{% endif %}
+
+**Satisfaction by Persona**:
+{% set sat_personas = feature_satisfaction | map(attribute="personaName") | unique %}
+{% for persona in sat_personas %}
+{% set persona_sat_data = feature_satisfaction | filter(attribute="personaName", value=persona) %}
+{% set persona_total = 0 %}
+{% set persona_count = 0 %}
+{% for item in persona_sat_data %}
+{% set_global persona_total = persona_total + (item.satisfactionScore | float) %}
+{% set_global persona_count = persona_count + 1 %}
+{% endfor %}
+- **{{ persona }}**: {{ (persona_total / persona_count) | round(precision=1) }}/10
+{% endfor %}
+
+{% else %}
+*No satisfaction data available. Survey users to measure satisfaction.*
+{% endif %}
+
+#### ROI Assessment
+
+{% if feature.estimatedValue %}
+**Estimated Value Score**: {{ feature.estimatedValue }}
+{% endif %}
+
+{% if feature_data | filter(attribute="currentValue") | length > 0 %}
+
+**Impact Score**:
+{% set impact_score = 0 %}
+{% set measured_outcomes = feature_data | filter(attribute="currentValue") | filter(attribute="targetValue") %}
+{% for outcome in measured_outcomes %}
+{% if outcome.currentValue | float >= outcome.targetValue | float %}
+{% set_global impact_score = impact_score + 100 %}
+{% else %}
+{% set_global impact_score = impact_score + ((outcome.currentValue | float / outcome.targetValue | float) * 100) | round %}
+{% endif %}
+{% endfor %}
+{% if measured_outcomes | length > 0 %}
+{{ (impact_score / measured_outcomes | length) | round(precision=1) }}/100
+
+{% if (impact_score / measured_outcomes | length) >= 100 %}✅ **Exceeding Expectations** - Feature delivers on all outcomes{% elif (impact_score / measured_outcomes | length) >= 70 %}⚠️ **On Track** - Feature delivering most outcomes{% else %}🔴 **Needs Attention** - Feature underperforming{% endif %}
+{% endif %}
+
+{% endif %}
+
+---
+
+{% endfor %}
+
+## Comparative Analysis
+
+### Top Performing Features
+
+{% set features_with_metrics = results | filter(attribute="currentValue") | filter(attribute="targetValue") %}
+{% set feature_performance = {} %}
+
+{# Calculate average achievement per feature #}
+{% for feature_name in features_with_metrics | map(attribute="featureName") | unique %}
+{% set feature_metrics = features_with_metrics | filter(attribute="featureName", value=feature_name) %}
+{% set total_achievement = 0 %}
+{% set count = 0 %}
+{% for metric in feature_metrics %}
+{% set achievement = (metric.currentValue | float / metric.targetValue | float * 100) %}
+{% set_global total_achievement = total_achievement + achievement %}
+{% set_global count = count + 1 %}
+{% endfor %}
+{# Store in conceptual map - rendered in sorted order below #}
+{% endfor %}
+
+{% if features_with_metrics | length > 0 %}
+
+**Features Exceeding Targets** (≥100%):
+
+| Feature | Job | Avg Achievement | Status |
+|---------|-----|-----------------|--------|
+{% for feature_name in features_with_metrics | map(attribute="featureName") | unique %}
+{% set feature_metrics = features_with_metrics | filter(attribute="featureName", value=feature_name) %}
+{% set total_achievement = 0 %}
+{% set count = 0 %}
+{% for metric in feature_metrics %}
+{% set_global total_achievement = total_achievement + (metric.currentValue | float / metric.targetValue | float * 100) %}
+{% set_global count = count + 1 %}
+{% endfor %}
+{% set avg_achievement = total_achievement / count %}
+{% if avg_achievement >= 100 %}
+| {{ feature_name }} | {{ feature_metrics | first | get(key="jobTitle") }} | {{ avg_achievement | round(precision=1) }}% | ✅ Excellent |
+{% endif %}
+{% endfor %}
+
+**Features Needing Improvement** (<70%):
+
+| Feature | Job | Avg Achievement | Action Required |
+|---------|-----|-----------------|-----------------|
+{% for feature_name in features_with_metrics | map(attribute="featureName") | unique %}
+{% set feature_metrics = features_with_metrics | filter(attribute="featureName", value=feature_name) %}
+{% set total_achievement = 0 %}
+{% set count = 0 %}
+{% for metric in feature_metrics %}
+{% set_global total_achievement = total_achievement + (metric.currentValue | float / metric.targetValue | float * 100) %}
+{% set_global count = count + 1 %}
+{% endfor %}
+{% set avg_achievement = total_achievement / count %}
+{% if avg_achievement < 70 %}
+| {{ feature_name }} | {{ feature_metrics | first | get(key="jobTitle") }} | {{ avg_achievement | round(precision=1) }}% | 🔴 Investigate |
+{% endif %}
+{% endfor %}
+
+{% endif %}
+
+### Features by Job Priority
+
+**P0 Jobs** (Critical × High-Frequency):
+
+{% set p0_features = results | filter(attribute="jobFrequency", value="High") | filter(attribute="jobImportance", value="Critical") %}
+{% if p0_features | length > 0 %}
+| Feature | Job | Status | Impact |
+|---------|-----|--------|--------|
+{% for feature in p0_features | unique(attribute="featureName") %}
+| {{ feature.featureName }} | {{ feature.jobTitle }} | {{ feature.featureStatus }} | {% if feature.currentValue and feature.targetValue %}{{ (feature.currentValue | float / feature.targetValue | float * 100) | round }}%{% else %}TBD{% endif %} |
+{% endfor %}
+{% else %}
+*No P0 features identified - consider if high-priority jobs are adequately addressed.*
+{% endif %}
+
+### Satisfaction Leaderboard
+
+{% set features_with_sat = results | filter(attribute="satisfactionScore") %}
+{% if features_with_sat | length > 0 %}
+
+**Top 5 Most Satisfying Features**:
+
+{% set sat_by_feature = {} %}
+{% for feature_name in features_with_sat | map(attribute="featureName") | unique %}
+{% set feature_sat = features_with_sat | filter(attribute="featureName", value=feature_name) %}
+{% set total_sat = 0 %}
+{% set count = 0 %}
+{% for item in feature_sat %}
+{% set_global total_sat = total_sat + (item.satisfactionScore | float) %}
+{% set_global count = count + 1 %}
+{% endfor %}
+{# Conceptual storage - rendered below #}
+{% endfor %}
+
+| Rank | Feature | Avg Score | Persona Coverage |
+|------|---------|-----------|------------------|
+{% for feature_name in features_with_sat | map(attribute="featureName") | unique | first(n=5) %}
+{% set feature_sat = features_with_sat | filter(attribute="featureName", value=feature_name) %}
+{% set total_sat = 0 %}
+{% set count = 0 %}
+{% for item in feature_sat %}
+{% set_global total_sat = total_sat + (item.satisfactionScore | float) %}
+{% set_global count = count + 1 %}
+{% endfor %}
+| {{ loop.index }} | {{ feature_name }} | {{ (total_sat / count) | round(precision=1) }}/10 | {{ feature_sat | map(attribute="personaName") | unique | join(sep=", ") }} |
+{% endfor %}
+
+{% endif %}
+
+---
+
+## Outcome Category Performance
+
+{% set outcome_categories = results | map(attribute="outcome") | unique %}
+
+{% for outcome in outcome_categories %}
+{% set outcome_data = results | filter(attribute="outcome", value=outcome) %}
+{% set outcome_measured = outcome_data | filter(attribute="currentValue") | filter(attribute="targetValue") %}
+
+### {{ outcome }}
+
+**Features Delivering This Outcome**: {{ outcome_data | map(attribute="featureName") | unique | length }}
+
+{% if outcome_measured | length > 0 %}
+
+**Performance Summary**:
+
+| Feature | Target | Current | Achievement | Status |
+|---------|--------|---------|-------------|--------|
+{% for feature in outcome_measured %}
+| {{ feature.featureName }} | {{ feature.targetValue }} | {{ feature.currentValue }} | {{ (feature.currentValue | float / feature.targetValue | float * 100) | round }}% | {% if feature.currentValue | float >= feature.targetValue | float %}✅{% elif feature.currentValue | float >= (feature.targetValue | float * 0.7) %}⚠️{% else %}🔴{% endif %} |
+{% endfor %}
+
+{% set total_achievement = 0 %}
+{% set count = 0 %}
+{% for feature in outcome_measured %}
+{% set_global total_achievement = total_achievement + (feature.currentValue | float / feature.targetValue | float * 100) %}
+{% set_global count = count + 1 %}
+{% endfor %}
+
+**Outcome Category Average**: {{ (total_achievement / count) | round(precision=1) }}%
+
+{% else %}
+*No measurements available for this outcome category. Implement tracking to monitor impact.*
+{% endif %}
+
+{% endfor %}
+
+---
+
+## Impact Recommendations
+
+### Immediate Actions
+
+{% set underperforming = results | filter(attribute="currentValue") | filter(attribute="targetValue") %}
+{% set needs_attention = [] %}
+{% for feature in underperforming %}
+{% if feature.currentValue | float < (feature.targetValue | float * 0.7) %}
+{% set_global needs_attention = needs_attention | concat(with=[feature]) %}
+{% endif %}
+{% endfor %}
+
+1. **Underperforming Features** ({{ needs_attention | length }})
+   {% if needs_attention | length > 0 %}
+   {% for feature in needs_attention | unique(attribute="featureName") %}
+   - **{{ feature.featureName }}**: Currently at {{ (feature.currentValue | float / feature.targetValue | float * 100) | round }}% of target
+     - Action: Investigate barriers to adoption/performance
+   {% endfor %}
+   {% else %}
+   - All measured features performing adequately (≥70% of target)
+   {% endif %}
+
+2. **Measurement Gaps** ({{ total_features - (measured_features | map(attribute="featureName") | unique | length) }})
+   {% if (measured_features | map(attribute="featureName") | unique | length / total_features * 100) < 50 %}
+   - Priority: Implement outcome tracking for {{ total_features - (measured_features | map(attribute="featureName") | unique | length) }} unmeasured features
+   - Focus on released features first
+   {% else %}
+   - Maintain current measurement coverage ({{ (measured_features | map(attribute="featureName") | unique | length / total_features * 100) | round }}%)
+   {% endif %}
+
+3. **Satisfaction Improvements**
+   {% set low_sat = features_with_sat | filter(attribute="satisfactionScore", value="5") | length + features_with_sat | filter(attribute="satisfactionScore", value="4") | length + features_with_sat | filter(attribute="satisfactionScore", value="3") | length + features_with_sat | filter(attribute="satisfactionScore", value="2") | length + features_with_sat | filter(attribute="satisfactionScore", value="1") | length + features_with_sat | filter(attribute="satisfactionScore", value="0") | length %}
+   {% if low_sat > 0 %}
+   - {{ low_sat }} features with satisfaction scores < 6/10
+   - Review feature-outcome alignment and user feedback
+   {% elif features_with_sat | length > 0 %}
+   - Satisfaction levels healthy across measured features
+   {% else %}
+   - Implement satisfaction surveys for all released features
+   {% endif %}
+
+### Long-Term Strategy
+
+1. **Outcome-Driven Development**
+   - Ensure all new features define measurable outcomes before development
+   - Track baseline metrics before feature release
+   - Measure impact within 30 days of release
+
+2. **Job-Feature Alignment**
+   - Review features underperforming on high-priority jobs
+   - Consider alternative features for critical jobs not meeting targets
+
+3. **Continuous Improvement**
+   - Quarterly review of feature impact metrics
+   - Retire or reimagine features consistently below 50% target achievement
+   - Double down on features exceeding expectations
+
+---
+
+*Feature impact analysis generated from JTBD specifications and performance data | Refresh monthly*

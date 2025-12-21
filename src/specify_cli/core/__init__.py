@@ -93,6 +93,41 @@ from .instrumentation import (
     instrument_subcommand,
 )
 
+# JTBD Measurement - Analysis and reporting
+from .jtbd_measurement import (
+    FeatureEffectiveness,
+    JTBDMetrics,
+    OutcomeDeliveryAnalysis,
+    analyze_feature_effectiveness,
+    analyze_outcome_delivery,
+    export_metrics,
+    extract_jtbd_metrics,
+    generate_jtbd_report,
+    query_job_completions,
+    query_outcome_achievements,
+    query_painpoint_resolutions,
+    query_satisfaction_scores,
+    query_time_to_outcome,
+)
+
+# JTBD Metrics - Jobs-to-be-Done tracking
+from .jtbd_metrics import (
+    JobCompletion,
+    JobStatus,
+    OutcomeAchieved,
+    OutcomeStatus,
+    PainpointCategory,
+    PainpointResolved,
+    SatisfactionLevel,
+    TimeToOutcome,
+    UserSatisfaction,
+    track_job_completion,
+    track_outcome_achieved,
+    track_painpoint_resolved,
+    track_time_to_outcome,
+    track_user_satisfaction,
+)
+
 # Process - Subprocess execution
 from .process import run, run_command, run_logged, which
 
@@ -151,13 +186,25 @@ __all__ = [
     "ErrorCategory",
     "ErrorSeverity",
     "ExitCode",
+    # JTBD Measurement
+    "FeatureEffectiveness",
     "GitHubAttributes",
     "GitHubOperations",
+    # JTBD Metrics
+    "JTBDMetrics",
+    "JobCompletion",
+    "JobStatus",
     "NetworkError",
+    "OutcomeAchieved",
+    "OutcomeDeliveryAnalysis",
+    "OutcomeStatus",
+    "PainpointCategory",
+    "PainpointResolved",
     "ProcessAttributes",
     "ProcessOperations",
     "ProjectAttributes",
     "ProjectOperations",
+    "SatisfactionLevel",
     "SpecAttributes",
     "SpecOperations",
     "SpecifyConfig",
@@ -167,7 +214,9 @@ __all__ = [
     "TemplateOperations",
     "TestAttributes",
     "TestOperations",
+    "TimeToOutcome",
     "ToolNotFoundError",
+    "UserSatisfaction",
     "ValidationError",
     "WorkflowAttributes",
     "WorkflowOperations",
@@ -178,6 +227,8 @@ __all__ = [
     "_parse_rate_limit_headers",
     "add_span_attributes",
     "add_span_event",
+    "analyze_feature_effectiveness",
+    "analyze_outcome_delivery",
     # Cache
     "cache_key",
     "cache_stats",
@@ -188,7 +239,10 @@ __all__ = [
     "download_template_from_github",
     "dump_json",
     "env_or",
+    "export_metrics",
+    "extract_jtbd_metrics",
     "format_error_message",
+    "generate_jtbd_report",
     "get_cache_dir",
     "get_cached",
     "get_common_attributes",
@@ -207,6 +261,11 @@ __all__ = [
     "metric_counter",
     "metric_histogram",
     "progress_bar",
+    "query_job_completions",
+    "query_outcome_achievements",
+    "query_painpoint_resolutions",
+    "query_satisfaction_scores",
+    "query_time_to_outcome",
     "record_exception",
     "rich_table",
     # Process
@@ -217,6 +276,11 @@ __all__ = [
     # Telemetry
     "span",
     "timed",
+    "track_job_completion",
+    "track_outcome_achieved",
+    "track_painpoint_resolved",
+    "track_time_to_outcome",
+    "track_user_satisfaction",
     "which",
     "with_error_handling",
 ]

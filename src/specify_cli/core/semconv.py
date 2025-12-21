@@ -45,6 +45,9 @@ __all__ = [
     # GitHub Attributes
     "GitHubAttributes",
     "GitHubOperations",
+    # JTBD Attributes
+    "JTBDAttributes",
+    "JTBDOperations",
     # Process Attributes
     "ProcessAttributes",
     "ProcessOperations",
@@ -379,6 +382,91 @@ class TemplateOperations:
     EXTRACT: Final[str] = "template.extract"
     APPLY: Final[str] = "template.apply"
     LIST: Final[str] = "template.list"
+
+
+# =============================================================================
+# JTBD (Jobs-to-be-Done) Attributes
+# =============================================================================
+
+
+class JTBDAttributes:
+    """Jobs-to-be-Done semantic conventions for outcome-driven instrumentation."""
+
+    # Job attributes
+    JOB_ID: Final[str] = "jtbd.job.id"
+    JOB_PERSONA: Final[str] = "jtbd.job.persona"
+    JOB_FEATURE: Final[str] = "jtbd.job.feature"
+    JOB_STATUS: Final[str] = "jtbd.job.status"
+    JOB_DURATION_SECONDS: Final[str] = "jtbd.job.duration_seconds"
+    JOB_STARTED_AT: Final[str] = "jtbd.job.started_at"
+    JOB_COMPLETED_AT: Final[str] = "jtbd.job.completed_at"
+
+    # Outcome attributes
+    OUTCOME_ID: Final[str] = "jtbd.outcome.id"
+    OUTCOME_METRIC: Final[str] = "jtbd.outcome.metric"
+    OUTCOME_EXPECTED: Final[str] = "jtbd.outcome.expected"
+    OUTCOME_ACTUAL: Final[str] = "jtbd.outcome.actual"
+    OUTCOME_ACHIEVEMENT_RATE: Final[str] = "jtbd.outcome.achievement_rate"
+    OUTCOME_FEATURE: Final[str] = "jtbd.outcome.feature"
+    OUTCOME_PERSONA: Final[str] = "jtbd.outcome.persona"
+    OUTCOME_STATUS: Final[str] = "jtbd.outcome.status"
+    OUTCOME_EXCEEDS_EXPECTATIONS: Final[str] = "jtbd.outcome.exceeds_expectations"
+
+    # Painpoint attributes
+    PAINPOINT_ID: Final[str] = "jtbd.painpoint.id"
+    PAINPOINT_CATEGORY: Final[str] = "jtbd.painpoint.category"
+    PAINPOINT_DESCRIPTION: Final[str] = "jtbd.painpoint.description"
+    PAINPOINT_FEATURE: Final[str] = "jtbd.painpoint.feature"
+    PAINPOINT_PERSONA: Final[str] = "jtbd.painpoint.persona"
+    PAINPOINT_SEVERITY_BEFORE: Final[str] = "jtbd.painpoint.severity_before"
+    PAINPOINT_SEVERITY_AFTER: Final[str] = "jtbd.painpoint.severity_after"
+    PAINPOINT_RESOLUTION_EFFECTIVENESS: Final[str] = "jtbd.painpoint.resolution_effectiveness"
+
+    # Time-to-Outcome attributes
+    TTO_OUTCOME_ID: Final[str] = "jtbd.tto.outcome_id"
+    TTO_PERSONA: Final[str] = "jtbd.tto.persona"
+    TTO_FEATURE: Final[str] = "jtbd.tto.feature"
+    TTO_DURATION_SECONDS: Final[str] = "jtbd.tto.duration_seconds"
+    TTO_STEPS_COUNT: Final[str] = "jtbd.tto.steps_count"
+
+    # Satisfaction attributes
+    SATISFACTION_OUTCOME_ID: Final[str] = "jtbd.satisfaction.outcome_id"
+    SATISFACTION_FEATURE: Final[str] = "jtbd.satisfaction.feature"
+    SATISFACTION_PERSONA: Final[str] = "jtbd.satisfaction.persona"
+    SATISFACTION_LEVEL: Final[str] = "jtbd.satisfaction.level"
+    SATISFACTION_MET_EXPECTATIONS: Final[str] = "jtbd.satisfaction.met_expectations"
+    SATISFACTION_WOULD_RECOMMEND: Final[str] = "jtbd.satisfaction.would_recommend"
+    SATISFACTION_EFFORT_SCORE: Final[str] = "jtbd.satisfaction.effort_score"
+    SATISFACTION_FEEDBACK: Final[str] = "jtbd.satisfaction.feedback"
+
+
+class JTBDOperations:
+    """Standard JTBD operation values for metric and span naming."""
+
+    # Job operations
+    JOB_START: Final[str] = "jtbd.job.start"
+    JOB_COMPLETE: Final[str] = "jtbd.job.complete"
+    JOB_FAIL: Final[str] = "jtbd.job.fail"
+    JOB_ABANDON: Final[str] = "jtbd.job.abandon"
+
+    # Outcome operations
+    OUTCOME_MEASURE: Final[str] = "jtbd.outcome.measure"
+    OUTCOME_ACHIEVE: Final[str] = "jtbd.outcome.achieve"
+    OUTCOME_VALIDATE: Final[str] = "jtbd.outcome.validate"
+
+    # Painpoint operations
+    PAINPOINT_IDENTIFY: Final[str] = "jtbd.painpoint.identify"
+    PAINPOINT_RESOLVE: Final[str] = "jtbd.painpoint.resolve"
+    PAINPOINT_MEASURE: Final[str] = "jtbd.painpoint.measure"
+
+    # Time-to-Outcome operations
+    TTO_START: Final[str] = "jtbd.tto.start"
+    TTO_STEP: Final[str] = "jtbd.tto.step"
+    TTO_COMPLETE: Final[str] = "jtbd.tto.complete"
+
+    # Satisfaction operations
+    SATISFACTION_RECORD: Final[str] = "jtbd.satisfaction.record"
+    SATISFACTION_ANALYZE: Final[str] = "jtbd.satisfaction.analyze"
 
 
 # =============================================================================
