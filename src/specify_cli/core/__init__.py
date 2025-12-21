@@ -1,50 +1,22 @@
-"""
-specify_cli.core - Core utilities and infrastructure
+"""Core functionality for Specify CLI."""
 
-This module provides foundational utilities for the Specify CLI, including:
-- Shell output and formatting utilities
-- Process execution helpers
-- Semantic conventions for OTEL instrumentation
-- Error handling and exceptions
-- Configuration management
-"""
-
-from .shell import (
-    colour,
-    colour_stderr,
-    dump_json,
-    markdown,
-    timed,
-    rich_table,
-    progress_bar,
-    install_rich,
-)
-from .process import (
-    run_command,
-    run_logged,
-)
-from .semconv import (
-    WorkflowAttributes,
-    WorkflowOperations,
-    TestAttributes,
-    SpecAttributes,
-    get_common_attributes,
+from .git import is_git_repo, init_git_repo
+from .github import (
+    _format_rate_limit_error,
+    _github_auth_headers,
+    _github_token,
+    _parse_rate_limit_headers,
+    download_template_from_github,
 )
 
 __all__ = [
-    "colour",
-    "colour_stderr",
-    "dump_json",
-    "markdown",
-    "timed",
-    "rich_table",
-    "progress_bar",
-    "install_rich",
-    "run_command",
-    "run_logged",
-    "WorkflowAttributes",
-    "WorkflowOperations",
-    "TestAttributes",
-    "SpecAttributes",
-    "get_common_attributes",
+    # GitHub functions
+    "_github_token",
+    "_github_auth_headers",
+    "_parse_rate_limit_headers",
+    "_format_rate_limit_error",
+    "download_template_from_github",
+    # Git functions
+    "is_git_repo",
+    "init_git_repo",
 ]
