@@ -6,23 +6,21 @@ Includes commands for workflow creation, execution, and OTEL validation.
 """
 
 from pathlib import Path
-from typing import Optional
 
 import typer
 from rich.console import Console
 from rich.panel import Panel
 from rich.table import Table
-from rich.json import JSON as RichJSON
 
-from ..core.shell import colour, dump_json
-from ..spiff.ops import (
-    create_otel_validation_workflow,
-    execute_otel_validation_workflow,
-    run_8020_otel_validation,
-    discover_external_projects,
-    validate_external_project_with_spiff,
+from specify_cli.core.shell import colour
+from specify_cli.spiff.ops import (
     batch_validate_external_projects,
+    create_otel_validation_workflow,
+    discover_external_projects,
+    execute_otel_validation_workflow,
     run_8020_external_project_validation,
+    run_8020_otel_validation,
+    validate_external_project_with_spiff,
 )
 
 console = Console()
@@ -34,8 +32,10 @@ app = typer.Typer(help="SPIFF BPMN workflow management and validation")
 def validate(
     iterations: int = typer.Option(1, "--iterations", "-i", help="Number of validation iterations"),
     verbose: bool = typer.Option(False, "--verbose", "-v", help="Verbose output"),
-    export_json: Optional[Path] = typer.Option(None, "--export-json", help="Export results to JSON file"),
-):
+    export_json: Path | None = typer.Option(
+        None, "--export-json", help="Export results to JSON file"
+    ),
+) -> None:
     """Execute full OTEL validation workflow."""
     console.print(Panel("[bold cyan]SPIFF OTEL Validation[/bold cyan]", expand=False))
 
@@ -61,18 +61,16 @@ def validate(
 
             # Display results
             console.print()
-            results_table = Table(title="Validation Results", show_header=True, header_style="bold cyan")
+            results_table = Table(
+                title="Validation Results", show_header=True, header_style="bold cyan"
+            )
             results_table.add_column("Step", style="cyan")
             results_table.add_column("Status", style="white")
             results_table.add_column("Duration", style="magenta")
 
             for step in result.validation_steps:
                 status = "[green]✓[/green]" if step.success else "[red]✗[/red]"
-                results_table.add_row(
-                    step.name,
-                    status,
-                    f"{step.duration_seconds:.2f}s"
-                )
+                results_table.add_row(step.name, status, f"{step.duration_seconds:.2f}s")
 
             console.print(results_table)
 
@@ -91,6 +89,7 @@ def validate(
             if export_json:
                 export_json.parent.mkdir(parents=True, exist_ok=True)
                 import json
+
                 export_json.write_text(json.dumps(result.to_dict(), indent=2))
                 colour(f"✓ Results exported to {export_json}", "green")
 
@@ -101,8 +100,10 @@ def validate(
 
 @app.command()
 def validate_quick(
-    export_json: Optional[Path] = typer.Option(None, "--export-json", help="Export results to JSON file"),
-):
+    export_json: Path | None = typer.Option(
+        None, "--export-json", help="Export results to JSON file"
+    ),
+) -> None:
     """Quick 80/20 OTEL validation (critical path only)."""
     console.print(Panel("[bold cyan]SPIFF 80/20 OTEL Validation[/bold cyan]", expand=False))
 
@@ -112,7 +113,9 @@ def validate_quick(
 
         # Display results
         console.print()
-        results_table = Table(title="Validation Results", show_header=True, header_style="bold cyan")
+        results_table = Table(
+            title="Validation Results", show_header=True, header_style="bold cyan"
+        )
         results_table.add_column("Step", style="cyan")
         results_table.add_column("Status", style="white")
         results_table.add_column("Duration", style="magenta")
@@ -134,6 +137,7 @@ def validate_quick(
         if export_json:
             export_json.parent.mkdir(parents=True, exist_ok=True)
             import json
+
             export_json.write_text(json.dumps(result.to_dict(), indent=2))
             colour(f"✓ Results exported to {export_json}", "green")
 
@@ -145,8 +149,10 @@ def validate_quick(
 @app.command()
 def create_workflow(
     output: Path = typer.Option("workflow.bpmn", "--output", "-o", help="Output BPMN file"),
-    test_cmd: Optional[str] = typer.Option(None, "--test", "-t", help="Test command to include (can be repeated)"),
-):
+    test_cmd: str | None = typer.Option(
+        None, "--test", "-t", help="Test command to include (can be repeated)"
+    ),
+) -> None:
     """Create custom BPMN validation workflow."""
     console.print(Panel("[bold cyan]Create BPMN Workflow[/bold cyan]", expand=False))
 
@@ -169,10 +175,12 @@ def create_workflow(
 @app.command()
 def run_workflow(
     workflow_file: Path = typer.Argument(..., help="BPMN workflow file to execute"),
-    export_json: Optional[Path] = typer.Option(None, "--export-json", help="Export results to JSON"),
-):
+    export_json: Path | None = typer.Option(None, "--export-json", help="Export results to JSON"),
+) -> None:
     """Execute a BPMN workflow file."""
-    console.print(Panel(f"[bold cyan]Execute Workflow: {workflow_file.name}[/bold cyan]", expand=False))
+    console.print(
+        Panel(f"[bold cyan]Execute Workflow: {workflow_file.name}[/bold cyan]", expand=False)
+    )
 
     try:
         if not workflow_file.exists():
@@ -180,7 +188,7 @@ def run_workflow(
             raise typer.Exit(1)
 
         colour("→ Validating workflow...", "cyan")
-        from ..spiff.runtime import validate_bpmn_file, run_bpmn
+        from specify_cli.spiff.runtime import run_bpmn, validate_bpmn_file
 
         if not validate_bpmn_file(workflow_file):
             colour("✗ Workflow validation failed", "red")
@@ -206,6 +214,7 @@ def run_workflow(
         if export_json:
             export_json.parent.mkdir(parents=True, exist_ok=True)
             import json
+
             export_json.write_text(json.dumps(result, indent=2))
             colour(f"✓ Results exported to {export_json}", "green")
 
@@ -216,10 +225,14 @@ def run_workflow(
 
 @app.command()
 def discover_projects(
-    search_path: Path = typer.Option(Path.home() / "projects", "--path", "-p", help="Path to search"),
+    search_path: Path = typer.Option(
+        Path.home() / "projects", "--path", "-p", help="Path to search"
+    ),
     max_depth: int = typer.Option(3, "--depth", "-d", help="Maximum directory depth"),
-    min_confidence: float = typer.Option(0.5, "--confidence", "-c", help="Minimum confidence threshold"),
-):
+    min_confidence: float = typer.Option(
+        0.5, "--confidence", "-c", help="Minimum confidence threshold"
+    ),
+) -> None:
     """Discover Python projects in a directory."""
     console.print(Panel("[bold cyan]Discover Python Projects[/bold cyan]", expand=False))
 
@@ -237,7 +250,9 @@ def discover_projects(
 
         # Display projects
         console.print()
-        projects_table = Table(title="Discovered Projects", show_header=True, header_style="bold cyan")
+        projects_table = Table(
+            title="Discovered Projects", show_header=True, header_style="bold cyan"
+        )
         projects_table.add_column("Name", style="cyan")
         projects_table.add_column("Type", style="magenta")
         projects_table.add_column("Manager", style="blue")
@@ -248,7 +263,7 @@ def discover_projects(
                 project.name,
                 project.project_type,
                 project.package_manager,
-                f"{project.confidence:.0%}"
+                f"{project.confidence:.0%}",
             )
 
         console.print(projects_table)
@@ -263,10 +278,14 @@ def discover_projects(
 @app.command()
 def validate_external(
     project_path: Path = typer.Argument(..., help="Path to external project"),
-    export_json: Optional[Path] = typer.Option(None, "--export-json", help="Export results to JSON"),
-):
+    export_json: Path | None = typer.Option(None, "--export-json", help="Export results to JSON"),
+) -> None:
     """Validate an external project with spec-kit."""
-    console.print(Panel(f"[bold cyan]Validate External Project: {project_path.name}[/bold cyan]", expand=False))
+    console.print(
+        Panel(
+            f"[bold cyan]Validate External Project: {project_path.name}[/bold cyan]", expand=False
+        )
+    )
 
     try:
         if not project_path.exists():
@@ -274,7 +293,7 @@ def validate_external(
             raise typer.Exit(1)
 
         colour("→ Analyzing project...", "cyan")
-        from ..spiff.ops.external_projects import _is_python_project
+        from specify_cli.spiff.ops.external_projects import _is_python_project
 
         project_info = _is_python_project(project_path)
         if not project_info:
@@ -299,6 +318,7 @@ def validate_external(
         if export_json:
             export_json.parent.mkdir(parents=True, exist_ok=True)
             import json
+
             export_json.write_text(json.dumps(result.to_dict(), indent=2))
             colour(f"✓ Results exported to {export_json}", "green")
 
@@ -309,11 +329,13 @@ def validate_external(
 
 @app.command()
 def batch_validate(
-    search_path: Path = typer.Option(Path.home() / "projects", "--path", "-p", help="Path to search"),
+    search_path: Path = typer.Option(
+        Path.home() / "projects", "--path", "-p", help="Path to search"
+    ),
     parallel: bool = typer.Option(True, "--parallel/--no-parallel", help="Use parallel execution"),
     max_workers: int = typer.Option(4, "--workers", "-w", help="Maximum worker threads"),
-    export_json: Optional[Path] = typer.Option(None, "--export-json", help="Export results to JSON"),
-):
+    export_json: Path | None = typer.Option(None, "--export-json", help="Export results to JSON"),
+) -> None:
     """Validate multiple projects in batch."""
     console.print(Panel("[bold cyan]Batch Validate Projects[/bold cyan]", expand=False))
 
@@ -334,18 +356,16 @@ def batch_validate(
 
         # Display results
         console.print()
-        results_table = Table(title="Batch Validation Results", show_header=True, header_style="bold cyan")
+        results_table = Table(
+            title="Batch Validation Results", show_header=True, header_style="bold cyan"
+        )
         results_table.add_column("Project", style="cyan")
         results_table.add_column("Status", style="white")
         results_table.add_column("Duration", style="magenta")
 
         for result in results:
             status = "[green]✓[/green]" if result.success else "[red]✗[/red]"
-            results_table.add_row(
-                result.project_name,
-                status,
-                f"{result.duration_seconds:.2f}s"
-            )
+            results_table.add_row(result.project_name, status, f"{result.duration_seconds:.2f}s")
 
         console.print(results_table)
 
@@ -357,10 +377,8 @@ def batch_validate(
         if export_json:
             export_json.parent.mkdir(parents=True, exist_ok=True)
             import json
-            export_json.write_text(json.dumps(
-                [r.to_dict() for r in results],
-                indent=2
-            ))
+
+            export_json.write_text(json.dumps([r.to_dict() for r in results], indent=2))
             colour(f"✓ Results exported to {export_json}", "green")
 
     except Exception as e:
@@ -370,13 +388,17 @@ def batch_validate(
 
 @app.command()
 def validate_8020(
-    search_path: Path = typer.Option(Path.home() / "projects", "--path", "-p", help="Path to search"),
+    search_path: Path = typer.Option(
+        Path.home() / "projects", "--path", "-p", help="Path to search"
+    ),
     max_depth: int = typer.Option(2, "--depth", "-d", help="Maximum directory depth"),
-    project_type: Optional[str] = typer.Option(None, "--type", "-t", help="Filter by project type"),
-    export_json: Optional[Path] = typer.Option(None, "--export-json", help="Export results to JSON"),
-):
+    project_type: str | None = typer.Option(None, "--type", "-t", help="Filter by project type"),
+    export_json: Path | None = typer.Option(None, "--export-json", help="Export results to JSON"),
+) -> None:
     """Quick 80/20 validation of critical external projects."""
-    console.print(Panel("[bold cyan]SPIFF 80/20 External Project Validation[/bold cyan]", expand=False))
+    console.print(
+        Panel("[bold cyan]SPIFF 80/20 External Project Validation[/bold cyan]", expand=False)
+    )
 
     try:
         colour("→ Running critical path validation...", "cyan")
@@ -398,6 +420,7 @@ def validate_8020(
         if export_json:
             export_json.parent.mkdir(parents=True, exist_ok=True)
             import json
+
             export_json.write_text(json.dumps(summary, indent=2))
             colour(f"✓ Results exported to {export_json}", "green")
 

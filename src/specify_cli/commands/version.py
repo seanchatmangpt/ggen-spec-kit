@@ -20,8 +20,6 @@ See Also
 
 from __future__ import annotations
 
-from typing import Optional
-
 import typer
 from rich.console import Console
 from rich.panel import Panel
@@ -41,7 +39,6 @@ app = typer.Typer(
 @app.callback(invoke_without_command=True)
 @instrument_command("version", track_args=True)
 def version(
-    ctx: typer.Context,
     check_updates: bool = typer.Option(
         False,
         "--check-updates",
@@ -90,14 +87,16 @@ def version(
             if info.error:
                 console.print(f"[yellow]Could not check for updates:[/yellow] {info.error}")
             elif info.update_available:
-                console.print(Panel(
-                    f"[green]Update available![/green]\n\n"
-                    f"Current version: {info.current_version}\n"
-                    f"Latest version:  {info.latest_version}\n\n"
-                    f"[cyan]Update with:[/cyan] pip install --upgrade specify-cli",
-                    title="Update Available",
-                    border_style="green",
-                ))
+                console.print(
+                    Panel(
+                        f"[green]Update available![/green]\n\n"
+                        f"Current version: {info.current_version}\n"
+                        f"Latest version:  {info.latest_version}\n\n"
+                        f"[cyan]Update with:[/cyan] pip install --upgrade specify-cli",
+                        title="Update Available",
+                        border_style="green",
+                    )
+                )
             else:
                 colour("[green]✓ You are running the latest version[/green]", "green")
 
@@ -117,7 +116,9 @@ def version(
                 console.print("[bold]Build Information:[/bold]")
                 console.print(f"  Python: {build_info['python_version']}")
                 console.print(f"  Platform: {build_info['platform']}")
-                console.print(f"  OTEL: {'enabled' if build_info['otel_available'] else 'disabled'}")
+                console.print(
+                    f"  OTEL: {'enabled' if build_info['otel_available'] else 'disabled'}"
+                )
 
                 if build_info.get("dependencies"):
                     console.print()
@@ -141,4 +142,4 @@ def version_callback(value: bool) -> None:
     """Callback for --version flag on main app."""
     if value:
         console.print(f"specify-cli {version_ops.get_current_version()}")
-        raise typer.Exit()
+        raise typer.Exit

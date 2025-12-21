@@ -46,18 +46,17 @@ from __future__ import annotations
 import os
 from dataclasses import dataclass, field
 from pathlib import Path
-from typing import Any
 
 try:
-    import tomllib
+    import tomllib  # type: ignore[import-not-found,no-redef]
 except ImportError:
-    import tomli as tomllib  # type: ignore[import-not-found]
+    import tomli as tomllib  # type: ignore[import-not-found,no-redef]
 
 __all__ = [
     "SpecifyConfig",
-    "get_config",
     "env_or",
     "get_cache_dir",
+    "get_config",
     "get_config_dir",
 ]
 
@@ -167,7 +166,7 @@ class SpecifyConfig:
     default_ai_assistant: str = "claude"
 
     @classmethod
-    def from_env_and_file(cls) -> "SpecifyConfig":
+    def from_env_and_file(cls) -> SpecifyConfig:
         """
         Load configuration from environment and config file.
 

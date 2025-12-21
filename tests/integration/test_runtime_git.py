@@ -67,7 +67,7 @@ class TestInitRepo:
         # Verify it's a valid repo
         result = subprocess.run(
             ["git", "status"],
-            cwd=project_dir,
+            check=False, cwd=project_dir,
             capture_output=True,
             text=True,
         )
@@ -141,7 +141,7 @@ class TestCommit:
         # Verify commit exists
         result = subprocess.run(
             ["git", "log", "--oneline", "-1"],
-            cwd=git_repo,
+            check=False, cwd=git_repo,
             capture_output=True,
             text=True,
         )
@@ -156,7 +156,7 @@ class TestCommit:
         # Verify empty commit was created
         result = subprocess.run(
             ["git", "log", "--oneline", "-1"],
-            cwd=git_repo,
+            check=False, cwd=git_repo,
             capture_output=True,
             text=True,
         )
@@ -174,7 +174,7 @@ class TestCommit:
         # Verify no commit was made
         result = subprocess.run(
             ["git", "log", "--oneline"],
-            cwd=git_repo,
+            check=False, cwd=git_repo,
             capture_output=True,
             text=True,
         )

@@ -19,7 +19,7 @@ console = Console()
 @app.command("run")
 def run_command() -> None:
     """Execute tests command."""
-    console.print(f"[bold green]✓[/] tests command executed")
+    console.print("[bold green]✓[/] tests command executed")
 
 
 if __name__ == "__main__":

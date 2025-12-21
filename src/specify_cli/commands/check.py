@@ -40,7 +40,6 @@ app = typer.Typer(
 @app.callback(invoke_without_command=True)
 @instrument_command("check", track_args=True)
 def check(
-    ctx: typer.Context,
     verbose: bool = typer.Option(
         False,
         "--verbose",

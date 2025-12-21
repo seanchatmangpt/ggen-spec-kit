@@ -62,9 +62,8 @@ from __future__ import annotations
 import json
 import sys
 import time
-from collections.abc import Callable, Iterable, Sequence
 from functools import wraps
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
 from rich.console import Console
 from rich.json import JSON as RichJSON
@@ -75,6 +74,9 @@ from rich.traceback import install as _install_tb
 
 # Import telemetry (will be no-op if OTEL not available)
 from .telemetry import metric_counter, metric_histogram, span
+
+if TYPE_CHECKING:
+    from collections.abc import Callable, Iterable, Sequence
 
 __all__ = [
     "colour",
@@ -161,7 +163,7 @@ def dump_json(obj: Any) -> None:
             if _console.is_terminal:
                 _console.print(RichJSON(json_str))
             else:
-                print(json_str)
+                pass
 
             duration = time.time() - start_time
 
@@ -220,9 +222,8 @@ def timed(fn: Callable[..., Any]) -> Callable[..., Any]:
             exception_occurred = False
 
             try:
-                result = fn(*a, **kw)
-                return result
-            except Exception as e:
+                return fn(*a, **kw)
+            except Exception:
                 exception_occurred = True
                 metric_counter(f"shell.timed.{fn.__name__}.failed")(1)
                 raise

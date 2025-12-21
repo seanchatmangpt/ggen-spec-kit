@@ -46,10 +46,10 @@ from specify_cli.core.telemetry import metric_counter, span
 from specify_cli.runtime import github
 
 __all__ = [
-    "get_version_info",
+    "VersionInfo",
     "check_for_updates",
     "get_current_version",
-    "VersionInfo",
+    "get_version_info",
 ]
 
 
@@ -178,9 +178,7 @@ def check_for_updates(
 
             # Compare versions
             if info.latest_version:
-                info.update_available = _is_newer_version(
-                    CURRENT_VERSION, info.latest_version
-                )
+                info.update_available = _is_newer_version(CURRENT_VERSION, info.latest_version)
 
             info.check_time = time.time() - start_time
 
@@ -235,8 +233,7 @@ def get_version_info(
     with span("ops.version.get_info", check_updates=check_updates):
         if check_updates:
             return check_for_updates(token=token)
-        else:
-            return VersionInfo(current_version=CURRENT_VERSION)
+        return VersionInfo(current_version=CURRENT_VERSION)
 
 
 def get_build_info() -> dict[str, Any]:

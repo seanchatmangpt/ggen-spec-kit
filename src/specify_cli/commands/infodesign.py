@@ -19,7 +19,7 @@ console = Console()
 @app.command("run")
 def run_command() -> None:
     """Execute infodesign command."""
-    console.print(f"[bold green]✓[/] infodesign command executed")
+    console.print("[bold green]✓[/] infodesign command executed")
 
 
 if __name__ == "__main__":

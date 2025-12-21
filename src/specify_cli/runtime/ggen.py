@@ -38,10 +38,8 @@ See Also
 from __future__ import annotations
 
 import json
-import subprocess
-import tempfile
 import time
-from pathlib import Path  # noqa: TC003 - Path used as runtime parameter
+from pathlib import Path
 from typing import Any
 
 from specify_cli.core.instrumentation import add_span_event
@@ -49,16 +47,14 @@ from specify_cli.core.process import run, run_logged
 from specify_cli.core.shell import timed
 from specify_cli.core.telemetry import metric_counter, metric_histogram, span
 from specify_cli.ops.transform import (
+    StageResult,
     TransformConfig,
     TransformResult,
-    StageResult,
     canonicalize_output,
     compose_transform,
 )
 from specify_cli.runtime.receipt import (
     generate_receipt,
-    Receipt,
-    sha256_file,
     sha256_string,
 )
 from specify_cli.runtime.tools import check_tool
@@ -208,10 +204,19 @@ def run_transform(config: TransformConfig) -> TransformResult:
             return compose_transform(config, stage_results)
 
         # μ₂ EXTRACT: Execute SPARQL
-        stage_results["extract"] = _run_extract(
-            config,
-            stage_results["normalize"].output,
-        )
+        normalize_output = stage_results["normalize"].output
+        if normalize_output is None:
+            stage_results["extract"] = StageResult(
+                stage="extract",
+                success=False,
+                input_hash="",
+                output_hash="",
+                output=None,
+                errors=["Normalize stage produced no output"],
+            )
+            return compose_transform(config, stage_results)
+
+        stage_results["extract"] = _run_extract(config, normalize_output)
         if not stage_results["extract"].success:
             return compose_transform(config, stage_results)
 
@@ -383,7 +388,7 @@ def _validate_shacl(_rdf_content: str, schema_files: list[str]) -> dict[str, Any
             if not path.exists():
                 return {"valid": False, "violations": [f"Schema not found: {schema_file}"]}
         return {"valid": True, "violations": []}
-    except Exception as e:  # noqa: TRY300
+    except Exception as e:
         return {"valid": False, "violations": [str(e)]}
 
 

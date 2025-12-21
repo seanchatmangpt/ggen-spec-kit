@@ -33,11 +33,13 @@ See Also
 from __future__ import annotations
 
 import json
-from collections.abc import Callable
 from functools import wraps
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
-from .telemetry import metric_counter, record_exception, span, OTEL_AVAILABLE
+from .telemetry import metric_counter, record_exception, span
+
+if TYPE_CHECKING:
+    from collections.abc import Callable
 
 # Import typer only when needed to avoid circular dependencies
 try:
@@ -191,29 +193,30 @@ def instrument_command(
                             )
                         current_span.set_attribute("cli.exit_code", exit_code)
                         raise
-                    else:
-                        # Error - record exception and set error status
-                        record_exception(e, escaped=True)
-                        current_span.set_status(Status(StatusCode.ERROR, str(e)))
-                        current_span.add_event(
-                            "command.failed",
-                            {
-                                "cli.command": command_name,
-                                "cli.success": False,
-                                "exception.type": type(e).__name__,
-                            },
-                        )
+                    # Error - record exception and set error status
+                    record_exception(e, escaped=True)
+                    current_span.set_status(Status(StatusCode.ERROR, str(e)))
+                    current_span.add_event(
+                        "command.failed",
+                        {
+                            "cli.command": command_name,
+                            "cli.success": False,
+                            "exception.type": type(e).__name__,
+                        },
+                    )
 
-                        # Increment error counter
-                        metric_counter(f"cli.command.{command_name}.errors")(1)
-                        raise
+                    # Increment error counter
+                    metric_counter(f"cli.command.{command_name}.errors")(1)
+                    raise
 
         return wrapper
 
     return decorator
 
 
-def instrument_subcommand(parent_command: str) -> Callable[[Callable[..., Any]], Callable[..., Any]]:
+def instrument_subcommand(
+    parent_command: str,
+) -> Callable[[Callable[..., Any]], Callable[..., Any]]:
     """
     Decorator for subcommands to maintain trace hierarchy.
 
@@ -271,8 +274,8 @@ def add_span_event(name: str, attributes: dict[str, Any] | None = None) -> None:
 
 
 __all__ = [
-    "instrument_command",
-    "instrument_subcommand",
     "add_span_attributes",
     "add_span_event",
+    "instrument_command",
+    "instrument_subcommand",
 ]

@@ -49,23 +49,19 @@ from specify_cli.core.semconv import TemplateAttributes, TemplateOperations
 from specify_cli.core.telemetry import metric_counter, metric_histogram, span
 
 __all__ = [
-    "extract_template",
-    "ensure_executable_scripts",
-    "merge_json_files",
-    "handle_vscode_settings",
     "TemplateError",
+    "ensure_executable_scripts",
+    "extract_template",
+    "handle_vscode_settings",
+    "merge_json_files",
 ]
 
 
 class TemplateError(Exception):
     """Template operation error."""
 
-    pass
 
-
-def merge_json_files(
-    existing_path: Path, new_content: dict[str, Any]
-) -> dict[str, Any]:
+def merge_json_files(existing_path: Path, new_content: dict[str, Any]) -> dict[str, Any]:
     """Merge new JSON content into existing JSON file.
 
     Performs a deep merge where:
@@ -88,7 +84,7 @@ def merge_json_files(
     """
     with span("template.merge_json", path=str(existing_path)):
         try:
-            with open(existing_path, "r", encoding="utf-8") as f:
+            with open(existing_path, encoding="utf-8") as f:
                 existing_content = json.load(f)
         except (FileNotFoundError, json.JSONDecodeError):
             # If file doesn't exist or is invalid, just use new content
@@ -109,9 +105,7 @@ def merge_json_files(
         return merged
 
 
-def handle_vscode_settings(
-    source_path: Path, dest_path: Path
-) -> None:
+def handle_vscode_settings(source_path: Path, dest_path: Path) -> None:
     """Handle merging or copying of .vscode/settings.json files.
 
     Parameters
@@ -123,7 +117,7 @@ def handle_vscode_settings(
     """
     with span("template.vscode_settings", source=str(source_path), dest=str(dest_path)):
         try:
-            with open(source_path, "r", encoding="utf-8") as f:
+            with open(source_path, encoding="utf-8") as f:
                 new_settings = json.load(f)
 
             if dest_path.exists():

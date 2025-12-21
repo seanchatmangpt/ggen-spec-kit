@@ -44,12 +44,12 @@ from specify_cli.core.process import run
 from specify_cli.core.telemetry import metric_counter, metric_histogram, span
 
 __all__ = [
-    "is_repo",
-    "init_repo",
+    "GitError",
     "add_all",
     "commit",
     "get_current_branch",
-    "GitError",
+    "init_repo",
+    "is_repo",
 ]
 
 

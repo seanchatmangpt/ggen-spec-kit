@@ -40,36 +40,13 @@ See Also
 
 from __future__ import annotations
 
-# Telemetry - OpenTelemetry instrumentation
-from .telemetry import (
-    OTEL_AVAILABLE,
-    metric_counter,
-    metric_histogram,
-    record_exception,
-    span,
-)
-
-# Instrumentation - Command decorators
-from .instrumentation import (
-    add_span_attributes,
-    add_span_event,
-    instrument_command,
-    instrument_subcommand,
-)
-
-# Process - Subprocess execution
-from .process import run, run_command, run_logged, which
-
-# Shell - Rich terminal output
-from .shell import (
-    colour,
-    colour_stderr,
-    dump_json,
-    install_rich,
-    markdown,
-    progress_bar,
-    rich_table,
-    timed,
+# Cache - Result caching
+from .cache import (
+    cache_key,
+    cache_stats,
+    clear_cache,
+    get_cached,
+    set_cached,
 )
 
 # Configuration - Settings management
@@ -79,15 +56,6 @@ from .config import (
     get_cache_dir,
     get_config,
     get_config_dir,
-)
-
-# Cache - Result caching
-from .cache import (
-    cache_key,
-    cache_stats,
-    clear_cache,
-    get_cached,
-    set_cached,
 )
 
 # Error Handling - Error management
@@ -105,13 +73,35 @@ from .error_handling import (
     with_error_handling,
 )
 
+# Git operations (legacy, moved to runtime in future)
+from .git import init_git_repo, is_git_repo
+
+# GitHub operations (legacy, moved to runtime in future)
+from .github import (
+    _format_rate_limit_error,
+    _github_auth_headers,
+    _github_token,
+    _parse_rate_limit_headers,
+    download_template_from_github,
+)
+
+# Instrumentation - Command decorators
+from .instrumentation import (
+    add_span_attributes,
+    add_span_event,
+    instrument_command,
+    instrument_subcommand,
+)
+
+# Process - Subprocess execution
+from .process import run, run_command, run_logged, which
+
 # Semantic Conventions - OTEL attribute names
 from .semconv import (
     CacheAttributes,
     CacheOperations,
     CliAttributes,
     CliOperations,
-    get_common_attributes,
     GitHubAttributes,
     GitHubOperations,
     ProcessAttributes,
@@ -126,97 +116,107 @@ from .semconv import (
     TestOperations,
     WorkflowAttributes,
     WorkflowOperations,
+    get_common_attributes,
 )
 
-# Git operations (legacy, moved to runtime in future)
-from .git import init_git_repo, is_git_repo
+# Shell - Rich terminal output
+from .shell import (
+    colour,
+    colour_stderr,
+    dump_json,
+    install_rich,
+    markdown,
+    progress_bar,
+    rich_table,
+    timed,
+)
 
-# GitHub operations (legacy, moved to runtime in future)
-from .github import (
-    _format_rate_limit_error,
-    _github_auth_headers,
-    _github_token,
-    _parse_rate_limit_headers,
-    download_template_from_github,
+# Telemetry - OpenTelemetry instrumentation
+from .telemetry import (
+    OTEL_AVAILABLE,
+    metric_counter,
+    metric_histogram,
+    record_exception,
+    span,
 )
 
 __all__ = [
-    # Telemetry
-    "span",
-    "metric_counter",
-    "metric_histogram",
-    "record_exception",
     "OTEL_AVAILABLE",
-    # Instrumentation
-    "instrument_command",
-    "instrument_subcommand",
-    "add_span_attributes",
-    "add_span_event",
-    # Process
-    "run",
-    "run_logged",
-    "run_command",
-    "which",
-    # Shell
-    "colour",
-    "colour_stderr",
-    "dump_json",
-    "markdown",
-    "timed",
-    "rich_table",
-    "progress_bar",
-    "install_rich",
-    # Configuration
-    "get_config",
-    "get_cache_dir",
-    "get_config_dir",
-    "env_or",
-    "SpecifyConfig",
-    # Cache
-    "cache_key",
-    "get_cached",
-    "set_cached",
-    "clear_cache",
-    "cache_stats",
-    # Error Handling
-    "SpecifyError",
-    "ConfigurationError",
-    "ValidationError",
-    "NetworkError",
-    "ToolNotFoundError",
-    "ErrorSeverity",
-    "ErrorCategory",
-    "ExitCode",
-    "handle_cli_error",
-    "format_error_message",
-    "with_error_handling",
+    "CacheAttributes",
+    "CacheOperations",
     # Semantic Conventions
     "CliAttributes",
     "CliOperations",
+    "ConfigurationError",
+    "ErrorCategory",
+    "ErrorSeverity",
+    "ExitCode",
+    "GitHubAttributes",
+    "GitHubOperations",
+    "NetworkError",
     "ProcessAttributes",
     "ProcessOperations",
     "ProjectAttributes",
     "ProjectOperations",
-    "WorkflowAttributes",
-    "WorkflowOperations",
-    "TestAttributes",
-    "TestOperations",
     "SpecAttributes",
     "SpecOperations",
-    "CacheAttributes",
-    "CacheOperations",
-    "GitHubAttributes",
-    "GitHubOperations",
+    "SpecifyConfig",
+    # Error Handling
+    "SpecifyError",
     "TemplateAttributes",
     "TemplateOperations",
-    "get_common_attributes",
-    # Git (legacy)
-    "is_git_repo",
-    "init_git_repo",
+    "TestAttributes",
+    "TestOperations",
+    "ToolNotFoundError",
+    "ValidationError",
+    "WorkflowAttributes",
+    "WorkflowOperations",
+    "_format_rate_limit_error",
+    "_github_auth_headers",
     # GitHub (legacy)
     "_github_token",
-    "_github_auth_headers",
     "_parse_rate_limit_headers",
-    "_format_rate_limit_error",
+    "add_span_attributes",
+    "add_span_event",
+    # Cache
+    "cache_key",
+    "cache_stats",
+    "clear_cache",
+    # Shell
+    "colour",
+    "colour_stderr",
     "download_template_from_github",
+    "dump_json",
+    "env_or",
+    "format_error_message",
+    "get_cache_dir",
+    "get_cached",
+    "get_common_attributes",
+    # Configuration
+    "get_config",
+    "get_config_dir",
+    "handle_cli_error",
+    "init_git_repo",
+    "install_rich",
+    # Instrumentation
+    "instrument_command",
+    "instrument_subcommand",
+    # Git (legacy)
+    "is_git_repo",
+    "markdown",
+    "metric_counter",
+    "metric_histogram",
+    "progress_bar",
+    "record_exception",
+    "rich_table",
+    # Process
+    "run",
+    "run_command",
+    "run_logged",
+    "set_cached",
+    # Telemetry
+    "span",
+    "timed",
+    "which",
+    "with_error_handling",
 ]

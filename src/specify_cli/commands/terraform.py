@@ -19,7 +19,7 @@ console = Console()
 @app.command("run")
 def run_command() -> None:
     """Execute terraform command."""
-    console.print(f"[bold green]✓[/] terraform command executed")
+    console.print("[bold green]✓[/] terraform command executed")
 
 
 if __name__ == "__main__":

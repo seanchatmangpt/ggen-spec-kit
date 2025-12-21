@@ -957,7 +957,7 @@ def pm_sample(
                 trace_length = random.randint(min_trace_length, max_trace_length)
                 current_time = start_date + timedelta(days=case_id)
 
-                for event_idx in range(trace_length):
+                for _event_idx in range(trace_length):
                     event = {
                         "case:concept:name": f"Case_{case_id + 1:05d}",
                         "concept:name": random.choice(activity_names),
@@ -1052,7 +1052,7 @@ def _load_workflow(file_path: Path) -> tuple:
     with open(file_path) as f:
         parser.parse_file(f)
 
-    workflow_spec = parser.get_spec(list(parser.processes.keys())[0])
+    workflow_spec = parser.get_spec(next(iter(parser.processes.keys())))
     return parser, workflow_spec
 
 
@@ -1091,7 +1091,7 @@ def _validate_bpmn(file_path: Path) -> dict:
             "errors": [],
             "warnings": [],
             "root_tag": root.tag,
-            "namespaces": list(root.attrib.keys()) if hasattr(root, "attrib") else [],
+            "namespaces": list[Any](root.attrib.keys()) if hasattr(root, "attrib") else [],
         }
 
         # Check for required elements
@@ -1287,7 +1287,7 @@ def wf_execute(
             tracker.complete("load", workflow_file.name)
 
             tracker.start("parse")
-            workflow_spec = parser.get_spec(list(parser.processes.keys())[0])
+            workflow_spec = parser.get_spec(next(iter(parser.processes.keys())))
             workflow = BpmnWorkflow(workflow_spec)
             tracker.complete("parse", f"{len(parser.processes)} process(es)")
 
@@ -1544,7 +1544,7 @@ def wf_convert(
                 parser = BpmnParser()
                 with open(input_file) as f:
                     parser.parse_file(f)
-                model = parser.get_spec(list(parser.processes.keys())[0])
+                model = parser.get_spec(next(iter(parser.processes.keys())))
                 model_type = "bpmn"
                 tracker.complete("load", "BPMN file")
             elif in_suffix == ".pnml":
@@ -1676,7 +1676,7 @@ def pm_execute(
 
             while not workflow.is_completed():
                 # Get the next task to run
-                ready_tasks = [t for t in workflow.get_tasks(state=TaskState.READY)]
+                ready_tasks = list(workflow.get_tasks(state=TaskState.READY))
 
                 if not ready_tasks:
                     break

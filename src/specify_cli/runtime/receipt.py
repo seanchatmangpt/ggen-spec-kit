@@ -19,9 +19,12 @@ from __future__ import annotations
 import hashlib
 import json
 from dataclasses import asdict, dataclass
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from pathlib import Path
-from typing import Any, Callable
+from typing import TYPE_CHECKING
+
+if TYPE_CHECKING:
+    from collections.abc import Callable
 
 
 @dataclass
@@ -143,7 +146,7 @@ def generate_receipt(
             prev_hash = output_hash
 
     return Receipt(
-        timestamp=datetime.now(timezone.utc).isoformat(),
+        timestamp=datetime.now(UTC).isoformat(),
         input_file=str(input_file),
         output_file=str(output_file),
         input_hash=sha256_file(input_file),
@@ -179,15 +182,10 @@ def verify_receipt(receipt: Receipt) -> bool:
     current_input_hash = sha256_file(input_path)
     current_output_hash = sha256_file(output_path)
 
-    return (
-        current_input_hash == receipt.input_hash
-        and current_output_hash == receipt.output_hash
-    )
+    return current_input_hash == receipt.input_hash and current_output_hash == receipt.output_hash
 
 
-def verify_idempotence(
-    input_file: Path, transform_fn: Callable[[Path], str]
-) -> bool:
+def verify_idempotence(input_file: Path, transform_fn: Callable[[Path], str]) -> bool:
     """Verify μ∘μ = μ (transformation is idempotent).
 
     Run the transformation twice and verify output is identical.

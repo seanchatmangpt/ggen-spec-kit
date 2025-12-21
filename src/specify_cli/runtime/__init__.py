@@ -52,6 +52,24 @@ See Also
 
 from __future__ import annotations
 
+# ggen wrapper
+from .ggen import (
+    GgenError,
+    get_ggen_version,
+    is_ggen_available,
+    sync_specs,
+)
+
+# Git operations
+from .git import (
+    GitError,
+    add_all,
+    commit,
+    get_current_branch,
+    init_repo,
+    is_repo,
+)
+
 # GitHub operations
 from .github import (
     GitHubError,
@@ -63,16 +81,6 @@ from .github import (
     github_auth_headers,
     github_token,
     parse_rate_limit_headers,
-)
-
-# Git operations
-from .git import (
-    GitError,
-    add_all,
-    commit,
-    get_current_branch,
-    init_repo,
-    is_repo,
 )
 
 # Template operations
@@ -95,49 +103,41 @@ from .tools import (
     which_tool,
 )
 
-# ggen wrapper
-from .ggen import (
-    GgenError,
-    get_ggen_version,
-    is_ggen_available,
-    sync_specs,
-)
-
 __all__ = [
-    # GitHub
-    "github_token",
-    "github_auth_headers",
-    "parse_rate_limit_headers",
-    "format_rate_limit_error",
-    "fetch_latest_release",
-    "find_matching_asset",
-    "download_asset",
+    "CLAUDE_LOCAL_PATH",
+    "OPTIONAL_TOOLS",
+    "REQUIRED_TOOLS",
+    "GgenError",
+    "GitError",
     "GitHubError",
     "RateLimitError",
-    # Git
-    "is_repo",
-    "init_repo",
-    "add_all",
-    "commit",
-    "get_current_branch",
-    "GitError",
-    # Template
-    "extract_template",
-    "ensure_executable_scripts",
-    "merge_json_files",
-    "handle_vscode_settings",
     "TemplateError",
+    "add_all",
+    "check_required_tools",
     # Tools
     "check_tool",
-    "which_tool",
-    "check_required_tools",
+    "commit",
+    "download_asset",
+    "ensure_executable_scripts",
+    # Template
+    "extract_template",
+    "fetch_latest_release",
+    "find_matching_asset",
+    "format_rate_limit_error",
+    "get_current_branch",
+    "get_ggen_version",
     "get_tool_versions",
-    "CLAUDE_LOCAL_PATH",
-    "REQUIRED_TOOLS",
-    "OPTIONAL_TOOLS",
+    "github_auth_headers",
+    # GitHub
+    "github_token",
+    "handle_vscode_settings",
+    "init_repo",
     # ggen
     "is_ggen_available",
-    "get_ggen_version",
+    # Git
+    "is_repo",
+    "merge_json_files",
+    "parse_rate_limit_headers",
     "sync_specs",
-    "GgenError",
+    "which_tool",
 ]

@@ -19,7 +19,7 @@ console = Console()
 @app.command("run")
 def run_command() -> None:
     """Execute mermaid command."""
-    console.print(f"[bold green]✓[/] mermaid command executed")
+    console.print("[bold green]✓[/] mermaid command executed")
 
 
 if __name__ == "__main__":

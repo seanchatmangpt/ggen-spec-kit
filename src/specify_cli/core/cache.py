@@ -44,20 +44,21 @@ from __future__ import annotations
 
 import hashlib
 import json
-import os
 import time
-from pathlib import Path
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
 from .config import get_cache_dir
-from .telemetry import metric_counter, metric_histogram, span
+from .telemetry import metric_counter, span
+
+if TYPE_CHECKING:
+    from pathlib import Path
 
 __all__ = [
     "cache_key",
+    "cache_stats",
+    "clear_cache",
     "get_cached",
     "set_cached",
-    "clear_cache",
-    "cache_stats",
 ]
 
 # Maximum cache entries before pruning
@@ -122,7 +123,7 @@ def get_cached(key: str) -> dict[str, Any] | None:
 
         try:
             # Read cache file and find matching entry
-            with open(cache_path, "r") as f:
+            with open(cache_path) as f:
                 for line in f:
                     try:
                         entry = json.loads(line)
@@ -135,7 +136,7 @@ def get_cached(key: str) -> dict[str, Any] | None:
             metric_counter("cache.miss.not_found")(1)
             return None
 
-        except Exception as e:
+        except Exception:
             metric_counter("cache.error.read")(1)
             return None
 
@@ -173,7 +174,7 @@ def set_cached(key: str, value: dict[str, Any], ttl: int | None = None) -> None:
             # Check if pruning needed
             _maybe_prune_cache(cache_path)
 
-        except Exception as e:
+        except Exception:
             metric_counter("cache.error.write")(1)
 
 
@@ -194,7 +195,7 @@ def clear_cache() -> int:
 
         try:
             # Count entries
-            with open(cache_path, "r") as f:
+            with open(cache_path) as f:
                 count = sum(1 for _ in f)
 
             # Remove file
@@ -203,7 +204,7 @@ def clear_cache() -> int:
             metric_counter("cache.cleared")(count)
             return count
 
-        except Exception as e:
+        except Exception:
             metric_counter("cache.error.clear")(1)
             return 0
 
@@ -230,7 +231,7 @@ def cache_stats() -> dict[str, Any]:
 
         try:
             # Count entries and measure size
-            with open(cache_path, "r") as f:
+            with open(cache_path) as f:
                 entries = sum(1 for _ in f)
 
             size = cache_path.stat().st_size
@@ -255,7 +256,7 @@ def cache_stats() -> dict[str, Any]:
 def _maybe_prune_cache(cache_path: Path) -> None:
     """Prune cache if it exceeds maximum size."""
     try:
-        with open(cache_path, "r") as f:
+        with open(cache_path) as f:
             lines = f.readlines()
 
         if len(lines) > _MAX_CACHE_ENTRIES:

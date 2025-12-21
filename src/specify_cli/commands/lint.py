@@ -19,7 +19,7 @@ console = Console()
 @app.command("run")
 def run_command() -> None:
     """Execute lint command."""
-    console.print(f"[bold green]✓[/] lint command executed")
+    console.print("[bold green]✓[/] lint command executed")
 
 
 if __name__ == "__main__":

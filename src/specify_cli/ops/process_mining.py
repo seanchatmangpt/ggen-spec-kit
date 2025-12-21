@@ -6,7 +6,7 @@ separated from the CLI layer for better testability and reusability.
 """
 
 from pathlib import Path
-from typing import Dict, Any, Tuple, Optional
+from typing import Any
 
 
 def load_event_log(
@@ -40,7 +40,7 @@ def load_event_log(
 
     if suffix == ".xes":
         return pm4py.read_xes(str(file_path))
-    elif suffix == ".csv":
+    if suffix == ".csv":
         import pandas as pd
 
         df = pd.read_csv(file_path)
@@ -49,8 +49,7 @@ def load_event_log(
             df, case_id=case_id, activity_key=activity, timestamp_key=timestamp
         )
         return pm4py.convert_to_event_log(df)
-    else:
-        raise ValueError(f"Unsupported file format: {suffix}. Use .xes or .csv")
+    raise ValueError(f"Unsupported file format: {suffix}. Use .xes or .csv")
 
 
 def save_model(model: Any, output_path: Path, model_type: str = "petri") -> None:
@@ -115,10 +114,10 @@ def save_log(log: Any, output_path: Path) -> None:
 
 
 def discover_process_model(
-    log,
+    log: Any,
     algorithm: str = "inductive",
     noise_threshold: float = 0.0,
-) -> Tuple[Any, str]:
+) -> tuple[Any, str]:
     """
     Discover a process model from an event log.
 
@@ -138,29 +137,26 @@ def discover_process_model(
     if algorithm == "alpha":
         net, im, fm = pm4py.discover_petri_net_alpha(log)
         return (net, im, fm), "petri"
-    elif algorithm == "alpha_plus":
+    if algorithm == "alpha_plus":
         net, im, fm = pm4py.discover_petri_net_alpha_plus(log)
         return (net, im, fm), "petri"
-    elif algorithm == "heuristic":
+    if algorithm == "heuristic":
         net, im, fm = pm4py.discover_petri_net_heuristics(log)
         return (net, im, fm), "petri"
-    elif algorithm == "inductive":
-        net, im, fm = pm4py.discover_petri_net_inductive(
-            log, noise_threshold=noise_threshold
-        )
+    if algorithm == "inductive":
+        net, im, fm = pm4py.discover_petri_net_inductive(log, noise_threshold=noise_threshold)
         return (net, im, fm), "petri"
-    elif algorithm == "ilp":
+    if algorithm == "ilp":
         net, im, fm = pm4py.discover_petri_net_ilp(log)
         return (net, im, fm), "petri"
-    else:
-        raise ValueError(f"Unknown discovery algorithm: {algorithm}")
+    raise ValueError(f"Unknown discovery algorithm: {algorithm}")
 
 
 def conform_trace(
-    log,
+    log: Any,
     model_file: Path,
     method: str = "token",
-) -> Dict[str, Any]:
+) -> dict[str, Any]:
     """
     Perform conformance checking between an event log and a process model.
 
@@ -225,7 +221,7 @@ def conform_trace(
     }
 
 
-def get_log_statistics(log) -> Dict[str, Any]:
+def get_log_statistics(log: Any) -> dict[str, Any]:
     """
     Get statistics about an event log.
 
@@ -236,9 +232,9 @@ def get_log_statistics(log) -> Dict[str, Any]:
         Dictionary with log statistics
     """
     import pm4py
-    from pm4py.statistics.traces.generic.log import case_statistics
-    from pm4py.statistics.start_activities.log import get as get_start_activities
     from pm4py.statistics.end_activities.log import get as get_end_activities
+    from pm4py.statistics.start_activities.log import get as get_start_activities
+    from pm4py.statistics.traces.generic.log import case_statistics
 
     num_cases = len(log)
     num_events = sum(len(trace) for trace in log)
@@ -264,16 +260,14 @@ def get_log_statistics(log) -> Dict[str, Any]:
         "avg_trace_length": avg_trace_length,
         "num_start_activities": len(start_activities),
         "num_end_activities": len(end_activities),
-        "activities": dict(sorted(activities.items(), key=lambda x: x[1], reverse=True)),
-        "start_activities": dict(
+        "activities": dict[str, Any](sorted(activities.items(), key=lambda x: x[1], reverse=True)),
+        "start_activities": dict[str, Any](
             sorted(start_activities.items(), key=lambda x: x[1], reverse=True)
         ),
-        "end_activities": dict(
+        "end_activities": dict[str, Any](
             sorted(end_activities.items(), key=lambda x: x[1], reverse=True)
         ),
-        "variants": sorted(
-            variants, key=lambda x: x.get("count", 0), reverse=True
-        )[:10],  # Top 10
+        "variants": sorted(variants, key=lambda x: x.get("count", 0), reverse=True)[:10],  # Top 10
     }
 
 
@@ -318,9 +312,7 @@ def convert_model(
         bpmn = pm4py.convert_petri_net_to_bpmn(net, im, fm)
         pm4py.write_bpmn(bpmn, str(output_file))
     else:
-        raise ValueError(
-            f"Unsupported conversion: {input_type} -> {output_type}"
-        )
+        raise ValueError(f"Unsupported conversion: {input_type} -> {output_type}")
 
 
 def visualize_model(
@@ -360,11 +352,11 @@ def visualize_model(
 
 
 def filter_log(
-    log,
+    log: Any,
     filter_type: str = "activity",
-    filter_value: Optional[str] = None,
-    min_length: Optional[int] = None,
-    max_length: Optional[int] = None,
+    filter_value: str | None = None,
+    min_length: int | None = None,
+    max_length: int | None = None,
 ) -> Any:
     """
     Filter an event log.
@@ -385,23 +377,20 @@ def filter_log(
     import pm4py
 
     if filter_type == "activity" and filter_value:
-        return pm4py.filter_event_attribute_values(
-            log, "concept:name", [filter_value], True
-        )
-    elif filter_type == "start" and filter_value:
+        return pm4py.filter_event_attribute_values(log, "concept:name", [filter_value], True)
+    if filter_type == "start" and filter_value:
         return pm4py.filter_start_activities(log, [filter_value])
-    elif filter_type == "end" and filter_value:
+    if filter_type == "end" and filter_value:
         return pm4py.filter_end_activities(log, [filter_value])
-    elif filter_type == "length" and min_length is not None:
+    if filter_type == "length" and min_length is not None:
         return pm4py.filter_trace_length(log, min_length, max_length or float("inf"))
-    else:
-        raise ValueError(f"Invalid filter type or parameters: {filter_type}")
+    raise ValueError(f"Invalid filter type or parameters: {filter_type}")
 
 
 def sample_log(
-    log,
-    num_traces: Optional[int] = None,
-    num_events: Optional[int] = None,
+    log: Any,
+    num_traces: int | None = None,
+    num_events: int | None = None,
     method: str = "random",
 ) -> Any:
     """
@@ -424,9 +413,7 @@ def sample_log(
     if method == "random":
         if num_traces:
             return pm4py.sample_log(log, n_traces=num_traces)
-        elif num_events:
+        if num_events:
             return pm4py.sample_log(log, n_cases=max(1, num_events // 5))
-        else:
-            raise ValueError("Either num_traces or num_events must be specified")
-    else:
-        raise ValueError(f"Unknown sampling method: {method}")
+        raise ValueError("Either num_traces or num_events must be specified")
+    raise ValueError(f"Unknown sampling method: {method}")

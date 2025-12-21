@@ -50,9 +50,11 @@ from __future__ import annotations
 import logging
 import os
 import platform
-from collections.abc import Callable
 from contextlib import contextmanager
-from typing import Any
+from typing import TYPE_CHECKING, Any
+
+if TYPE_CHECKING:
+    from collections.abc import Callable
 
 
 # --------------------------------------------------------------------------- #
@@ -148,7 +150,7 @@ if not _OTEL_DISABLED:
         _METER = metrics.get_meter("specify-cli")
 
         @contextmanager
-        def span(name: str, span_kind: Any = None, **attrs: Any):
+        def span(name: str, span_kind: Any | None = None, **attrs: Any) -> None:
             """Create an OTEL span with the given name and attributes."""
             kwargs: dict[str, Any] = {"attributes": attrs}
             if span_kind is not None:
@@ -289,7 +291,7 @@ else:
 if not OTEL_AVAILABLE:
 
     @contextmanager
-    def span(name: str, span_kind: Any = None, **attrs: Any):  # type: ignore[misc]
+    def span(name: str, span_kind: Any | None = None, **attrs: Any):  # type: ignore[misc]
         """No-op span context manager."""
 
         class _NoopSpan:
@@ -338,7 +340,6 @@ if not OTEL_AVAILABLE:
         e: Exception, escaped: bool = True, attributes: dict[str, Any] | None = None
     ) -> None:
         """No-op exception recording."""
-        pass
 
     def get_current_span() -> Any:  # type: ignore[misc]
         """No-op get current span."""
@@ -360,22 +361,21 @@ if not OTEL_AVAILABLE:
 
     def get_tracer() -> None:  # type: ignore[misc]
         """No-op get tracer."""
-        return None
+        return
 
     def set_span_status(status_code: str, description: str = "") -> None:
         """No-op set span status."""
-        pass
 
 
 __all__ = [
-    "setup_logging",
-    "span",
-    "metric_counter",
-    "metric_histogram",
-    "metric_gauge",
-    "record_exception",
+    "OTEL_AVAILABLE",
     "get_current_span",
     "get_tracer",
+    "metric_counter",
+    "metric_gauge",
+    "metric_histogram",
+    "record_exception",
     "set_span_status",
-    "OTEL_AVAILABLE",
+    "setup_logging",
+    "span",
 ]

@@ -41,9 +41,8 @@ from __future__ import annotations
 import os
 import ssl
 import time
-from datetime import datetime, timezone
-from pathlib import Path
-from typing import Any
+from datetime import UTC, datetime
+from typing import TYPE_CHECKING, Any
 
 import httpx
 
@@ -59,16 +58,19 @@ from specify_cli.core.instrumentation import add_span_attributes, add_span_event
 from specify_cli.core.semconv import GitHubAttributes, GitHubOperations
 from specify_cli.core.telemetry import metric_counter, metric_histogram, span
 
+if TYPE_CHECKING:
+    from pathlib import Path
+
 __all__ = [
-    "github_token",
-    "github_auth_headers",
-    "parse_rate_limit_headers",
-    "format_rate_limit_error",
-    "fetch_latest_release",
-    "download_asset",
-    "find_matching_asset",
     "GitHubError",
     "RateLimitError",
+    "download_asset",
+    "fetch_latest_release",
+    "find_matching_asset",
+    "format_rate_limit_error",
+    "github_auth_headers",
+    "github_token",
+    "parse_rate_limit_headers",
 ]
 
 
@@ -155,7 +157,7 @@ def parse_rate_limit_headers(headers: httpx.Headers) -> dict[str, Any]:
     if "X-RateLimit-Reset" in headers:
         reset_epoch = int(headers.get("X-RateLimit-Reset", "0"))
         if reset_epoch:
-            reset_time = datetime.fromtimestamp(reset_epoch, tz=timezone.utc)
+            reset_time = datetime.fromtimestamp(reset_epoch, tz=UTC)
             info["reset_epoch"] = reset_epoch
             info["reset_time"] = reset_time
             info["reset_local"] = reset_time.astimezone()
@@ -284,7 +286,9 @@ def fetch_latest_release(
             # Parse rate limit headers
             rate_info = parse_rate_limit_headers(response.headers)
             if rate_info.get("remaining") is not None:
-                add_span_attributes(**{GitHubAttributes.RATE_LIMIT_REMAINING: rate_info["remaining"]})
+                add_span_attributes(
+                    **{GitHubAttributes.RATE_LIMIT_REMAINING: rate_info["remaining"]}
+                )
 
             if response.status_code == 403:
                 metric_counter("github.api.rate_limited")(1)
@@ -461,7 +465,7 @@ def download_asset(
 
             return zip_path
 
-        except Exception as e:
+        except Exception:
             # Clean up partial download
             if zip_path.exists():
                 zip_path.unlink()

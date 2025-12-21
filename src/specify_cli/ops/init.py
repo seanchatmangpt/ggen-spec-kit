@@ -45,19 +45,18 @@ import re
 import time
 from dataclasses import dataclass, field
 from pathlib import Path
-from typing import Any
 
 from specify_cli.core.instrumentation import add_span_attributes, add_span_event
 from specify_cli.core.shell import timed
 from specify_cli.core.telemetry import metric_counter, metric_histogram, span
-from specify_cli.runtime import github, git, template, tools
+from specify_cli.runtime import git, github, template
 
 __all__ = [
+    "InitError",
+    "InitResult",
+    "determine_ai_assistant",
     "initialize_project",
     "validate_project_name",
-    "determine_ai_assistant",
-    "InitResult",
-    "InitError",
 ]
 
 
@@ -203,7 +202,10 @@ def _check_project_path(
 
     raise InitError(
         "Either project name or --here flag must be specified",
-        suggestions=["Provide a project name: specify init my-project", "Use --here to initialize in current directory"],
+        suggestions=[
+            "Provide a project name: specify init my-project",
+            "Use --here to initialize in current directory",
+        ],
     )
 
 
@@ -267,7 +269,9 @@ def initialize_project(
             target_path, is_current_dir = _check_project_path(name, here, project_path)
             result.project_path = target_path
 
-            add_span_event("init.path_resolved", {"path": str(target_path), "is_current": is_current_dir})
+            add_span_event(
+                "init.path_resolved", {"path": str(target_path), "is_current": is_current_dir}
+            )
 
             # Validate project name if not using current dir
             if not is_current_dir and name:
@@ -279,7 +283,10 @@ def initialize_project(
             if not is_current_dir and target_path.exists():
                 raise InitError(
                     f"Directory '{target_path.name}' already exists",
-                    suggestions=["Choose a different name", "Use --here to initialize in existing directory"],
+                    suggestions=[
+                        "Choose a different name",
+                        "Use --here to initialize in existing directory",
+                    ],
                 )
 
             # Determine AI assistant

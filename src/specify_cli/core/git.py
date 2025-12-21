@@ -3,7 +3,6 @@
 import os
 import subprocess
 from pathlib import Path
-from typing import Tuple
 
 from rich.console import Console
 
@@ -31,7 +30,7 @@ def is_git_repo(path: Path | None = None) -> bool:
         return False
 
 
-def init_git_repo(project_path: Path, quiet: bool = False) -> Tuple[bool, str | None]:
+def init_git_repo(project_path: Path, quiet: bool = False) -> tuple[bool, str | None]:
     """Initialize a git repository in the specified path.
 
     Args:

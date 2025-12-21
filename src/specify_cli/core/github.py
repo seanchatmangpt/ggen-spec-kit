@@ -2,8 +2,7 @@
 
 import os
 import ssl
-from datetime import datetime, timezone
-from typing import Optional, Tuple
+from datetime import UTC, datetime
 from pathlib import Path
 
 import httpx
@@ -24,15 +23,15 @@ def _github_token(cli_token: str | None = None) -> str | None:
     return ((cli_token or os.getenv("GH_TOKEN") or os.getenv("GITHUB_TOKEN") or "").strip()) or None
 
 
-def _github_auth_headers(cli_token: str | None = None) -> dict:
+def _github_auth_headers(cli_token: str | None = None) -> dict[str, str]:
     """Return Authorization header dict only when a non-empty token exists."""
     token = _github_token(cli_token)
     return {"Authorization": f"Bearer {token}"} if token else {}
 
 
-def _parse_rate_limit_headers(headers: httpx.Headers) -> dict:
+def _parse_rate_limit_headers(headers: httpx.Headers) -> dict[str, str | int | datetime]:
     """Extract and parse GitHub rate-limit headers."""
-    info = {}
+    info: dict[str, str | int | datetime] = {}
 
     # Standard GitHub rate-limit headers
     if "X-RateLimit-Limit" in headers:
@@ -42,7 +41,7 @@ def _parse_rate_limit_headers(headers: httpx.Headers) -> dict:
     if "X-RateLimit-Reset" in headers:
         reset_epoch = int(headers.get("X-RateLimit-Reset", "0"))
         if reset_epoch:
-            reset_time = datetime.fromtimestamp(reset_epoch, tz=timezone.utc)
+            reset_time = datetime.fromtimestamp(reset_epoch, tz=UTC)
             info["reset_epoch"] = reset_epoch
             info["reset_time"] = reset_time
             info["reset_local"] = reset_time.astimezone()
@@ -82,9 +81,13 @@ def _format_rate_limit_error(status_code: int, headers: httpx.Headers, url: str)
     # Add troubleshooting guidance
     lines.append("[bold]Troubleshooting Tips:[/bold]")
     lines.append("  • If you're on a shared CI or corporate environment, you may be rate-limited.")
-    lines.append("  • Consider using a GitHub token via --github-token or the GH_TOKEN/GITHUB_TOKEN")
+    lines.append(
+        "  • Consider using a GitHub token via --github-token or the GH_TOKEN/GITHUB_TOKEN"
+    )
     lines.append("    environment variable to increase rate limits.")
-    lines.append("  • Authenticated requests have a limit of 5,000/hour vs 60/hour for unauthenticated.")
+    lines.append(
+        "  • Authenticated requests have a limit of 5,000/hour vs 60/hour for unauthenticated."
+    )
 
     return "\n".join(lines)
 
@@ -96,10 +99,10 @@ def download_template_from_github(
     script_type: str = "sh",
     verbose: bool = True,
     show_progress: bool = True,
-    client: httpx.Client = None,
+    client: httpx.Client | None = None,
     debug: bool = False,
-    github_token: str = None
-) -> Tuple[Path, dict]:
+    github_token: str | None = None,
+) -> tuple[Path, dict[str, str]]:
     """Download the latest template release from GitHub.
 
     Args:
@@ -143,25 +146,34 @@ def download_template_from_github(
         try:
             release_data = response.json()
         except ValueError as je:
-            raise RuntimeError(f"Failed to parse release JSON: {je}\nRaw (truncated 400): {response.text[:400]}")
+            raise RuntimeError(
+                f"Failed to parse release JSON: {je}\nRaw (truncated 400): {response.text[:400]}"
+            )
     except Exception as e:
-        console.print(f"[red]Error fetching release information[/red]")
+        console.print("[red]Error fetching release information[/red]")
         console.print(Panel(str(e), title="Fetch Error", border_style="red"))
         raise typer.Exit(1)
 
     assets = release_data.get("assets", [])
     pattern = f"spec-kit-template-{ai_assistant}-{script_type}"
     matching_assets = [
-        asset for asset in assets
-        if pattern in asset["name"] and asset["name"].endswith(".zip")
+        asset for asset in assets if pattern in asset["name"] and asset["name"].endswith(".zip")
     ]
 
     asset = matching_assets[0] if matching_assets else None
 
     if asset is None:
-        console.print(f"[red]No matching release asset found[/red] for [bold]{ai_assistant}[/bold] (expected pattern: [bold]{pattern}[/bold])")
+        console.print(
+            f"[red]No matching release asset found[/red] for [bold]{ai_assistant}[/bold] (expected pattern: [bold]{pattern}[/bold])"
+        )
         asset_names = [a.get("name", "?") for a in assets]
-        console.print(Panel("\n".join(asset_names) or "(no assets)", title="Available Assets", border_style="yellow"))
+        console.print(
+            Panel(
+                "\n".join(asset_names) or "(no assets)",
+                title="Available Assets",
+                border_style="yellow",
+            )
+        )
         raise typer.Exit(1)
 
     download_url = asset["browser_download_url"]
@@ -175,7 +187,7 @@ def download_template_from_github(
 
     zip_path = download_dir / filename
     if verbose:
-        console.print(f"[cyan]Downloading template...[/cyan]")
+        console.print("[cyan]Downloading template...[/cyan]")
 
     try:
         with client.stream(
@@ -187,34 +199,37 @@ def download_template_from_github(
         ) as response:
             if response.status_code != 200:
                 # Handle rate-limiting on download as well
-                error_msg = _format_rate_limit_error(response.status_code, response.headers, download_url)
+                error_msg = _format_rate_limit_error(
+                    response.status_code, response.headers, download_url
+                )
                 if debug:
-                    error_msg += f"\n\n[dim]Response body (truncated 400):[/dim]\n{response.text[:400]}"
+                    error_msg += (
+                        f"\n\n[dim]Response body (truncated 400):[/dim]\n{response.text[:400]}"
+                    )
                 raise RuntimeError(error_msg)
             total_size = int(response.headers.get("content-length", 0))
             with open(zip_path, "wb") as f:
                 if total_size == 0:
                     for chunk in response.iter_bytes(chunk_size=8192):
                         f.write(chunk)
-                else:
-                    if show_progress:
-                        with Progress(
-                            SpinnerColumn(),
-                            TextColumn("[progress.description]{task.description}"),
-                            TextColumn("[progress.percentage]{task.percentage:>3.0f}%"),
-                            console=console,
-                        ) as progress:
-                            task = progress.add_task("Downloading...", total=total_size)
-                            downloaded = 0
-                            for chunk in response.iter_bytes(chunk_size=8192):
-                                f.write(chunk)
-                                downloaded += len(chunk)
-                                progress.update(task, completed=downloaded)
-                    else:
+                elif show_progress:
+                    with Progress(
+                        SpinnerColumn(),
+                        TextColumn("[progress.description]{task.description}"),
+                        TextColumn("[progress.percentage]{task.percentage:>3.0f}%"),
+                        console=console,
+                    ) as progress:
+                        task = progress.add_task("Downloading...", total=total_size)
+                        downloaded = 0
                         for chunk in response.iter_bytes(chunk_size=8192):
                             f.write(chunk)
+                            downloaded += len(chunk)
+                            progress.update(task, completed=downloaded)
+                else:
+                    for chunk in response.iter_bytes(chunk_size=8192):
+                        f.write(chunk)
     except Exception as e:
-        console.print(f"[red]Error downloading template[/red]")
+        console.print("[red]Error downloading template[/red]")
         detail = str(e)
         if zip_path.exists():
             zip_path.unlink()

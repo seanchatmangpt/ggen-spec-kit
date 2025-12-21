@@ -121,7 +121,7 @@ def validate_transform_config(config: dict[str, Any]) -> TransformConfig:
 
     Parameters
     ----------
-    config : dict
+    config : dict[str, Any]
         Raw configuration from TOML
 
     Returns
@@ -222,9 +222,7 @@ def extract_data(
 
     # Check for SELECT/CONSTRUCT/ASK
     query_upper = sparql_query.upper()
-    if not any(
-        kw in query_upper for kw in ["SELECT", "CONSTRUCT", "ASK", "DESCRIBE"]
-    ):
+    if not any(kw in query_upper for kw in ["SELECT", "CONSTRUCT", "ASK", "DESCRIBE"]):
         errors.append("Invalid SPARQL query: missing SELECT/CONSTRUCT/ASK/DESCRIBE")
 
     return StageResult(
@@ -247,7 +245,7 @@ def emit_template(
 
     Parameters
     ----------
-    extracted_data : dict
+    extracted_data : dict[str, Any]
         JSON data from μ₂
     template : str
         Tera template content
@@ -371,9 +369,7 @@ def compose_transform(
         all_errors.extend(r.errors)
 
     # Get hashes from first and last stages
-    first_stage = stage_results.get(
-        "normalize", StageResult("", False, "", "", None, [])
-    )
+    first_stage = stage_results.get("normalize", StageResult("", False, "", "", None, []))
     last_stage = stage_results.get(
         "receipt",
         stage_results.get("canonicalize", StageResult("", False, "", "", None, [])),
@@ -418,8 +414,6 @@ def validate_stage_sequence(stages: list[str]) -> list[str]:
         current_idx = stage_indices[stages[i]]
         next_idx = stage_indices[stages[i + 1]]
         if next_idx <= current_idx:
-            errors.append(
-                f"Stages out of order: {stages[i]} must come before {stages[i+1]}"
-            )
+            errors.append(f"Stages out of order: {stages[i]} must come before {stages[i + 1]}")
 
     return errors

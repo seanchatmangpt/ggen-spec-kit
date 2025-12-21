@@ -42,26 +42,27 @@ import functools
 import sys
 import time
 import traceback
-from collections.abc import Callable
 from dataclasses import dataclass, field
 from enum import Enum, IntEnum
-from pathlib import Path
-from typing import Any, TypeVar
+from typing import TYPE_CHECKING, Any, TypeVar
 
 from .shell import colour, colour_stderr
-from .telemetry import metric_counter, metric_histogram, record_exception, span
+from .telemetry import metric_counter, record_exception, span
+
+if TYPE_CHECKING:
+    from collections.abc import Callable
 
 __all__ = [
-    "ErrorSeverity",
-    "ErrorCategory",
-    "ExitCode",
-    "SpecifyError",
     "ConfigurationError",
-    "ValidationError",
+    "ErrorCategory",
+    "ErrorSeverity",
+    "ExitCode",
     "NetworkError",
+    "SpecifyError",
     "ToolNotFoundError",
-    "handle_cli_error",
+    "ValidationError",
     "format_error_message",
+    "handle_cli_error",
     "with_error_handling",
 ]
 
@@ -170,7 +171,8 @@ class ConfigurationError(SpecifyError):
             category=ErrorCategory.CONFIGURATION,
             severity=ErrorSeverity.HIGH,
             exit_code=ExitCode.CONFIGURATION_ERROR,
-            suggestions=suggestions or ["Check your configuration file", "Verify environment variables"],
+            suggestions=suggestions
+            or ["Check your configuration file", "Verify environment variables"],
         )
 
 
@@ -183,7 +185,8 @@ class ValidationError(SpecifyError):
             category=ErrorCategory.VALIDATION,
             severity=ErrorSeverity.MEDIUM,
             exit_code=ExitCode.VALIDATION_ERROR,
-            suggestions=suggestions or ["Check your input values", "Review documentation for valid formats"],
+            suggestions=suggestions
+            or ["Check your input values", "Review documentation for valid formats"],
         )
 
 
@@ -214,7 +217,8 @@ class ToolNotFoundError(SpecifyError):
             category=ErrorCategory.TOOL_MISSING,
             severity=ErrorSeverity.HIGH,
             exit_code=ExitCode.TOOL_NOT_FOUND,
-            suggestions=suggestions or [f"Install {tool_name}", "Check your PATH environment variable"],
+            suggestions=suggestions
+            or [f"Install {tool_name}", "Check your PATH environment variable"],
         )
 
 
@@ -335,7 +339,9 @@ def _get_suggestions(category: ErrorCategory, exception: Exception) -> list[str]
         ],
     }
 
-    return suggestions_map.get(category, ["Check the error message for details", "Run 'specify --help' for usage"])
+    return suggestions_map.get(
+        category, ["Check the error message for details", "Run 'specify --help' for usage"]
+    )
 
 
 def format_error_message(
@@ -359,7 +365,7 @@ def format_error_message(
     str
         Formatted error message.
     """
-    category, severity, _ = _classify_exception(exception)
+    category, _severity, _ = _classify_exception(exception)
     suggestions = _get_suggestions(category, exception)
 
     lines = [f"Error in {operation}: {exception!s}"]

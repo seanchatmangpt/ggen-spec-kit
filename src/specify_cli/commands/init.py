@@ -22,9 +22,6 @@ See Also
 
 from __future__ import annotations
 
-from pathlib import Path
-from typing import Optional
-
 import typer
 from rich.console import Console
 from rich.panel import Panel
@@ -51,19 +48,17 @@ def _select_ai_assistant_interactive() -> str:
         "copilot": "GitHub Copilot",
     }
 
-    selected = select_with_arrows(options, prompt_text="Select AI Assistant")
-    return selected
+    return select_with_arrows(options, prompt_text="Select AI Assistant")
 
 
 @app.callback(invoke_without_command=True)
 @instrument_command("init", track_args=True)
 def init(
-    ctx: typer.Context,
-    project_name: Optional[str] = typer.Argument(
+    project_name: str | None = typer.Argument(
         None,
         help="Name of the project to create. Omit if using --here.",
     ),
-    ai_assistant: Optional[str] = typer.Option(
+    ai_assistant: str | None = typer.Option(
         None,
         "--ai",
         "-a",
@@ -86,7 +81,7 @@ def init(
         "--no-git",
         help="Skip git repository initialization.",
     ),
-    github_token: Optional[str] = typer.Option(
+    github_token: str | None = typer.Option(
         None,
         "--github-token",
         envvar="GH_TOKEN",
@@ -137,7 +132,7 @@ def init(
 
     # Show what we're doing
     if here:
-        console.print(f"\n[cyan]Initializing Specify project in current directory...[/cyan]")
+        console.print("\n[cyan]Initializing Specify project in current directory...[/cyan]")
     else:
         console.print(f"\n[cyan]Creating Specify project:[/cyan] {project_name}")
 
@@ -159,7 +154,7 @@ def init(
         if result.success:
             # Success output
             console.print()
-            colour(f"[green]✓[/green] Project initialized successfully!", "green")
+            colour("[green]✓[/green] Project initialized successfully!", "green")
             console.print()
 
             console.print(f"[bold]Project Path:[/bold] {result.project_path}")
@@ -167,9 +162,9 @@ def init(
             console.print(f"[bold]Template Version:[/bold] {result.release_tag}")
 
             if result.git_initialized:
-                console.print(f"[bold]Git:[/bold] Initialized with initial commit")
+                console.print("[bold]Git:[/bold] Initialized with initial commit")
             else:
-                console.print(f"[bold]Git:[/bold] Skipped")
+                console.print("[bold]Git:[/bold] Skipped")
 
             if result.warnings:
                 console.print()
@@ -181,8 +176,8 @@ def init(
             console.print("[cyan]Next steps:[/cyan]")
             if not here:
                 console.print(f"  1. cd {result.project_path.name}")
-            console.print(f"  2. Review the README.md for getting started")
-            console.print(f"  3. Run 'specify check' to verify your setup")
+            console.print("  2. Review the README.md for getting started")
+            console.print("  3. Run 'specify check' to verify your setup")
 
         else:
             # Failure output
@@ -194,11 +189,13 @@ def init(
 
     except init_ops.InitError as e:
         console.print()
-        console.print(Panel(
-            str(e),
-            title="Initialization Error",
-            border_style="red",
-        ))
+        console.print(
+            Panel(
+                str(e),
+                title="Initialization Error",
+                border_style="red",
+            )
+        )
         if e.suggestions:
             console.print()
             console.print("[yellow]Suggestions:[/yellow]")
@@ -213,13 +210,16 @@ def init(
 
     except Exception as e:
         console.print()
-        console.print(Panel(
-            str(e),
-            title="Unexpected Error",
-            border_style="red",
-        ))
+        console.print(
+            Panel(
+                str(e),
+                title="Unexpected Error",
+                border_style="red",
+            )
+        )
         if debug:
             import traceback
+
             console.print()
             console.print("[dim]Stack trace:[/dim]")
             console.print(traceback.format_exc())

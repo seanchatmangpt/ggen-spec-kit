@@ -60,15 +60,17 @@ import os
 import shutil
 import subprocess
 import time
-from collections.abc import Sequence
-from pathlib import Path
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
 from .instrumentation import add_span_attributes, add_span_event
 from .shell import colour
 from .telemetry import metric_counter, metric_histogram, span
 
-__all__ = ["run", "run_logged", "which", "run_command"]
+if TYPE_CHECKING:
+    from collections.abc import Sequence
+    from pathlib import Path
+
+__all__ = ["run", "run_command", "run_logged", "which"]
 
 _log = logging.getLogger("specify_cli.process")
 
@@ -82,6 +84,7 @@ def _to_list(cmd: str | Sequence[str]) -> list[str]:
     """Convert command to list for subprocess."""
     if isinstance(cmd, str):
         import shlex
+
         return shlex.split(cmd)
     return list(cmd)
 
@@ -169,7 +172,7 @@ def run(
 
         try:
             # SECURITY: Always use list-based execution, never shell=True
-            res = subprocess.run(cmd_list, **kw)
+            res = subprocess.run(cmd_list, check=False, **kw)
 
             duration = time.time() - start_time
 

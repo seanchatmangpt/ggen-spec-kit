@@ -19,7 +19,7 @@ console = Console()
 @app.command("run")
 def run_command() -> None:
     """Execute guides command."""
-    console.print(f"[bold green]✓[/] guides command executed")
+    console.print("[bold green]✓[/] guides command executed")
 
 
 if __name__ == "__main__":

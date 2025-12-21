@@ -70,7 +70,7 @@ except ImportError:
 
 # DSPy commands (optional)
 try:
-    from ..dspy_commands import get_dspy_app
+    from specify_cli.dspy_commands import get_dspy_app
 
     DSPY_COMMANDS_AVAILABLE = True
 except ImportError:
@@ -78,20 +78,20 @@ except ImportError:
     get_dspy_app = None
 
 __all__ = [
-    # Core commands
-    "init_app",
-    "check_app",
-    "version_app",
-    "version_callback",
-    # Workflow commands
-    "spiff_app",
-    # ggen commands
-    "ggen_app",
+    "DSPY_COMMANDS_AVAILABLE",
     "GGEN_COMMANDS_AVAILABLE",
-    # Process mining commands
-    "pm_app",
     "PM_COMMANDS_AVAILABLE",
+    "check_app",
     # DSPy commands
     "get_dspy_app",
-    "DSPY_COMMANDS_AVAILABLE",
+    # ggen commands
+    "ggen_app",
+    # Core commands
+    "init_app",
+    # Process mining commands
+    "pm_app",
+    # Workflow commands
+    "spiff_app",
+    "version_app",
+    "version_callback",
 ]

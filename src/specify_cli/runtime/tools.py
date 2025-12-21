@@ -81,15 +81,14 @@ def which_tool(tool: str) -> Path | None:
     """
     with span("tools.which", tool=tool):
         # Special handling for Claude CLI
-        if tool == "claude":
-            if CLAUDE_LOCAL_PATH.exists() and CLAUDE_LOCAL_PATH.is_file():
-                add_span_attributes(
-                    tool_path=str(CLAUDE_LOCAL_PATH),
-                    tool_found=True,
-                    special_path=True,
-                )
-                metric_counter("tools.which.claude_local")(1)
-                return CLAUDE_LOCAL_PATH
+        if tool == "claude" and CLAUDE_LOCAL_PATH.exists() and CLAUDE_LOCAL_PATH.is_file():
+            add_span_attributes(
+                tool_path=str(CLAUDE_LOCAL_PATH),
+                tool_found=True,
+                special_path=True,
+            )
+            metric_counter("tools.which.claude_local")(1)
+            return CLAUDE_LOCAL_PATH
 
         # Standard PATH lookup
         result = shutil.which(tool)
