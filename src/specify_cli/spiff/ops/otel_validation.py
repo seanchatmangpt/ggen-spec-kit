@@ -17,7 +17,7 @@ import subprocess
 import time
 from dataclasses import dataclass, field
 from pathlib import Path
-from typing import Any, Dict, List, Optional
+from typing import Any
 
 __all__ = [
     "OTELValidationResult",
@@ -29,8 +29,8 @@ __all__ = [
 
 # Optional OTEL instrumentation
 try:
-    from ...core.telemetry import metric_counter, metric_histogram, span
     from ...core.instrumentation import add_span_attributes, add_span_event
+    from ...core.telemetry import metric_counter, metric_histogram, span
     _otel_available = True
 except ImportError:
     _otel_available = False
@@ -69,9 +69,9 @@ class TestValidationStep:
     success: bool
     duration_seconds: float = 0.0
     details: str = ""
-    error: Optional[str] = None
+    error: str | None = None
 
-    def to_dict(self) -> Dict[str, Any]:
+    def to_dict(self) -> dict[str, Any]:
         """Convert to dictionary."""
         return {
             "key": self.key,
@@ -91,14 +91,14 @@ class OTELValidationResult:
     success: bool
     workflow_name: str
     duration_seconds: float = 0.0
-    validation_steps: List[TestValidationStep] = field(default_factory=list)
-    errors: List[str] = field(default_factory=list)
-    metrics: Dict[str, Any] = field(default_factory=dict)
+    validation_steps: list[TestValidationStep] = field(default_factory=list)
+    errors: list[str] = field(default_factory=list)
+    metrics: dict[str, Any] = field(default_factory=dict)
     spans_created: int = 0
     metrics_recorded: int = 0
-    test_results: Dict[str, bool] = field(default_factory=dict)
+    test_results: dict[str, bool] = field(default_factory=dict)
 
-    def to_dict(self) -> Dict[str, Any]:
+    def to_dict(self) -> dict[str, Any]:
         """Convert to dictionary for JSON serialization."""
         return {
             "success": self.success,
@@ -115,7 +115,7 @@ class OTELValidationResult:
 
 def create_otel_validation_workflow(
     output_path: Path,
-    test_commands: List[str],
+    test_commands: list[str],
     workflow_name: str = "otel_validation",
 ) -> Path:
     """
@@ -148,7 +148,7 @@ def create_otel_validation_workflow(
 
 def execute_otel_validation_workflow(
     workflow_path: Path,
-    test_commands: List[str],
+    test_commands: list[str],
     timeout_seconds: int = 60,
 ) -> OTELValidationResult:
     """
@@ -172,7 +172,7 @@ def execute_otel_validation_workflow(
             workflow_name=workflow_name,
         )
 
-        validation_steps: List[TestValidationStep] = []
+        validation_steps: list[TestValidationStep] = []
 
         try:
             # Step 1: Validate BPMN file
@@ -243,13 +243,13 @@ def execute_otel_validation_workflow(
                 try:
                     result_text = subprocess.run(
                         cmd,
-                        shell=True,
+                        check=False, shell=True,
                         capture_output=True,
                         text=True,
                         timeout=timeout_seconds,
                     )
                     test_results[cmd] = result_text.returncode == 0
-                except Exception as e:
+                except Exception:
                     test_results[cmd] = False
 
             step_duration = time.time() - step_start
@@ -395,7 +395,7 @@ def run_8020_otel_validation(
         return result
 
 
-def _generate_otel_validation_bpmn(workflow_name: str, test_commands: List[str]) -> str:
+def _generate_otel_validation_bpmn(workflow_name: str, test_commands: list[str]) -> str:
     """Generate BPMN XML for OTEL validation workflow."""
     task_list = "\n".join([
         f"""        <bpmn:ServiceTask id="Task_{i}" name="Test: {cmd[:50]}...">
@@ -405,7 +405,7 @@ def _generate_otel_validation_bpmn(workflow_name: str, test_commands: List[str])
         for i, cmd in enumerate(test_commands)
     ])
 
-    first_task_ref = f"Task_0" if test_commands else "End"
+    first_task_ref = "Task_0" if test_commands else "End"
 
     return f"""<?xml version="1.0" encoding="UTF-8"?>
 <bpmn:definitions xmlns:bpmn="http://www.omg.org/spec/BPMN/20100524/MODEL"
@@ -427,20 +427,19 @@ def _generate_otel_validation_bpmn(workflow_name: str, test_commands: List[str])
 """
 
 
-def _validate_otel_system_health() -> Dict[str, Any]:
+def _validate_otel_system_health() -> dict[str, Any]:
     """Validate OTEL system health."""
     try:
-        import opentelemetry
-        from opentelemetry.sdk.trace import TracerProvider
-        from opentelemetry.sdk.metrics import MeterProvider
         from opentelemetry.instrumentation import trace
+        from opentelemetry.sdk.metrics import MeterProvider
+        from opentelemetry.sdk.trace import TracerProvider
 
         # Check critical components
         checks = {
             "opentelemetry_import": True,
             "tracer_provider": isinstance(TracerProvider(), TracerProvider),
             "meter_provider": isinstance(MeterProvider(), MeterProvider),
-            "instrumentation_api": hasattr(trace, 'get_tracer'),
+            "instrumentation_api": hasattr(trace, "get_tracer"),
         }
 
         healthy = all(checks.values())
