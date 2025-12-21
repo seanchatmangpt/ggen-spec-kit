@@ -57,7 +57,6 @@ See Also
 from __future__ import annotations
 
 import sys
-from typing import Optional
 
 import typer
 from rich.align import Align
@@ -111,10 +110,20 @@ except ImportError:
     pass  # pm4py not installed
 
 
+# Try to add DSPy commands if dspy is available
+try:
+    from specify_cli.dspy_commands import get_dspy_app
+
+    dspy_app = get_dspy_app()
+    app.add_typer(dspy_app, name="dspy", help="DSPy LLM optimization")
+except ImportError:
+    pass  # dspy not installed
+
+
 @app.callback()
 def callback(
     ctx: typer.Context,
-    version: Optional[bool] = typer.Option(
+    version: bool | None = typer.Option(
         None,
         "--version",
         "-V",
