@@ -79,7 +79,7 @@ def find_similar(
 
             # Find similar entities
             hde = HyperdimensionalEmbedding()
-            candidates = store.get_embeddings_by_type(entity_type)
+            candidates = _get_embeddings_by_type(store, entity_type)
             similar = hde.find_similar(query_vector, candidates, top_k=top_k + 1)
 
             # Display results (skip first one which is self)
@@ -132,7 +132,7 @@ def rank_by_objective(
             objective_vector = hde.embed_outcome(objective)
 
             # Get all entities of requested type
-            candidates = store.get_embeddings_by_type(entity_type)
+            candidates = _get_embeddings_by_type(store, entity_type)
 
             if not candidates:
                 console.print(f"[red]No {entity_type}s found[/red]")
@@ -154,7 +154,7 @@ def rank_by_objective(
 
                 # Get metadata for category
                 metadata = store.get_metadata(entity_name)
-                category = ", ".join(metadata.get("tags", [])[:2]) if metadata else ""
+                category = ", ".join(metadata.tags[:2]) if metadata else ""
 
                 table.add_row(
                     str(rank),
@@ -275,10 +275,10 @@ def show_embeddings(
 
             # Get embeddings by type
             if entity_type == "all":
-                embeddings = store.get_all_embeddings()
+                embeddings = store.embeddings
                 title = "All Embeddings"
             else:
-                embeddings = store.get_embeddings_by_type(entity_type)
+                embeddings = _get_embeddings_by_type(store, entity_type)
                 title = f"{entity_type.capitalize()} Embeddings"
 
             if not embeddings:
@@ -300,7 +300,7 @@ def show_embeddings(
 
                 # Get metadata
                 metadata = store.get_metadata(entity_name)
-                tags = ", ".join(metadata.get("tags", [])) if metadata else ""
+                tags = ", ".join(metadata.tags) if metadata else ""
 
                 table.add_row(
                     etype,
@@ -315,6 +315,23 @@ def show_embeddings(
         except Exception as e:
             console.print(f"[red]Error: {e}[/red]")
             raise typer.Exit(1) from e
+
+
+def _get_embeddings_by_type(store, entity_type: str):
+    """Get embeddings filtered by type."""
+    type_map = {
+        "command": store.get_all_commands,
+        "job": store.get_all_jobs,
+        "outcome": store.get_all_outcomes,
+        "feature": store.get_all_features,
+        "constraint": store.get_all_constraints,
+        "quality": lambda: store.filter_by_prefix("quality:"),
+    }
+
+    getter = type_map.get(entity_type)
+    if getter:
+        return getter()
+    return {}
 
 
 def _show_available_entities(entity_type: str) -> None:

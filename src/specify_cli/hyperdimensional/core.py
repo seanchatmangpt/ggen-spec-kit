@@ -37,13 +37,9 @@ import hashlib
 import json
 from dataclasses import dataclass
 from pathlib import Path
-from typing import TYPE_CHECKING
 
 import numpy as np
 from numpy.typing import NDArray
-
-if TYPE_CHECKING:
-    pass
 
 # Type alias
 Vector = NDArray[np.float64]
@@ -156,10 +152,21 @@ class HyperdimensionalVector:
         HyperdimensionalVector
             Reconstructed vector
         """
+        name_val = data["name"]
+        dims_val = data["dimensions"]
+        data_val = data["data"]
+
+        if not isinstance(name_val, str):
+            raise TypeError("name must be str")
+        if not isinstance(dims_val, int):
+            raise TypeError("dimensions must be int")
+        if not isinstance(data_val, list):
+            raise TypeError("data must be list")
+
         return cls(
-            name=str(data["name"]),
-            dimensions=int(data["dimensions"]),
-            data=np.array(data["data"], dtype=np.float64),
+            name=name_val,
+            dimensions=dims_val,
+            data=np.array(data_val, dtype=np.float64),
         )
 
 
@@ -503,9 +510,8 @@ def precompute_speckit_embeddings(dimensions: int = DEFAULT_DIMENSIONS) -> Embed
     for job in jobs:
         cache.add(embed_entity(f"job:{job}", dimensions))
 
-    # Outcomes (50+ total)
+    # Outcomes
     outcomes = [
-        # Performance
         "fast-startup",
         "fast-command",
         "fast-transform",

@@ -37,6 +37,7 @@ dependencies = [
     "opentelemetry-exporter-otlp>=0.41b0",
     # NumPy for hyperdimensional computing and information-theoretic metrics
     "numpy>=1.24.0",
+    "scikit-learn>=1.8.0",
 ]
 
 # External system dependencies (must be installed separately):

@@ -98,7 +98,7 @@ features = [
 ]
 
 # Rank by information gain
-ranked = rank_features_by_gain(features, top_k=3)
+ranked = rank_features_by_gain(features, objective="quality")
 
 for item in ranked:
     print(f"{item.rank}. {item.item.name}")

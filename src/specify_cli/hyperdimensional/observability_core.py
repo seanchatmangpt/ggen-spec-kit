@@ -108,7 +108,7 @@ def track_embedding_operation(
     counter = metric_counter(f"hyperdimensional.embedding.{operation_name}.operations")
     counter(1)
 
-    with span(span_name, **attrs) as current_span:
+    with span(span_name, **attrs) as current_span:  # type: ignore[var-annotated]
         try:
             yield current_span
             # Track successful completion
@@ -183,7 +183,7 @@ def track_similarity_search(
         f"hyperdimensional.search.{search_type}.result_count", unit="results"
     )
 
-    with span(span_name, **attrs) as current_span:
+    with span(span_name, **attrs) as current_span:  # type: ignore[var-annotated]
         try:
             yield current_span
             # Record result count
@@ -262,7 +262,7 @@ def track_validation_check(
     # Track validation scores
     score_histogram = metric_histogram(f"hyperdimensional.validation.{check_name}.score", unit="")
 
-    with span(span_name, **attrs) as current_span:
+    with span(span_name, **attrs) as current_span:  # type: ignore[var-annotated]
         try:
             yield current_span
 

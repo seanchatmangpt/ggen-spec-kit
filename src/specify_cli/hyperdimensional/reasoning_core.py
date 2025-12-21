@@ -27,7 +27,8 @@ Example:
 
 from __future__ import annotations
 
-from typing import TYPE_CHECKING, Any, Callable
+from collections.abc import Callable
+from typing import TYPE_CHECKING, Any
 
 import numpy as np
 from numpy.typing import NDArray
@@ -376,16 +377,14 @@ def batch_compare(
     entity_matrix = np.vstack([_normalize(v) for v in entity_vectors])
 
     # Batch dot product (fast!)
-    similarities = entity_matrix @ query_norm
-
-    return similarities
+    return entity_matrix @ query_norm
 
 
 __all__ = [
-    "find_similar_entities",
-    "rank_by_objective",
-    "check_constraint_satisfied",
-    "get_violated_constraints",
-    "compare_entities",
     "batch_compare",
+    "check_constraint_satisfied",
+    "compare_entities",
+    "find_similar_entities",
+    "get_violated_constraints",
+    "rank_by_objective",
 ]

@@ -101,6 +101,13 @@ from specify_cli.hyperdimensional.metrics import (
     redundancy_measure,
     wasserstein_distance,
 )
+from specify_cli.hyperdimensional.observability_core import (
+    record_search_latency,
+    record_vector_stats,
+    track_embedding_operation,
+    track_similarity_search,
+    track_validation_check,
+)
 from specify_cli.hyperdimensional.prioritization import (
     # Data Structures
     Feature,
@@ -170,6 +177,14 @@ from specify_cli.hyperdimensional.priority_core import (
     quick_wins,
     top_n_features,
 )
+from specify_cli.hyperdimensional.reasoning_core import (
+    batch_compare,
+    check_constraint_satisfied,
+    compare_entities,
+    find_similar_entities,
+    get_violated_constraints,
+    rank_by_objective,
+)
 from specify_cli.hyperdimensional.speckit_embeddings import (
     SPECKIT_COMMANDS,
     SPECKIT_CONSTRAINTS,
@@ -194,6 +209,12 @@ __all__ = [
     "SPECKIT_OUTCOMES",
     "EmbeddingMetadata",
     "EmbeddingStore",
+    # Observability (OTEL instrumentation)
+    "record_search_latency",
+    "record_vector_stats",
+    "track_embedding_operation",
+    "track_similarity_search",
+    "track_validation_check",
     # Prioritization - Data Structures
     "Feature",
     "FeaturePriority",
@@ -208,10 +229,14 @@ __all__ = [
     "approximate_complexity",
     "approximate_entropy",
     "balance_objectives",
+    # Reasoning core (80/20)
+    "batch_compare",
     # Prioritization - Feature Entropy
     "calculate_feature_entropy",
     # Prioritization - Information Gain
     "calculate_information_gain",
+    "check_constraint_satisfied",
+    "compare_entities",
     "competition_analysis",
     "complexity_per_requirement",
     "conditional_entropy",
@@ -229,6 +254,7 @@ __all__ = [
     "estimate_implementation_complexity",
     "feature_importance_ranking",
     "feature_redundancy_analysis",
+    "find_similar_entities",
     "find_strategic_initiatives",
     # Information geometry
     "fisher_information_matrix",
@@ -238,6 +264,7 @@ __all__ = [
     "get_feature_embeddings",
     "get_job_embeddings",
     "get_outcome_embeddings",
+    "get_violated_constraints",
     "hellinger_distance",
     "identify_blockers",
     "identify_complex_requirements",
@@ -279,6 +306,7 @@ __all__ = [
     "quick_wins",
     "rank_features_by_gain",
     # Prioritization - Job-Outcome
+    "rank_by_objective",
     "rank_jobs_by_frequency",
     "rank_outcomes_by_importance",
     "recommend_next_tasks",

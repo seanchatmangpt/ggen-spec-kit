@@ -102,19 +102,23 @@ def check_code_fidelity(spec_text: str, code_text: str) -> float:
     if not spec_text or not code_text:
         return 0.0
 
-    # Extract words from spec (lowercase, alphanumeric only)
-    spec_words = set(
-        word.lower()
-        for word in re.findall(r"\b[a-z_][a-z0-9_]*\b", spec_text.lower())
-        if len(word) > 2  # Ignore short words
-    )
+    # Extract words from spec (lowercase, split on non-alphanumeric)
+    # Split identifiers like "authenticate_user" into ["authenticate", "user"]
+    spec_words = set()
+    for token in re.findall(r"\b\w+\b", spec_text.lower()):
+        # Split on underscore and camelCase
+        parts = re.split(r"[_\s]+", token)
+        for part in parts:
+            if len(part) > 2 and part.isalpha():
+                spec_words.add(part)
 
-    # Extract words from code (include comments)
-    code_words = set(
-        word.lower()
-        for word in re.findall(r"\b[a-z_][a-z0-9_]*\b", code_text.lower())
-        if len(word) > 2
-    )
+    # Extract words from code (same approach)
+    code_words = set()
+    for token in re.findall(r"\b\w+\b", code_text.lower()):
+        parts = re.split(r"[_\s]+", token)
+        for part in parts:
+            if len(part) > 2 and part.isalpha():
+                code_words.add(part)
 
     if not spec_words:
         return 0.0
