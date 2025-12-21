@@ -45,8 +45,9 @@ from pathlib import Path  # noqa: TC003 - Path used as runtime parameter
 from typing import Any
 
 from specify_cli.core.instrumentation import add_span_event
-from specify_cli.core.process import run
-from specify_cli.core.telemetry import metric_counter, metric_histogram, span, timed
+from specify_cli.core.process import run, run_logged
+from specify_cli.core.shell import timed
+from specify_cli.core.telemetry import metric_counter, metric_histogram, span
 from specify_cli.ops.transform import (
     TransformConfig,
     TransformResult,
@@ -66,6 +67,7 @@ __all__ = [
     "GgenError",
     "get_ggen_version",
     "is_ggen_available",
+    "run_logged",  # Re-export for patching in tests
     "run_transform",
     "sync_specs",
 ]
@@ -371,7 +373,7 @@ def _run_receipt(
         )
 
 
-def _validate_shacl(rdf_content: str, schema_files: list[str]) -> dict[str, Any]:
+def _validate_shacl(_rdf_content: str, schema_files: list[str]) -> dict[str, Any]:
     """Validate RDF against SHACL shapes."""
     # Implementation depends on available tools (pyshacl, ggen, etc.)
     # For now, return valid if shapes load
@@ -381,19 +383,19 @@ def _validate_shacl(rdf_content: str, schema_files: list[str]) -> dict[str, Any]
             if not path.exists():
                 return {"valid": False, "violations": [f"Schema not found: {schema_file}"]}
         return {"valid": True, "violations": []}
-    except Exception as e:
+    except Exception as e:  # noqa: TRY300
         return {"valid": False, "violations": [str(e)]}
 
 
-def _execute_sparql(rdf_content: str, query: str) -> dict[str, Any]:
+def _execute_sparql(_rdf_content: str, _query: str) -> dict[str, Any]:
     """Execute SPARQL query against RDF content."""
     # Use ggen sync or local SPARQL engine
     # For now, return empty results placeholder
     return {"results": []}
 
 
-def _render_tera(template: str, data: Any) -> str:
+def _render_tera(_template: str, _data: Any) -> str:
     """Render Tera template with data."""
     # Use ggen sync or local Tera engine
     # For now, return template with basic substitution
-    return template
+    return _template

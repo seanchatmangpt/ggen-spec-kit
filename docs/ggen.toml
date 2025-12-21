@@ -551,6 +551,22 @@ output_file = "src/specify_cli/commands/terraform.py"
 deterministic = true
 
 # ============================================================================
+# TRANSFORMATIONS - uvmgr Runtime Layer Generation
+# ============================================================================
+# Implements: uvmgr runtime/*.py = μ(cli-commands-uvmgr-full.ttl)
+# Runtime layer handles subprocess execution, I/O, and tool integration
+
+[[transformations.code]]
+name = "uvmgr-runtime-layer"
+description = "Generate runtime layer for all uvmgr commands"
+input_files = ["ontology/cli-commands-uvmgr-full.ttl"]
+schema_files = ["ontology/spec-kit-schema.ttl"]
+sparql_query = "sparql/extract-runtime.rq"
+template = "templates/runtime-command.tera"
+output_file = "src/specify_cli/runtime/uvmgr_operations.py"
+deterministic = true
+
+# ============================================================================
 # OPTIONS
 # ============================================================================
 

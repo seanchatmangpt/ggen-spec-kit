@@ -1,0 +1,142 @@
+"""
+uvmgr.runtime.{{ command_name }}
+{{ "-" | repeat(count=command_name | length + 18) }}
+
+Runtime layer for {{ description | lower }}.
+
+This module handles all subprocess execution, file I/O, and external tool integration.
+No business logic - all I/O operations delegated from the ops layer.
+
+Install {{ command_name }} dependencies via:
+    uv sync --group {{ command_name }}
+
+Functions
+---------
+{% for subcommand in subcommands %}
+- {{ subcommand.name | replace(old="-", new="_") }} : {{ subcommand.description }}
+{% endfor %}
+
+All functions use:
+- subprocess.run() with shell=False (safe subprocess calls)
+- Path validation before operations
+- Error handling with proper context
+- OpenTelemetry instrumentation
+
+See Also
+--------
+- :mod:`uvmgr.ops.{{ command_name }}` : Business logic layer
+- :mod:`uvmgr.commands.{{ command_name }}` : CLI command layer
+- :mod:`uvmgr.core.process` : Process execution utilities
+"""
+
+from __future__ import annotations
+
+import subprocess
+from pathlib import Path
+from typing import Any
+
+from specify_cli.core.process import run, run_logged
+from specify_cli.core.shell import timed
+from specify_cli.core.telemetry import span
+
+
+__all__ = [
+{%- for subcommand in subcommands %}
+    "{{ subcommand.name | replace(old="-", new="_") }}",
+{%- endfor %}
+]
+
+
+# --------------------------------------------------------------------------- #
+# Runtime Operations (I/O & Subprocess)
+# --------------------------------------------------------------------------- #
+{% for subcommand in subcommands %}
+
+@timed
+def {{ subcommand.name | replace(old="-", new="_") }}(
+{%- for param in subcommand.parameters %}
+    {{ param.name }}: {{ param.python_type }},
+{%- endfor %}
+{%- for option in subcommand.options %}
+    {{ option.name }}: {{ option.python_type }} = {{ option.python_default }},
+{%- endfor %}
+) -> dict[str, Any]:
+    """
+    {{ subcommand.description }} (Runtime layer - I/O operations).
+
+    This is the runtime layer that executes actual subprocess calls and I/O.
+
+    Parameters
+    ----------
+{%- for param in subcommand.parameters %}
+    {{ param.name }} : {{ param.python_type }}
+        {{ param.description }}
+{%- endfor %}
+{%- for option in subcommand.options %}
+    {{ option.name }} : {{ option.python_type }}, optional
+        {{ option.description }}
+{%- endfor %}
+
+    Returns
+    -------
+    dict[str, Any]
+        Result with success status and output data.
+
+    Raises
+    ------
+    subprocess.CalledProcessError
+        If subprocess execution fails.
+    FileNotFoundError
+        If required files/tools not found.
+
+    Notes
+    -----
+    - Uses subprocess.run() with shell=False (safe)
+    - Validates paths before operations
+    - Records telemetry for all operations
+    - Context manager for proper resource cleanup
+    """
+    with span("{{ command_name }}.{{ subcommand.name | replace(old="-", new="_") }}.runtime"):
+        # Build command
+        cmd = ["{{ command_name }}", "{{ subcommand.name }}"]
+
+{%- for param in subcommand.parameters %}
+        cmd.extend([str(x) for x in {{ param.name }}])
+{%- endfor %}
+
+{%- for option in subcommand.options %}
+        if {{ option.name }}:
+            cmd.extend(["{{ option.flag }}", str({{ option.name }})])
+{%- endfor %}
+
+        try:
+            # Execute subprocess with logging
+            output = run_logged(cmd, capture=True, check=True)
+
+            return {
+                "success": True,
+                "command": "{{ command_name }}",
+                "subcommand": "{{ subcommand.name }}",
+                "output": output,
+                "returncode": 0,
+            }
+
+        except subprocess.CalledProcessError as e:
+            return {
+                "success": False,
+                "command": "{{ command_name }}",
+                "subcommand": "{{ subcommand.name }}",
+                "error": str(e),
+                "returncode": e.returncode,
+            }
+
+        except FileNotFoundError as e:
+            return {
+                "success": False,
+                "command": "{{ command_name }}",
+                "subcommand": "{{ subcommand.name }}",
+                "error": f"Tool not found: {e}",
+                "returncode": 127,
+            }
+
+{% endfor %}
