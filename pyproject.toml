@@ -38,6 +38,7 @@ dependencies = [
     # NumPy for hyperdimensional computing and information-theoretic metrics
     "numpy>=1.24.0",
     "scikit-learn>=1.8.0",
+    "rdflib>=7.5.0",
 ]
 
 # External system dependencies (must be installed separately):
@@ -174,7 +175,8 @@ ignore = [
 known-first-party = ["specify_cli"]
 
 [tool.ruff.lint.per-file-ignores]
-"tests/**/*.py" = ["ARG001", "S101", "PLR2004"]
+"tests/**/*.py" = ["ARG001", "S101", "PLR2004", "PLC0415"]
+"examples/**/*.py" = ["T20", "PLC0415"]  # Allow print and local imports in examples
 
 [tool.ruff.format]
 quote-style = "double"

@@ -102,9 +102,9 @@ class FeaturePriority:
 
 def estimate_feature_value(feature: dict[str, Any]) -> float:
     """
-    Estimate feature value using job frequency × outcome importance.
+    Estimate feature value using job frequency * outcome importance.
 
-    This is the 80/20 metric: how often users need it × how important it is.
+    This is the 80/20 metric: how often users need it * how important it is.
 
     Parameters
     ----------
@@ -135,7 +135,7 @@ def estimate_feature_value(feature: dict[str, Any]) -> float:
     job_freq = max(0.0, min(1.0, job_freq))
     importance = max(0.0, min(1.0, importance))
 
-    return job_freq * importance
+    return float(job_freq * importance)
 
 
 def estimate_feature_effort(feature: dict[str, Any]) -> float:
@@ -209,13 +209,13 @@ def estimate_feature_effort(feature: dict[str, Any]) -> float:
 
 def prioritize_features(
     features: dict[str, dict[str, Any]],
-    objectives: list[str] | None = None,
+    objectives: list[str] | None = None,  # noqa: ARG001 - Reserved for future use
 ) -> list[FeaturePriority]:
     """
     Prioritize features by value/effort ratio.
 
     Simple ROI-based prioritization:
-    1. Calculate value = job_frequency × importance
+    1. Calculate value = job_frequency * importance
     2. Estimate effort (1-3 scale)
     3. Priority = value / effort
     4. Sort descending by priority
@@ -250,7 +250,6 @@ def prioritize_features(
         value = estimate_feature_value(feature_data)
         effort = estimate_feature_effort(feature_data)
 
-        # Priority = value / effort (ROI)
         # Add small epsilon to avoid division by zero
         priority = value / max(effort, 0.1)
 
@@ -278,7 +277,7 @@ def quick_wins(
     Identify quick wins where value/effort > threshold.
 
     Quick wins are features with high ROI - low effort, high value.
-    Default threshold of 2.0 means value must be at least 2× effort.
+    Default threshold of 2.0 means value must be at least 2x effort.
 
     Parameters
     ----------

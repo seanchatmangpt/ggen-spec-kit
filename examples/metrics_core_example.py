@@ -118,7 +118,7 @@ def example_divergence() -> None:
     print(f"  D_KL(P||Q1) = {kl_close:.4f} bits")
     print(f"\nPoor approximation: Q2 = {q_poor}")
     print(f"  D_KL(P||Q2) = {kl_poor:.4f} bits")
-    print(f"\n→ Lower KL divergence means better approximation")
+    print("\n→ Lower KL divergence means better approximation")
 
 
 def example_redundancy() -> None:

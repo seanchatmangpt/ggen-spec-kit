@@ -29,7 +29,7 @@ import typer
 from rich.console import Console
 from rich.table import Table
 
-from specify_cli.core.instrumentation import timed
+from specify_cli.core.shell import timed
 from specify_cli.core.telemetry import span
 
 # Lazy imports for heavy dependencies

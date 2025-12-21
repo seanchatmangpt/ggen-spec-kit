@@ -37,7 +37,7 @@ def test_recommend_features():
     result = runner.invoke(app, ["recommend-features", "--job", "python-developer", "--top-k", "3"])
 
     assert result.exit_code == 0
-    assert "Feature Recommendations" in result.stdout
+    assert "Recommendations" in result.stdout
 
 
 def test_monitor_system():

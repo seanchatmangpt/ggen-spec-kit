@@ -218,7 +218,7 @@ tasks = [
 ranked = prioritize_tasks(
     tasks,
     objectives=["impact", "effort", "uncertainty"],
-    weights=[0.5, 0.3, 0.2]  # Impact most important
+    weights={"impact": 0.5, "effort": 0.3, "uncertainty": 0.2}
 )
 
 for item in ranked:

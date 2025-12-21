@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import math
+import random
 
 import pytest
 
@@ -234,8 +235,6 @@ class TestFeatureSelectionScore:
 
     def test_irrelevant_feature(self) -> None:
         """Irrelevant feature has low score."""
-        import random
-
         random.seed(42)
         feature = [random.random() for _ in range(100)]
         target = [0] * 50 + [1] * 50
@@ -255,8 +254,6 @@ class TestRedundancyScore:
 
     def test_independent_features(self) -> None:
         """Independent features have lower redundancy than identical."""
-        import random
-
         random.seed(42)
         feature1 = [random.random() for _ in range(100)]
         random.seed(43)
@@ -300,7 +297,6 @@ class TestCrossEntropy:
         """H(P,P) = H(P)."""
         p = {"a": 0.5, "b": 0.5}
         ce = cross_entropy(p, p)
-        h = kullback_leibler(p, p) + sum(-pv * math.log2(pv) for pv in p.values() if pv > 0)
         expected = sum(-pv * math.log2(pv) for pv in p.values() if pv > 0)
         assert abs(ce - expected) < 0.01
 

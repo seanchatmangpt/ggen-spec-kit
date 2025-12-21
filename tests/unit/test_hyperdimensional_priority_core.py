@@ -4,7 +4,7 @@ tests.unit.test_hyperdimensional_priority_core
 Unit tests for lean feature prioritization (80/20 value/effort).
 
 Tests cover:
-- Value estimation (job_frequency × importance)
+- Value estimation (job_frequency * importance)
 - Effort estimation (complexity mapping)
 - Priority ranking (value/effort ratio)
 - Quick wins detection
@@ -24,14 +24,13 @@ from specify_cli.hyperdimensional.priority_core import (
     top_n_features,
 )
 
-
 # =============================================================================
 # Value Estimation Tests
 # =============================================================================
 
 
 def test_estimate_feature_value_basic() -> None:
-    """Test basic value calculation: frequency × importance."""
+    """Test basic value calculation: frequency * importance."""
     feature = {
         "job_frequency": 0.8,
         "outcome_importance": 0.9,
@@ -44,7 +43,7 @@ def test_estimate_feature_value_defaults() -> None:
     """Test value calculation with missing fields uses 0.5 default."""
     feature: dict[str, float] = {}
     value = estimate_feature_value(feature)
-    assert value == pytest.approx(0.25, abs=0.01)  # 0.5 × 0.5
+    assert value == pytest.approx(0.25, abs=0.01)  # 0.5 * 0.5
 
 
 def test_estimate_feature_value_clamping() -> None:
