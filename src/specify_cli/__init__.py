@@ -461,6 +461,11 @@ pm_app = typer.Typer(
 )
 app.add_typer(pm_app, name="pm")
 
+# Add SpiffWorkflow self-automation commands
+from specify_cli.spiff_automation import create_self_automating_cli
+automate_app = create_self_automating_cli()
+app.add_typer(automate_app, name="automate")
+
 
 def _load_event_log(file_path: Path, case_id: str = "case:concept:name", activity: str = "concept:name", timestamp: str = "time:timestamp"):
     """Load event log from CSV/XES file."""
@@ -1483,6 +1488,157 @@ def wf_convert(
     console.print(tracker.render())
     console.print(f"\n[bold green]Workflow converted successfully.[/bold green]")
     console.print(f"Output: [cyan]{output_file}[/cyan]")
+
+
+@pm_app.command("execute")
+def pm_execute(
+    bpmn_file: Path = typer.Argument(..., help="BPMN file to execute (.bpmn)"),
+    data_file: Path = typer.Option(None, "--data", "-d", help="JSON file with workflow data"),
+    verbose: bool = typer.Option(False, "--verbose", "-v", help="Show detailed execution trace"),
+):
+    """
+    Execute a BPMN workflow using SpiffWorkflow.
+
+    This command loads a BPMN file and executes it using the SpiffWorkflow engine,
+    showing the execution flow and task completions.
+
+    Examples:
+        specify pm execute process.bpmn
+        specify pm execute process.bpmn --verbose
+        specify pm execute process.bpmn --data workflow_data.json
+    """
+    from SpiffWorkflow.bpmn.workflow import BpmnWorkflow
+    from SpiffWorkflow.bpmn.parser.BpmnParser import BpmnParser
+    from SpiffWorkflow.bpmn.serializer.workflow import BpmnWorkflowSerializer
+    from SpiffWorkflow.task import TaskState
+    import json
+
+    if not bpmn_file.exists():
+        console.print(f"[red]Error:[/red] BPMN file not found: {bpmn_file}")
+        raise typer.Exit(1)
+
+    # Load optional data
+    workflow_data = {}
+    if data_file:
+        if not data_file.exists():
+            console.print(f"[red]Error:[/red] Data file not found: {data_file}")
+            raise typer.Exit(1)
+        with open(data_file) as f:
+            workflow_data = json.load(f)
+
+    tracker = StepTracker("Execute BPMN Workflow")
+    tracker.add("load", "Load BPMN")
+    tracker.add("execute", "Execute workflow")
+    tracker.add("results", "Collect results")
+
+    with Live(tracker.render(), console=console, refresh_per_second=8, transient=True) as live:
+        tracker.attach_refresh(lambda: live.update(tracker.render()))
+
+        try:
+            tracker.start("load")
+
+            # Parse BPMN file
+            parser = BpmnParser()
+            parser.add_bpmn_file(str(bpmn_file))
+
+            # Get the first process spec
+            process_ids = list(parser.process_parsers.keys())
+            if not process_ids:
+                raise ValueError("No process found in BPMN file")
+
+            spec = parser.get_spec(process_ids[0])
+
+            tracker.complete("load", bpmn_file.name)
+
+            tracker.start("execute")
+
+            # Create and execute workflow
+            workflow = BpmnWorkflow(spec, workflow_data)
+
+            completed_tasks = []
+            execution_steps = []
+            step_count = 0
+
+            # Execute all tasks in the workflow
+            task_types_to_show = ['Task', 'UserTask', 'ManualTask', 'ScriptTask', 'ServiceTask']
+
+            while not workflow.is_completed():
+                # Get the next task to run
+                ready_tasks = [t for t in workflow.get_tasks(state=TaskState.READY)]
+
+                if not ready_tasks:
+                    break
+
+                for task in ready_tasks:
+                    task_name = task.task_spec.name if hasattr(task.task_spec, 'name') else str(task.task_spec)
+                    task_type = task.task_spec.__class__.__name__
+
+                    if verbose:
+                        console.print(f"[dim]Executing:[/dim] {task_name} ({task_type})")
+
+                    # Execute the task
+                    task.run()
+
+                    # Track completed work tasks
+                    if task.state == TaskState.COMPLETED and any(t in task_type for t in task_types_to_show):
+                        step_count += 1
+                        execution_steps.append(f"Step {step_count}: {task_name}")
+                        completed_tasks.append(task_name)
+
+                # Run engine steps to move workflow forward
+                workflow.do_engine_steps()
+
+            tracker.complete("execute", f"{step_count} steps")
+
+            tracker.start("results")
+
+            # Get workflow status
+            is_complete = workflow.is_completed()
+
+            tracker.complete("results")
+
+        except Exception as e:
+            console.print(f"[red]Error:[/red] {e}")
+            import traceback
+            if verbose:
+                console.print(traceback.format_exc())
+            raise typer.Exit(1)
+
+    console.print(tracker.render())
+    console.print(f"\n[bold green]Workflow execution complete.[/bold green]")
+
+    # Show execution summary
+    summary_table = Table(title="Execution Summary", show_header=True, header_style="bold cyan")
+    summary_table.add_column("Metric", style="cyan")
+    summary_table.add_column("Value", style="white")
+
+    summary_table.add_row("BPMN File", str(bpmn_file))
+    summary_table.add_row("Total Steps", str(step_count))
+    summary_table.add_row("Completed Tasks", str(len(completed_tasks)))
+    summary_table.add_row("Workflow Status", "✓ Completed" if is_complete else "⚠ Incomplete")
+
+    console.print()
+    console.print(summary_table)
+
+    if verbose and execution_steps:
+        console.print()
+        exec_table = Table(title="Execution Steps", show_header=True, header_style="bold cyan")
+        exec_table.add_column("Step", style="cyan")
+
+        for step in execution_steps:
+            exec_table.add_row(step)
+
+        console.print(exec_table)
+
+    if completed_tasks:
+        console.print()
+        tasks_table = Table(title="Completed Tasks", show_header=True, header_style="bold cyan")
+        tasks_table.add_column("Task Name", style="green")
+
+        for task in completed_tasks:
+            tasks_table.add_row(task)
+
+        console.print(tasks_table)
 
 
 # =============================================================================

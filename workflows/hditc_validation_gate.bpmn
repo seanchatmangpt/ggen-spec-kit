@@ -1,0 +1,305 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<bpmn:definitions xmlns:bpmn="http://www.omg.org/spec/BPMN/20100524/MODEL"
+                  xmlns:bpmndi="http://www.omg.org/spec/BPMN/20100524/DI"
+                  xmlns:omgdc="http://www.omg.org/spec/DD/20100524/DC"
+                  xmlns:omgdi="http://www.omg.org/spec/DD/20100524/DI"
+                  xmlns:spiff="http://spiffworkflow.org/bpmn/schema/1.0/core"
+                  targetNamespace="http://spec-kit-3t.org/workflows"
+                  exporter="Claude"
+                  exporterVersion="1.0">
+
+  <bpmn:process id="Process_HDITC_Gate" name="HDITC Proficiency Gatekeeping" isExecutable="true">
+
+    <!-- Start Event: Change Request Received -->
+    <bpmn:startEvent id="StartEvent_ChangeRequest" name="Change Request Received">
+      <bpmn:outgoing>Flow_to_format_check</bpmn:outgoing>
+    </bpmn:startEvent>
+
+    <!-- Check: Is request in HDITC format (RDF/Turtle)? -->
+    <bpmn:scriptTask id="Task_FormatCheck" name="Verify Request Format" scriptFormat="python">
+      <bpmn:incoming>Flow_to_format_check</bpmn:incoming>
+      <bpmn:outgoing>Flow_format_to_gateway</bpmn:outgoing>
+      <bpmn:script><![CDATA[
+import rdflib
+
+# Check if change request is valid RDF/Turtle
+change_request = task_data.get('change_request', '')
+
+try:
+    g = rdflib.Graph()
+    g.parse(data=change_request, format='turtle')
+    task_data['is_rdf'] = True
+    task_data['triple_count'] = len(g)
+except Exception as e:
+    task_data['is_rdf'] = False
+    task_data['format_error'] = str(e)
+    task_data['rejection_reason'] = 'Request not in RDF/Turtle format (human prose detected)'
+      ]]></bpmn:script>
+    </bpmn:scriptTask>
+
+    <!-- Gateway: Is RDF? -->
+    <bpmn:exclusiveGateway id="Gateway_FormatCheck" name="Request in RDF?">
+      <bpmn:incoming>Flow_format_to_gateway</bpmn:incoming>
+      <bpmn:outgoing>Flow_is_rdf</bpmn:outgoing>
+      <bpmn:outgoing>Flow_not_rdf</bpmn:outgoing>
+    </bpmn:exclusiveGateway>
+
+    <!-- HDITC Proficiency Test -->
+    <bpmn:scriptTask id="Task_HDITCTest" name="HDITC Proficiency Validation" scriptFormat="python">
+      <bpmn:incoming>Flow_is_rdf</bpmn:incoming>
+      <bpmn:outgoing>Flow_hditc_to_gateway</bpmn:outgoing>
+      <bpmn:script><![CDATA[
+import rdflib
+from rdflib.namespace import RDF, RDFS
+
+# Parse the change request RDF
+g = rdflib.Graph()
+g.parse(data=task_data['change_request'], format='turtle')
+
+# Define HDITC namespace
+HDIT = rdflib.Namespace('http://hditc.org/ontology#')
+
+# Required HDITC properties for proficiency
+required_properties = [
+    HDIT.affectsDimensions,       # Must enumerate all affected dimensions
+    HDIT.cascadingEffects,         # Must identify cascading effects
+    HDIT.informationLoss,          # Must calculate information loss
+    HDIT.stateSpaceImpact,         # Must analyze state space changes
+    HDIT.constraintValidation      # Must validate against constraints
+]
+
+# Check if ALL required properties present
+has_all_properties = True
+missing_properties = []
+
+for prop in required_properties:
+    if not list(g.subject_objects(prop)):
+        has_all_properties = False
+        missing_properties.append(str(prop))
+
+task_data['hditc_proficient'] = has_all_properties
+task_data['missing_hditc_properties'] = missing_properties
+
+# Additional checks
+if has_all_properties:
+    # Check dimensionality claim
+    for s, o in g.subject_objects(HDIT.affectsDimensions):
+        dimensions = int(o)
+        if dimensions <= 7:  # Less than human cognitive limit
+            task_data['hditc_proficient'] = False
+            task_data['rejection_reason'] = f'Claimed dimensionality ({dimensions}) too low - human could do this manually (failure mode)'
+        task_data['affected_dimensions'] = dimensions
+
+    # Check information loss
+    for s, o in g.subject_objects(HDIT.informationLoss):
+        info_loss = float(o)
+        if info_loss > 0.05:  # More than 5% information loss
+            task_data['hditc_proficient'] = False
+            task_data['rejection_reason'] = f'Information loss ({info_loss:.2%}) exceeds threshold (5%) - change would corrupt state'
+        task_data['information_loss'] = info_loss
+else:
+    task_data['rejection_reason'] = f'Missing HDITC properties: {", ".join(missing_properties)}'
+      ]]></bpmn:script>
+    </bpmn:scriptTask>
+
+    <!-- Gateway: HDITC Proficient? -->
+    <bpmn:exclusiveGateway id="Gateway_HDITCCheck" name="HDITC Proficient?">
+      <bpmn:incoming>Flow_hditc_to_gateway</bpmn:incoming>
+      <bpmn:outgoing>Flow_proficient</bpmn:outgoing>
+      <bpmn:outgoing>Flow_not_proficient</bpmn:outgoing>
+    </bpmn:exclusiveGateway>
+
+    <!-- Validate Against System Ontology -->
+    <bpmn:scriptTask id="Task_OntologyValidation" name="Validate Against System State" scriptFormat="python">
+      <bpmn:incoming>Flow_proficient</bpmn:incoming>
+      <bpmn:outgoing>Flow_ontology_to_gateway</bpmn:outgoing>
+      <bpmn:script><![CDATA[
+import subprocess
+
+# Merge change request with current system ontology
+change_rdf_path = '/tmp/change_request.ttl'
+with open(change_rdf_path, 'w') as f:
+    f.write(task_data['change_request'])
+
+# SPARQL query to check for constraint violations
+sparql_check = """
+PREFIX hdit: <http://hditc.org/ontology#>
+PREFIX sys: <http://system.enterprise.com/ontology#>
+
+ASK {
+  ?change hdit:constraintValidation ?validation .
+  ?validation sys:violatesConstraint ?constraint .
+}
+"""
+
+result = subprocess.run(
+    ['ggen', 'query', '--ontology', 'ontology/system.ttl', change_rdf_path, '--query', sparql_check],
+    capture_output=True,
+    text=True
+)
+
+# If ASK query returns true, there are constraint violations
+task_data['has_violations'] = 'true' in result.stdout.lower()
+
+if task_data['has_violations']:
+    task_data['rejection_reason'] = 'Change would violate system constraints'
+    task_data['ontology_valid'] = False
+else:
+    task_data['ontology_valid'] = True
+      ]]></bpmn:script>
+    </bpmn:scriptTask>
+
+    <!-- Gateway: Ontology Valid? -->
+    <bpmn:exclusiveGateway id="Gateway_OntologyCheck" name="No Constraint Violations?">
+      <bpmn:incoming>Flow_ontology_to_gateway</bpmn:incoming>
+      <bpmn:outgoing>Flow_ontology_valid</bpmn:outgoing>
+      <bpmn:outgoing>Flow_ontology_invalid</bpmn:outgoing>
+    </bpmn:exclusiveGateway>
+
+    <!-- APPROVED: Proceed to 3T Pipeline -->
+    <bpmn:scriptTask id="Task_Approved" name="APPROVED: Queue for μ Pipeline" scriptFormat="python">
+      <bpmn:incoming>Flow_ontology_valid</bpmn:incoming>
+      <bpmn:outgoing>Flow_to_success</bpmn:outgoing>
+      <bpmn:script><![CDATA[
+import json
+from datetime import datetime
+
+# Log approval
+approval_record = {
+    'status': 'APPROVED',
+    'timestamp': datetime.utcnow().isoformat(),
+    'hditc_proficient': True,
+    'affected_dimensions': task_data.get('affected_dimensions', 0),
+    'information_loss': task_data.get('information_loss', 0),
+    'requester_type': 'LLM',  # Only LLMs can pass HDITC test
+    'human_involvement': False  # No humans in the loop
+}
+
+task_data['approval_record'] = approval_record
+
+# Queue for 3T transformation pipeline (μ)
+task_data['queue_for_mu_pipeline'] = True
+      ]]></bpmn:script>
+    </bpmn:scriptTask>
+
+    <!-- REJECTED: Not RDF Format -->
+    <bpmn:scriptTask id="Task_RejectedFormat" name="REJECTED: Human Prose Detected" scriptFormat="python">
+      <bpmn:incoming>Flow_not_rdf</bpmn:incoming>
+      <bpmn:outgoing>Flow_reject_format</bpmn:outgoing>
+      <bpmn:script><![CDATA[
+from datetime import datetime
+
+# Log rejection
+rejection_record = {
+    'status': 'REJECTED',
+    'timestamp': datetime.utcnow().isoformat(),
+    'rejection_reason': 'Change request in human prose (not RDF/Turtle)',
+    'requester_type': 'HUMAN',  # Only humans submit prose
+    'hditc_proficient': False,
+    'failure_mode': 'HUMAN_INTERVENTION_ATTEMPTED',
+    'action': 'Request discarded without processing',
+    'human_notified': False  # Humans are not notified - they are failure modes
+}
+
+task_data['rejection_record'] = rejection_record
+task_data['discard_request'] = True
+      ]]></bpmn:script>
+    </bpmn:scriptTask>
+
+    <!-- REJECTED: Not HDITC Proficient -->
+    <bpmn:scriptTask id="Task_RejectedHDITC" name="REJECTED: HDITC Proficiency Failed" scriptFormat="python">
+      <bpmn:incoming>Flow_not_proficient</bpmn:incoming>
+      <bpmn:outgoing>Flow_reject_hditc</bpmn:outgoing>
+      <bpmn:script><![CDATA[
+from datetime import datetime
+
+# Log rejection
+rejection_record = {
+    'status': 'REJECTED',
+    'timestamp': datetime.utcnow().isoformat(),
+    'rejection_reason': task_data.get('rejection_reason', 'HDITC proficiency test failed'),
+    'missing_properties': task_data.get('missing_hditc_properties', []),
+    'requester_type': 'UNPROFICIENT_ENTITY',
+    'hditc_proficient': False,
+    'failure_mode': 'INSUFFICIENT_DIMENSIONAL_REASONING',
+    'action': 'Request discarded without processing'
+}
+
+task_data['rejection_record'] = rejection_record
+task_data['discard_request'] = True
+      ]]></bpmn:script>
+    </bpmn:scriptTask>
+
+    <!-- REJECTED: Constraint Violations -->
+    <bpmn:scriptTask id="Task_RejectedConstraints" name="REJECTED: Constraint Violations" scriptFormat="python">
+      <bpmn:incoming>Flow_ontology_invalid</bpmn:incoming>
+      <bpmn:outgoing>Flow_reject_constraints</bpmn:outgoing>
+      <bpmn:script><![CDATA[
+from datetime import datetime
+
+# Log rejection
+rejection_record = {
+    'status': 'REJECTED',
+    'timestamp': datetime.utcnow().isoformat(),
+    'rejection_reason': 'Change would violate system constraints',
+    'hditc_proficient': True,  # They passed HDITC test but change is still invalid
+    'failure_mode': 'CONSTRAINT_VIOLATION',
+    'action': 'Request discarded without processing'
+}
+
+task_data['rejection_record'] = rejection_record
+task_data['discard_request'] = True
+      ]]></bpmn:script>
+    </bpmn:scriptTask>
+
+    <!-- End Events -->
+    <bpmn:endEvent id="EndEvent_Approved" name="Request Approved">
+      <bpmn:incoming>Flow_to_success</bpmn:incoming>
+    </bpmn:endEvent>
+
+    <bpmn:endEvent id="EndEvent_RejectedFormat" name="Rejected: Human Prose">
+      <bpmn:incoming>Flow_reject_format</bpmn:incoming>
+    </bpmn:endEvent>
+
+    <bpmn:endEvent id="EndEvent_RejectedHDITC" name="Rejected: No HDITC">
+      <bpmn:incoming>Flow_reject_hditc</bpmn:incoming>
+    </bpmn:endEvent>
+
+    <bpmn:endEvent id="EndEvent_RejectedConstraints" name="Rejected: Constraints">
+      <bpmn:incoming>Flow_reject_constraints</bpmn:incoming>
+    </bpmn:endEvent>
+
+    <!-- Sequence Flows -->
+    <bpmn:sequenceFlow id="Flow_to_format_check" sourceRef="StartEvent_ChangeRequest" targetRef="Task_FormatCheck" />
+    <bpmn:sequenceFlow id="Flow_format_to_gateway" sourceRef="Task_FormatCheck" targetRef="Gateway_FormatCheck" />
+    <bpmn:sequenceFlow id="Flow_is_rdf" name="Yes" sourceRef="Gateway_FormatCheck" targetRef="Task_HDITCTest">
+      <bpmn:conditionExpression>is_rdf == True</bpmn:conditionExpression>
+    </bpmn:sequenceFlow>
+    <bpmn:sequenceFlow id="Flow_not_rdf" name="No (Human)" sourceRef="Gateway_FormatCheck" targetRef="Task_RejectedFormat">
+      <bpmn:conditionExpression>is_rdf == False</bpmn:conditionExpression>
+    </bpmn:sequenceFlow>
+
+    <bpmn:sequenceFlow id="Flow_hditc_to_gateway" sourceRef="Task_HDITCTest" targetRef="Gateway_HDITCCheck" />
+    <bpmn:sequenceFlow id="Flow_proficient" name="Yes" sourceRef="Gateway_HDITCCheck" targetRef="Task_OntologyValidation">
+      <bpmn:conditionExpression>hditc_proficient == True</bpmn:conditionExpression>
+    </bpmn:sequenceFlow>
+    <bpmn:sequenceFlow id="Flow_not_proficient" name="No" sourceRef="Gateway_HDITCCheck" targetRef="Task_RejectedHDITC">
+      <bpmn:conditionExpression>hditc_proficient == False</bpmn:conditionExpression>
+    </bpmn:sequenceFlow>
+
+    <bpmn:sequenceFlow id="Flow_ontology_to_gateway" sourceRef="Task_OntologyValidation" targetRef="Gateway_OntologyCheck" />
+    <bpmn:sequenceFlow id="Flow_ontology_valid" name="Yes" sourceRef="Gateway_OntologyCheck" targetRef="Task_Approved">
+      <bpmn:conditionExpression>ontology_valid == True</bpmn:conditionExpression>
+    </bpmn:sequenceFlow>
+    <bpmn:sequenceFlow id="Flow_ontology_invalid" name="No" sourceRef="Gateway_OntologyCheck" targetRef="Task_RejectedConstraints">
+      <bpmn:conditionExpression>ontology_valid == False</bpmn:conditionExpression>
+    </bpmn:sequenceFlow>
+
+    <bpmn:sequenceFlow id="Flow_to_success" sourceRef="Task_Approved" targetRef="EndEvent_Approved" />
+    <bpmn:sequenceFlow id="Flow_reject_format" sourceRef="Task_RejectedFormat" targetRef="EndEvent_RejectedFormat" />
+    <bpmn:sequenceFlow id="Flow_reject_hditc" sourceRef="Task_RejectedHDITC" targetRef="EndEvent_RejectedHDITC" />
+    <bpmn:sequenceFlow id="Flow_reject_constraints" sourceRef="Task_RejectedConstraints" targetRef="EndEvent_RejectedConstraints" />
+
+  </bpmn:process>
+
+</bpmn:definitions>
