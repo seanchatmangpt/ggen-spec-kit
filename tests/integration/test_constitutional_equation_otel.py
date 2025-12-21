@@ -112,3 +112,4 @@ def test_constitutional_equation_integrity() -> None:
     assert cli_hash is not None
     assert ops_hash is not None
     assert runtime_hash is not None
+
