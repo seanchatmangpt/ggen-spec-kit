@@ -1,0 +1,1086 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<log xes.version="1849-2016" xes.features="nested-attributes" xmlns="http://www.xes-standard.org/">
+	<extension name="Time" prefix="time" uri="http://www.xes-standard.org/time.xesext" />
+	<extension name="Concept" prefix="concept" uri="http://www.xes-standard.org/concept.xesext" />
+	<string key="origin" value="csv" />
+	<trace>
+		<string key="concept:name" value="case_00001" />
+		<event>
+			<string key="concept:name" value="Activity_A" />
+			<date key="time:timestamp" value="2024-01-01T16:00:00+00:00" />
+			<int key="@@index" value="0" />
+			<int key="@@case_index" value="0" />
+		</event>
+		<event>
+			<string key="concept:name" value="Activity_B" />
+			<date key="time:timestamp" value="2024-01-01T16:38:00+00:00" />
+			<int key="@@index" value="1" />
+			<int key="@@case_index" value="0" />
+		</event>
+		<event>
+			<string key="concept:name" value="Activity_C" />
+			<date key="time:timestamp" value="2024-01-01T17:39:00+00:00" />
+			<int key="@@index" value="2" />
+			<int key="@@case_index" value="0" />
+		</event>
+		<event>
+			<string key="concept:name" value="Activity_E" />
+			<date key="time:timestamp" value="2024-01-01T17:56:00+00:00" />
+			<int key="@@index" value="3" />
+			<int key="@@case_index" value="0" />
+		</event>
+	</trace>
+	<trace>
+		<string key="concept:name" value="case_00002" />
+		<event>
+			<string key="concept:name" value="Activity_A" />
+			<date key="time:timestamp" value="2024-01-02T13:00:00+00:00" />
+			<int key="@@index" value="4" />
+			<int key="@@case_index" value="1" />
+		</event>
+		<event>
+			<string key="concept:name" value="Activity_C" />
+			<date key="time:timestamp" value="2024-01-02T14:39:00+00:00" />
+			<int key="@@index" value="5" />
+			<int key="@@case_index" value="1" />
+		</event>
+		<event>
+			<string key="concept:name" value="Activity_C" />
+			<date key="time:timestamp" value="2024-01-02T15:42:00+00:00" />
+			<int key="@@index" value="6" />
+			<int key="@@case_index" value="1" />
+		</event>
+		<event>
+			<string key="concept:name" value="Activity_D" />
+			<date key="time:timestamp" value="2024-01-02T16:55:00+00:00" />
+			<int key="@@index" value="7" />
+			<int key="@@case_index" value="1" />
+		</event>
+		<event>
+			<string key="concept:name" value="Activity_E" />
+			<date key="time:timestamp" value="2024-01-02T18:00:00+00:00" />
+			<int key="@@index" value="8" />
+			<int key="@@case_index" value="1" />
+		</event>
+	</trace>
+	<trace>
+		<string key="concept:name" value="case_00003" />
+		<event>
+			<string key="concept:name" value="Activity_A" />
+			<date key="time:timestamp" value="2024-01-03T16:00:00+00:00" />
+			<int key="@@index" value="9" />
+			<int key="@@case_index" value="2" />
+		</event>
+		<event>
+			<string key="concept:name" value="Activity_D" />
+			<date key="time:timestamp" value="2024-01-03T17:29:00+00:00" />
+			<int key="@@index" value="10" />
+			<int key="@@case_index" value="2" />
+		</event>
+		<event>
+			<string key="concept:name" value="Activity_B" />
+			<date key="time:timestamp" value="2024-01-03T18:14:00+00:00" />
+			<int key="@@index" value="11" />
+			<int key="@@case_index" value="2" />
+		</event>
+		<event>
+			<string key="concept:name" value="Activity_C" />
+			<date key="time:timestamp" value="2024-01-03T18:25:00+00:00" />
+			<int key="@@index" value="12" />
+			<int key="@@case_index" value="2" />
+		</event>
+		<event>
+			<string key="concept:name" value="Activity_D" />
+			<date key="time:timestamp" value="2024-01-03T20:22:00+00:00" />
+			<int key="@@index" value="13" />
+			<int key="@@case_index" value="2" />
+		</event>
+		<event>
+			<string key="concept:name" value="Activity_E" />
+			<date key="time:timestamp" value="2024-01-03T22:00:00+00:00" />
+			<int key="@@index" value="14" />
+			<int key="@@case_index" value="2" />
+		</event>
+	</trace>
+	<trace>
+		<string key="concept:name" value="case_00004" />
+		<event>
+			<string key="concept:name" value="Activity_A" />
+			<date key="time:timestamp" value="2024-01-04T13:00:00+00:00" />
+			<int key="@@index" value="15" />
+			<int key="@@case_index" value="3" />
+		</event>
+		<event>
+			<string key="concept:name" value="Activity_D" />
+			<date key="time:timestamp" value="2024-01-04T14:22:00+00:00" />
+			<int key="@@index" value="16" />
+			<int key="@@case_index" value="3" />
+		</event>
+		<event>
+			<string key="concept:name" value="Activity_B" />
+			<date key="time:timestamp" value="2024-01-04T15:42:00+00:00" />
+			<int key="@@index" value="17" />
+			<int key="@@case_index" value="3" />
+		</event>
+		<event>
+			<string key="concept:name" value="Activity_C" />
+			<date key="time:timestamp" value="2024-01-04T16:53:00+00:00" />
+			<int key="@@index" value="18" />
+			<int key="@@case_index" value="3" />
+		</event>
+		<event>
+			<string key="concept:name" value="Activity_E" />
+			<date key="time:timestamp" value="2024-01-04T17:46:00+00:00" />
+			<int key="@@index" value="19" />
+			<int key="@@case_index" value="3" />
+		</event>
+	</trace>
+	<trace>
+		<string key="concept:name" value="case_00005" />
+		<event>
+			<string key="concept:name" value="Activity_A" />
+			<date key="time:timestamp" value="2024-01-05T15:00:00+00:00" />
+			<int key="@@index" value="20" />
+			<int key="@@case_index" value="4" />
+		</event>
+		<event>
+			<string key="concept:name" value="Activity_D" />
+			<date key="time:timestamp" value="2024-01-05T15:50:00+00:00" />
+			<int key="@@index" value="21" />
+			<int key="@@case_index" value="4" />
+		</event>
+		<event>
+			<string key="concept:name" value="Activity_E" />
+			<date key="time:timestamp" value="2024-01-05T16:37:00+00:00" />
+			<int key="@@index" value="22" />
+			<int key="@@case_index" value="4" />
+		</event>
+	</trace>
+	<trace>
+		<string key="concept:name" value="case_00006" />
+		<event>
+			<string key="concept:name" value="Activity_A" />
+			<date key="time:timestamp" value="2024-01-06T12:00:00+00:00" />
+			<int key="@@index" value="23" />
+			<int key="@@case_index" value="5" />
+		</event>
+		<event>
+			<string key="concept:name" value="Activity_C" />
+			<date key="time:timestamp" value="2024-01-06T13:48:00+00:00" />
+			<int key="@@index" value="24" />
+			<int key="@@case_index" value="5" />
+		</event>
+		<event>
+			<string key="concept:name" value="Activity_C" />
+			<date key="time:timestamp" value="2024-01-06T15:01:00+00:00" />
+			<int key="@@index" value="25" />
+			<int key="@@case_index" value="5" />
+		</event>
+		<event>
+			<string key="concept:name" value="Activity_C" />
+			<date key="time:timestamp" value="2024-01-06T15:27:00+00:00" />
+			<int key="@@index" value="26" />
+			<int key="@@case_index" value="5" />
+		</event>
+		<event>
+			<string key="concept:name" value="Activity_C" />
+			<date key="time:timestamp" value="2024-01-06T16:04:00+00:00" />
+			<int key="@@index" value="27" />
+			<int key="@@case_index" value="5" />
+		</event>
+		<event>
+			<string key="concept:name" value="Activity_B" />
+			<date key="time:timestamp" value="2024-01-06T18:01:00+00:00" />
+			<int key="@@index" value="28" />
+			<int key="@@case_index" value="5" />
+		</event>
+		<event>
+			<string key="concept:name" value="Activity_D" />
+			<date key="time:timestamp" value="2024-01-06T19:11:00+00:00" />
+			<int key="@@index" value="29" />
+			<int key="@@case_index" value="5" />
+		</event>
+		<event>
+			<string key="concept:name" value="Activity_B" />
+			<date key="time:timestamp" value="2024-01-06T20:37:00+00:00" />
+			<int key="@@index" value="30" />
+			<int key="@@case_index" value="5" />
+		</event>
+		<event>
+			<string key="concept:name" value="Activity_B" />
+			<date key="time:timestamp" value="2024-01-06T22:25:00+00:00" />
+			<int key="@@index" value="31" />
+			<int key="@@case_index" value="5" />
+		</event>
+		<event>
+			<string key="concept:name" value="Activity_C" />
+			<date key="time:timestamp" value="2024-01-06T23:12:00+00:00" />
+			<int key="@@index" value="32" />
+			<int key="@@case_index" value="5" />
+		</event>
+		<event>
+			<string key="concept:name" value="Activity_D" />
+			<date key="time:timestamp" value="2024-01-07T00:27:00+00:00" />
+			<int key="@@index" value="33" />
+			<int key="@@case_index" value="5" />
+		</event>
+		<event>
+			<string key="concept:name" value="Activity_C" />
+			<date key="time:timestamp" value="2024-01-07T01:32:00+00:00" />
+			<int key="@@index" value="34" />
+			<int key="@@case_index" value="5" />
+		</event>
+		<event>
+			<string key="concept:name" value="Activity_D" />
+			<date key="time:timestamp" value="2024-01-07T02:57:00+00:00" />
+			<int key="@@index" value="35" />
+			<int key="@@case_index" value="5" />
+		</event>
+		<event>
+			<string key="concept:name" value="Activity_E" />
+			<date key="time:timestamp" value="2024-01-07T03:54:00+00:00" />
+			<int key="@@index" value="36" />
+			<int key="@@case_index" value="5" />
+		</event>
+	</trace>
+	<trace>
+		<string key="concept:name" value="case_00007" />
+		<event>
+			<string key="concept:name" value="Activity_A" />
+			<date key="time:timestamp" value="2024-01-07T13:00:00+00:00" />
+			<int key="@@index" value="37" />
+			<int key="@@case_index" value="6" />
+		</event>
+		<event>
+			<string key="concept:name" value="Activity_C" />
+			<date key="time:timestamp" value="2024-01-07T13:34:00+00:00" />
+			<int key="@@index" value="38" />
+			<int key="@@case_index" value="6" />
+		</event>
+		<event>
+			<string key="concept:name" value="Activity_B" />
+			<date key="time:timestamp" value="2024-01-07T14:50:00+00:00" />
+			<int key="@@index" value="39" />
+			<int key="@@case_index" value="6" />
+		</event>
+		<event>
+			<string key="concept:name" value="Activity_E" />
+			<date key="time:timestamp" value="2024-01-07T16:43:00+00:00" />
+			<int key="@@index" value="40" />
+			<int key="@@case_index" value="6" />
+		</event>
+	</trace>
+	<trace>
+		<string key="concept:name" value="case_00008" />
+		<event>
+			<string key="concept:name" value="Activity_A" />
+			<date key="time:timestamp" value="2024-01-08T08:00:00+00:00" />
+			<int key="@@index" value="41" />
+			<int key="@@case_index" value="7" />
+		</event>
+		<event>
+			<string key="concept:name" value="Activity_B" />
+			<date key="time:timestamp" value="2024-01-08T08:47:00+00:00" />
+			<int key="@@index" value="42" />
+			<int key="@@case_index" value="7" />
+		</event>
+		<event>
+			<string key="concept:name" value="Activity_D" />
+			<date key="time:timestamp" value="2024-01-08T10:07:00+00:00" />
+			<int key="@@index" value="43" />
+			<int key="@@case_index" value="7" />
+		</event>
+		<event>
+			<string key="concept:name" value="Activity_B" />
+			<date key="time:timestamp" value="2024-01-08T11:05:00+00:00" />
+			<int key="@@index" value="44" />
+			<int key="@@case_index" value="7" />
+		</event>
+		<event>
+			<string key="concept:name" value="Activity_C" />
+			<date key="time:timestamp" value="2024-01-08T12:14:00+00:00" />
+			<int key="@@index" value="45" />
+			<int key="@@case_index" value="7" />
+		</event>
+		<event>
+			<string key="concept:name" value="Activity_D" />
+			<date key="time:timestamp" value="2024-01-08T13:49:00+00:00" />
+			<int key="@@index" value="46" />
+			<int key="@@case_index" value="7" />
+		</event>
+		<event>
+			<string key="concept:name" value="Activity_E" />
+			<date key="time:timestamp" value="2024-01-08T15:48:00+00:00" />
+			<int key="@@index" value="47" />
+			<int key="@@case_index" value="7" />
+		</event>
+	</trace>
+	<trace>
+		<string key="concept:name" value="case_00009" />
+		<event>
+			<string key="concept:name" value="Activity_A" />
+			<date key="time:timestamp" value="2024-01-09T10:00:00+00:00" />
+			<int key="@@index" value="48" />
+			<int key="@@case_index" value="8" />
+		</event>
+		<event>
+			<string key="concept:name" value="Activity_B" />
+			<date key="time:timestamp" value="2024-01-09T10:53:00+00:00" />
+			<int key="@@index" value="49" />
+			<int key="@@case_index" value="8" />
+		</event>
+		<event>
+			<string key="concept:name" value="Activity_B" />
+			<date key="time:timestamp" value="2024-01-09T12:23:00+00:00" />
+			<int key="@@index" value="50" />
+			<int key="@@case_index" value="8" />
+		</event>
+		<event>
+			<string key="concept:name" value="Activity_C" />
+			<date key="time:timestamp" value="2024-01-09T13:41:00+00:00" />
+			<int key="@@index" value="51" />
+			<int key="@@case_index" value="8" />
+		</event>
+		<event>
+			<string key="concept:name" value="Activity_C" />
+			<date key="time:timestamp" value="2024-01-09T14:44:00+00:00" />
+			<int key="@@index" value="52" />
+			<int key="@@case_index" value="8" />
+		</event>
+		<event>
+			<string key="concept:name" value="Activity_B" />
+			<date key="time:timestamp" value="2024-01-09T15:57:00+00:00" />
+			<int key="@@index" value="53" />
+			<int key="@@case_index" value="8" />
+		</event>
+		<event>
+			<string key="concept:name" value="Activity_D" />
+			<date key="time:timestamp" value="2024-01-09T17:35:00+00:00" />
+			<int key="@@index" value="54" />
+			<int key="@@case_index" value="8" />
+		</event>
+		<event>
+			<string key="concept:name" value="Activity_C" />
+			<date key="time:timestamp" value="2024-01-09T18:34:00+00:00" />
+			<int key="@@index" value="55" />
+			<int key="@@case_index" value="8" />
+		</event>
+		<event>
+			<string key="concept:name" value="Activity_D" />
+			<date key="time:timestamp" value="2024-01-09T18:57:00+00:00" />
+			<int key="@@index" value="56" />
+			<int key="@@case_index" value="8" />
+		</event>
+		<event>
+			<string key="concept:name" value="Activity_C" />
+			<date key="time:timestamp" value="2024-01-09T20:18:00+00:00" />
+			<int key="@@index" value="57" />
+			<int key="@@case_index" value="8" />
+		</event>
+		<event>
+			<string key="concept:name" value="Activity_B" />
+			<date key="time:timestamp" value="2024-01-09T22:17:00+00:00" />
+			<int key="@@index" value="58" />
+			<int key="@@case_index" value="8" />
+		</event>
+		<event>
+			<string key="concept:name" value="Activity_D" />
+			<date key="time:timestamp" value="2024-01-09T23:01:00+00:00" />
+			<int key="@@index" value="59" />
+			<int key="@@case_index" value="8" />
+		</event>
+		<event>
+			<string key="concept:name" value="Activity_E" />
+			<date key="time:timestamp" value="2024-01-09T23:55:00+00:00" />
+			<int key="@@index" value="60" />
+			<int key="@@case_index" value="8" />
+		</event>
+	</trace>
+	<trace>
+		<string key="concept:name" value="case_00010" />
+		<event>
+			<string key="concept:name" value="Activity_A" />
+			<date key="time:timestamp" value="2024-01-10T09:00:00+00:00" />
+			<int key="@@index" value="61" />
+			<int key="@@case_index" value="9" />
+		</event>
+		<event>
+			<string key="concept:name" value="Activity_D" />
+			<date key="time:timestamp" value="2024-01-10T10:19:00+00:00" />
+			<int key="@@index" value="62" />
+			<int key="@@case_index" value="9" />
+		</event>
+		<event>
+			<string key="concept:name" value="Activity_D" />
+			<date key="time:timestamp" value="2024-01-10T11:43:00+00:00" />
+			<int key="@@index" value="63" />
+			<int key="@@case_index" value="9" />
+		</event>
+		<event>
+			<string key="concept:name" value="Activity_D" />
+			<date key="time:timestamp" value="2024-01-10T13:36:00+00:00" />
+			<int key="@@index" value="64" />
+			<int key="@@case_index" value="9" />
+		</event>
+		<event>
+			<string key="concept:name" value="Activity_C" />
+			<date key="time:timestamp" value="2024-01-10T14:10:00+00:00" />
+			<int key="@@index" value="65" />
+			<int key="@@case_index" value="9" />
+		</event>
+		<event>
+			<string key="concept:name" value="Activity_D" />
+			<date key="time:timestamp" value="2024-01-10T16:00:00+00:00" />
+			<int key="@@index" value="66" />
+			<int key="@@case_index" value="9" />
+		</event>
+		<event>
+			<string key="concept:name" value="Activity_C" />
+			<date key="time:timestamp" value="2024-01-10T16:11:00+00:00" />
+			<int key="@@index" value="67" />
+			<int key="@@case_index" value="9" />
+		</event>
+		<event>
+			<string key="concept:name" value="Activity_B" />
+			<date key="time:timestamp" value="2024-01-10T17:37:00+00:00" />
+			<int key="@@index" value="68" />
+			<int key="@@case_index" value="9" />
+		</event>
+		<event>
+			<string key="concept:name" value="Activity_B" />
+			<date key="time:timestamp" value="2024-01-10T19:15:00+00:00" />
+			<int key="@@index" value="69" />
+			<int key="@@case_index" value="9" />
+		</event>
+		<event>
+			<string key="concept:name" value="Activity_E" />
+			<date key="time:timestamp" value="2024-01-10T19:34:00+00:00" />
+			<int key="@@index" value="70" />
+			<int key="@@case_index" value="9" />
+		</event>
+	</trace>
+	<trace>
+		<string key="concept:name" value="case_00011" />
+		<event>
+			<string key="concept:name" value="Activity_A" />
+			<date key="time:timestamp" value="2024-01-11T16:00:00+00:00" />
+			<int key="@@index" value="71" />
+			<int key="@@case_index" value="10" />
+		</event>
+		<event>
+			<string key="concept:name" value="Activity_D" />
+			<date key="time:timestamp" value="2024-01-11T17:49:00+00:00" />
+			<int key="@@index" value="72" />
+			<int key="@@case_index" value="10" />
+		</event>
+		<event>
+			<string key="concept:name" value="Activity_E" />
+			<date key="time:timestamp" value="2024-01-11T19:10:00+00:00" />
+			<int key="@@index" value="73" />
+			<int key="@@case_index" value="10" />
+		</event>
+	</trace>
+	<trace>
+		<string key="concept:name" value="case_00012" />
+		<event>
+			<string key="concept:name" value="Activity_A" />
+			<date key="time:timestamp" value="2024-01-12T11:00:00+00:00" />
+			<int key="@@index" value="74" />
+			<int key="@@case_index" value="11" />
+		</event>
+		<event>
+			<string key="concept:name" value="Activity_B" />
+			<date key="time:timestamp" value="2024-01-12T11:41:00+00:00" />
+			<int key="@@index" value="75" />
+			<int key="@@case_index" value="11" />
+		</event>
+		<event>
+			<string key="concept:name" value="Activity_C" />
+			<date key="time:timestamp" value="2024-01-12T12:32:00+00:00" />
+			<int key="@@index" value="76" />
+			<int key="@@case_index" value="11" />
+		</event>
+		<event>
+			<string key="concept:name" value="Activity_D" />
+			<date key="time:timestamp" value="2024-01-12T14:23:00+00:00" />
+			<int key="@@index" value="77" />
+			<int key="@@case_index" value="11" />
+		</event>
+		<event>
+			<string key="concept:name" value="Activity_C" />
+			<date key="time:timestamp" value="2024-01-12T15:22:00+00:00" />
+			<int key="@@index" value="78" />
+			<int key="@@case_index" value="11" />
+		</event>
+		<event>
+			<string key="concept:name" value="Activity_C" />
+			<date key="time:timestamp" value="2024-01-12T16:24:00+00:00" />
+			<int key="@@index" value="79" />
+			<int key="@@case_index" value="11" />
+		</event>
+		<event>
+			<string key="concept:name" value="Activity_D" />
+			<date key="time:timestamp" value="2024-01-12T17:17:00+00:00" />
+			<int key="@@index" value="80" />
+			<int key="@@case_index" value="11" />
+		</event>
+		<event>
+			<string key="concept:name" value="Activity_D" />
+			<date key="time:timestamp" value="2024-01-12T17:50:00+00:00" />
+			<int key="@@index" value="81" />
+			<int key="@@case_index" value="11" />
+		</event>
+		<event>
+			<string key="concept:name" value="Activity_B" />
+			<date key="time:timestamp" value="2024-01-12T18:54:00+00:00" />
+			<int key="@@index" value="82" />
+			<int key="@@case_index" value="11" />
+		</event>
+		<event>
+			<string key="concept:name" value="Activity_B" />
+			<date key="time:timestamp" value="2024-01-12T19:44:00+00:00" />
+			<int key="@@index" value="83" />
+			<int key="@@case_index" value="11" />
+		</event>
+		<event>
+			<string key="concept:name" value="Activity_B" />
+			<date key="time:timestamp" value="2024-01-12T20:02:00+00:00" />
+			<int key="@@index" value="84" />
+			<int key="@@case_index" value="11" />
+		</event>
+		<event>
+			<string key="concept:name" value="Activity_E" />
+			<date key="time:timestamp" value="2024-01-12T20:09:00+00:00" />
+			<int key="@@index" value="85" />
+			<int key="@@case_index" value="11" />
+		</event>
+	</trace>
+	<trace>
+		<string key="concept:name" value="case_00013" />
+		<event>
+			<string key="concept:name" value="Activity_A" />
+			<date key="time:timestamp" value="2024-01-13T11:00:00+00:00" />
+			<int key="@@index" value="86" />
+			<int key="@@case_index" value="12" />
+		</event>
+		<event>
+			<string key="concept:name" value="Activity_D" />
+			<date key="time:timestamp" value="2024-01-13T12:32:00+00:00" />
+			<int key="@@index" value="87" />
+			<int key="@@case_index" value="12" />
+		</event>
+		<event>
+			<string key="concept:name" value="Activity_E" />
+			<date key="time:timestamp" value="2024-01-13T13:37:00+00:00" />
+			<int key="@@index" value="88" />
+			<int key="@@case_index" value="12" />
+		</event>
+	</trace>
+	<trace>
+		<string key="concept:name" value="case_00014" />
+		<event>
+			<string key="concept:name" value="Activity_A" />
+			<date key="time:timestamp" value="2024-01-14T13:00:00+00:00" />
+			<int key="@@index" value="89" />
+			<int key="@@case_index" value="13" />
+		</event>
+		<event>
+			<string key="concept:name" value="Activity_D" />
+			<date key="time:timestamp" value="2024-01-14T13:10:00+00:00" />
+			<int key="@@index" value="90" />
+			<int key="@@case_index" value="13" />
+		</event>
+		<event>
+			<string key="concept:name" value="Activity_C" />
+			<date key="time:timestamp" value="2024-01-14T13:18:00+00:00" />
+			<int key="@@index" value="91" />
+			<int key="@@case_index" value="13" />
+		</event>
+		<event>
+			<string key="concept:name" value="Activity_C" />
+			<date key="time:timestamp" value="2024-01-14T13:43:00+00:00" />
+			<int key="@@index" value="92" />
+			<int key="@@case_index" value="13" />
+		</event>
+		<event>
+			<string key="concept:name" value="Activity_C" />
+			<date key="time:timestamp" value="2024-01-14T14:50:00+00:00" />
+			<int key="@@index" value="93" />
+			<int key="@@case_index" value="13" />
+		</event>
+		<event>
+			<string key="concept:name" value="Activity_B" />
+			<date key="time:timestamp" value="2024-01-14T16:01:00+00:00" />
+			<int key="@@index" value="94" />
+			<int key="@@case_index" value="13" />
+		</event>
+		<event>
+			<string key="concept:name" value="Activity_B" />
+			<date key="time:timestamp" value="2024-01-14T18:00:00+00:00" />
+			<int key="@@index" value="95" />
+			<int key="@@case_index" value="13" />
+		</event>
+		<event>
+			<string key="concept:name" value="Activity_B" />
+			<date key="time:timestamp" value="2024-01-14T19:07:00+00:00" />
+			<int key="@@index" value="96" />
+			<int key="@@case_index" value="13" />
+		</event>
+		<event>
+			<string key="concept:name" value="Activity_D" />
+			<date key="time:timestamp" value="2024-01-14T20:30:00+00:00" />
+			<int key="@@index" value="97" />
+			<int key="@@case_index" value="13" />
+		</event>
+		<event>
+			<string key="concept:name" value="Activity_B" />
+			<date key="time:timestamp" value="2024-01-14T22:30:00+00:00" />
+			<int key="@@index" value="98" />
+			<int key="@@case_index" value="13" />
+		</event>
+		<event>
+			<string key="concept:name" value="Activity_D" />
+			<date key="time:timestamp" value="2024-01-14T23:05:00+00:00" />
+			<int key="@@index" value="99" />
+			<int key="@@case_index" value="13" />
+		</event>
+		<event>
+			<string key="concept:name" value="Activity_C" />
+			<date key="time:timestamp" value="2024-01-14T23:59:00+00:00" />
+			<int key="@@index" value="100" />
+			<int key="@@case_index" value="13" />
+		</event>
+		<event>
+			<string key="concept:name" value="Activity_E" />
+			<date key="time:timestamp" value="2024-01-15T00:50:00+00:00" />
+			<int key="@@index" value="101" />
+			<int key="@@case_index" value="13" />
+		</event>
+	</trace>
+	<trace>
+		<string key="concept:name" value="case_00015" />
+		<event>
+			<string key="concept:name" value="Activity_A" />
+			<date key="time:timestamp" value="2024-01-15T15:00:00+00:00" />
+			<int key="@@index" value="102" />
+			<int key="@@case_index" value="14" />
+		</event>
+		<event>
+			<string key="concept:name" value="Activity_B" />
+			<date key="time:timestamp" value="2024-01-15T16:21:00+00:00" />
+			<int key="@@index" value="103" />
+			<int key="@@case_index" value="14" />
+		</event>
+		<event>
+			<string key="concept:name" value="Activity_B" />
+			<date key="time:timestamp" value="2024-01-15T16:45:00+00:00" />
+			<int key="@@index" value="104" />
+			<int key="@@case_index" value="14" />
+		</event>
+		<event>
+			<string key="concept:name" value="Activity_B" />
+			<date key="time:timestamp" value="2024-01-15T18:17:00+00:00" />
+			<int key="@@index" value="105" />
+			<int key="@@case_index" value="14" />
+		</event>
+		<event>
+			<string key="concept:name" value="Activity_D" />
+			<date key="time:timestamp" value="2024-01-15T19:19:00+00:00" />
+			<int key="@@index" value="106" />
+			<int key="@@case_index" value="14" />
+		</event>
+		<event>
+			<string key="concept:name" value="Activity_C" />
+			<date key="time:timestamp" value="2024-01-15T20:42:00+00:00" />
+			<int key="@@index" value="107" />
+			<int key="@@case_index" value="14" />
+		</event>
+		<event>
+			<string key="concept:name" value="Activity_B" />
+			<date key="time:timestamp" value="2024-01-15T22:22:00+00:00" />
+			<int key="@@index" value="108" />
+			<int key="@@case_index" value="14" />
+		</event>
+		<event>
+			<string key="concept:name" value="Activity_B" />
+			<date key="time:timestamp" value="2024-01-15T22:51:00+00:00" />
+			<int key="@@index" value="109" />
+			<int key="@@case_index" value="14" />
+		</event>
+		<event>
+			<string key="concept:name" value="Activity_B" />
+			<date key="time:timestamp" value="2024-01-16T00:13:00+00:00" />
+			<int key="@@index" value="110" />
+			<int key="@@case_index" value="14" />
+		</event>
+		<event>
+			<string key="concept:name" value="Activity_B" />
+			<date key="time:timestamp" value="2024-01-16T01:04:00+00:00" />
+			<int key="@@index" value="111" />
+			<int key="@@case_index" value="14" />
+		</event>
+		<event>
+			<string key="concept:name" value="Activity_C" />
+			<date key="time:timestamp" value="2024-01-16T01:49:00+00:00" />
+			<int key="@@index" value="112" />
+			<int key="@@case_index" value="14" />
+		</event>
+		<event>
+			<string key="concept:name" value="Activity_C" />
+			<date key="time:timestamp" value="2024-01-16T03:48:00+00:00" />
+			<int key="@@index" value="113" />
+			<int key="@@case_index" value="14" />
+		</event>
+		<event>
+			<string key="concept:name" value="Activity_D" />
+			<date key="time:timestamp" value="2024-01-16T04:23:00+00:00" />
+			<int key="@@index" value="114" />
+			<int key="@@case_index" value="14" />
+		</event>
+		<event>
+			<string key="concept:name" value="Activity_E" />
+			<date key="time:timestamp" value="2024-01-16T05:03:00+00:00" />
+			<int key="@@index" value="115" />
+			<int key="@@case_index" value="14" />
+		</event>
+	</trace>
+	<trace>
+		<string key="concept:name" value="case_00016" />
+		<event>
+			<string key="concept:name" value="Activity_A" />
+			<date key="time:timestamp" value="2024-01-16T16:00:00+00:00" />
+			<int key="@@index" value="116" />
+			<int key="@@case_index" value="15" />
+		</event>
+		<event>
+			<string key="concept:name" value="Activity_D" />
+			<date key="time:timestamp" value="2024-01-16T18:00:00+00:00" />
+			<int key="@@index" value="117" />
+			<int key="@@case_index" value="15" />
+		</event>
+		<event>
+			<string key="concept:name" value="Activity_B" />
+			<date key="time:timestamp" value="2024-01-16T19:08:00+00:00" />
+			<int key="@@index" value="118" />
+			<int key="@@case_index" value="15" />
+		</event>
+		<event>
+			<string key="concept:name" value="Activity_B" />
+			<date key="time:timestamp" value="2024-01-16T19:50:00+00:00" />
+			<int key="@@index" value="119" />
+			<int key="@@case_index" value="15" />
+		</event>
+		<event>
+			<string key="concept:name" value="Activity_B" />
+			<date key="time:timestamp" value="2024-01-16T21:23:00+00:00" />
+			<int key="@@index" value="120" />
+			<int key="@@case_index" value="15" />
+		</event>
+		<event>
+			<string key="concept:name" value="Activity_B" />
+			<date key="time:timestamp" value="2024-01-16T22:13:00+00:00" />
+			<int key="@@index" value="121" />
+			<int key="@@case_index" value="15" />
+		</event>
+		<event>
+			<string key="concept:name" value="Activity_C" />
+			<date key="time:timestamp" value="2024-01-16T22:58:00+00:00" />
+			<int key="@@index" value="122" />
+			<int key="@@case_index" value="15" />
+		</event>
+		<event>
+			<string key="concept:name" value="Activity_D" />
+			<date key="time:timestamp" value="2024-01-17T00:18:00+00:00" />
+			<int key="@@index" value="123" />
+			<int key="@@case_index" value="15" />
+		</event>
+		<event>
+			<string key="concept:name" value="Activity_B" />
+			<date key="time:timestamp" value="2024-01-17T01:53:00+00:00" />
+			<int key="@@index" value="124" />
+			<int key="@@case_index" value="15" />
+		</event>
+		<event>
+			<string key="concept:name" value="Activity_D" />
+			<date key="time:timestamp" value="2024-01-17T02:02:00+00:00" />
+			<int key="@@index" value="125" />
+			<int key="@@case_index" value="15" />
+		</event>
+		<event>
+			<string key="concept:name" value="Activity_D" />
+			<date key="time:timestamp" value="2024-01-17T02:51:00+00:00" />
+			<int key="@@index" value="126" />
+			<int key="@@case_index" value="15" />
+		</event>
+		<event>
+			<string key="concept:name" value="Activity_C" />
+			<date key="time:timestamp" value="2024-01-17T03:28:00+00:00" />
+			<int key="@@index" value="127" />
+			<int key="@@case_index" value="15" />
+		</event>
+		<event>
+			<string key="concept:name" value="Activity_C" />
+			<date key="time:timestamp" value="2024-01-17T05:25:00+00:00" />
+			<int key="@@index" value="128" />
+			<int key="@@case_index" value="15" />
+		</event>
+		<event>
+			<string key="concept:name" value="Activity_E" />
+			<date key="time:timestamp" value="2024-01-17T05:44:00+00:00" />
+			<int key="@@index" value="129" />
+			<int key="@@case_index" value="15" />
+		</event>
+	</trace>
+	<trace>
+		<string key="concept:name" value="case_00017" />
+		<event>
+			<string key="concept:name" value="Activity_A" />
+			<date key="time:timestamp" value="2024-01-17T13:00:00+00:00" />
+			<int key="@@index" value="130" />
+			<int key="@@case_index" value="16" />
+		</event>
+		<event>
+			<string key="concept:name" value="Activity_D" />
+			<date key="time:timestamp" value="2024-01-17T14:37:00+00:00" />
+			<int key="@@index" value="131" />
+			<int key="@@case_index" value="16" />
+		</event>
+		<event>
+			<string key="concept:name" value="Activity_D" />
+			<date key="time:timestamp" value="2024-01-17T16:35:00+00:00" />
+			<int key="@@index" value="132" />
+			<int key="@@case_index" value="16" />
+		</event>
+		<event>
+			<string key="concept:name" value="Activity_C" />
+			<date key="time:timestamp" value="2024-01-17T17:18:00+00:00" />
+			<int key="@@index" value="133" />
+			<int key="@@case_index" value="16" />
+		</event>
+		<event>
+			<string key="concept:name" value="Activity_B" />
+			<date key="time:timestamp" value="2024-01-17T18:38:00+00:00" />
+			<int key="@@index" value="134" />
+			<int key="@@case_index" value="16" />
+		</event>
+		<event>
+			<string key="concept:name" value="Activity_D" />
+			<date key="time:timestamp" value="2024-01-17T20:08:00+00:00" />
+			<int key="@@index" value="135" />
+			<int key="@@case_index" value="16" />
+		</event>
+		<event>
+			<string key="concept:name" value="Activity_B" />
+			<date key="time:timestamp" value="2024-01-17T21:31:00+00:00" />
+			<int key="@@index" value="136" />
+			<int key="@@case_index" value="16" />
+		</event>
+		<event>
+			<string key="concept:name" value="Activity_B" />
+			<date key="time:timestamp" value="2024-01-17T23:30:00+00:00" />
+			<int key="@@index" value="137" />
+			<int key="@@case_index" value="16" />
+		</event>
+		<event>
+			<string key="concept:name" value="Activity_C" />
+			<date key="time:timestamp" value="2024-01-18T00:56:00+00:00" />
+			<int key="@@index" value="138" />
+			<int key="@@case_index" value="16" />
+		</event>
+		<event>
+			<string key="concept:name" value="Activity_C" />
+			<date key="time:timestamp" value="2024-01-18T02:04:00+00:00" />
+			<int key="@@index" value="139" />
+			<int key="@@case_index" value="16" />
+		</event>
+		<event>
+			<string key="concept:name" value="Activity_B" />
+			<date key="time:timestamp" value="2024-01-18T02:29:00+00:00" />
+			<int key="@@index" value="140" />
+			<int key="@@case_index" value="16" />
+		</event>
+		<event>
+			<string key="concept:name" value="Activity_E" />
+			<date key="time:timestamp" value="2024-01-18T04:03:00+00:00" />
+			<int key="@@index" value="141" />
+			<int key="@@case_index" value="16" />
+		</event>
+	</trace>
+	<trace>
+		<string key="concept:name" value="case_00018" />
+		<event>
+			<string key="concept:name" value="Activity_A" />
+			<date key="time:timestamp" value="2024-01-18T11:00:00+00:00" />
+			<int key="@@index" value="142" />
+			<int key="@@case_index" value="17" />
+		</event>
+		<event>
+			<string key="concept:name" value="Activity_D" />
+			<date key="time:timestamp" value="2024-01-18T12:19:00+00:00" />
+			<int key="@@index" value="143" />
+			<int key="@@case_index" value="17" />
+		</event>
+		<event>
+			<string key="concept:name" value="Activity_C" />
+			<date key="time:timestamp" value="2024-01-18T13:56:00+00:00" />
+			<int key="@@index" value="144" />
+			<int key="@@case_index" value="17" />
+		</event>
+		<event>
+			<string key="concept:name" value="Activity_E" />
+			<date key="time:timestamp" value="2024-01-18T14:20:00+00:00" />
+			<int key="@@index" value="145" />
+			<int key="@@case_index" value="17" />
+		</event>
+	</trace>
+	<trace>
+		<string key="concept:name" value="case_00019" />
+		<event>
+			<string key="concept:name" value="Activity_A" />
+			<date key="time:timestamp" value="2024-01-19T11:00:00+00:00" />
+			<int key="@@index" value="146" />
+			<int key="@@case_index" value="18" />
+		</event>
+		<event>
+			<string key="concept:name" value="Activity_C" />
+			<date key="time:timestamp" value="2024-01-19T12:23:00+00:00" />
+			<int key="@@index" value="147" />
+			<int key="@@case_index" value="18" />
+		</event>
+		<event>
+			<string key="concept:name" value="Activity_C" />
+			<date key="time:timestamp" value="2024-01-19T13:51:00+00:00" />
+			<int key="@@index" value="148" />
+			<int key="@@case_index" value="18" />
+		</event>
+		<event>
+			<string key="concept:name" value="Activity_B" />
+			<date key="time:timestamp" value="2024-01-19T15:51:00+00:00" />
+			<int key="@@index" value="149" />
+			<int key="@@case_index" value="18" />
+		</event>
+		<event>
+			<string key="concept:name" value="Activity_B" />
+			<date key="time:timestamp" value="2024-01-19T16:34:00+00:00" />
+			<int key="@@index" value="150" />
+			<int key="@@case_index" value="18" />
+		</event>
+		<event>
+			<string key="concept:name" value="Activity_B" />
+			<date key="time:timestamp" value="2024-01-19T18:03:00+00:00" />
+			<int key="@@index" value="151" />
+			<int key="@@case_index" value="18" />
+		</event>
+		<event>
+			<string key="concept:name" value="Activity_C" />
+			<date key="time:timestamp" value="2024-01-19T18:57:00+00:00" />
+			<int key="@@index" value="152" />
+			<int key="@@case_index" value="18" />
+		</event>
+		<event>
+			<string key="concept:name" value="Activity_D" />
+			<date key="time:timestamp" value="2024-01-19T19:44:00+00:00" />
+			<int key="@@index" value="153" />
+			<int key="@@case_index" value="18" />
+		</event>
+		<event>
+			<string key="concept:name" value="Activity_C" />
+			<date key="time:timestamp" value="2024-01-19T21:17:00+00:00" />
+			<int key="@@index" value="154" />
+			<int key="@@case_index" value="18" />
+		</event>
+		<event>
+			<string key="concept:name" value="Activity_B" />
+			<date key="time:timestamp" value="2024-01-19T23:13:00+00:00" />
+			<int key="@@index" value="155" />
+			<int key="@@case_index" value="18" />
+		</event>
+		<event>
+			<string key="concept:name" value="Activity_B" />
+			<date key="time:timestamp" value="2024-01-19T23:27:00+00:00" />
+			<int key="@@index" value="156" />
+			<int key="@@case_index" value="18" />
+		</event>
+		<event>
+			<string key="concept:name" value="Activity_D" />
+			<date key="time:timestamp" value="2024-01-20T01:15:00+00:00" />
+			<int key="@@index" value="157" />
+			<int key="@@case_index" value="18" />
+		</event>
+		<event>
+			<string key="concept:name" value="Activity_E" />
+			<date key="time:timestamp" value="2024-01-20T02:46:00+00:00" />
+			<int key="@@index" value="158" />
+			<int key="@@case_index" value="18" />
+		</event>
+	</trace>
+	<trace>
+		<string key="concept:name" value="case_00020" />
+		<event>
+			<string key="concept:name" value="Activity_A" />
+			<date key="time:timestamp" value="2024-01-20T15:00:00+00:00" />
+			<int key="@@index" value="159" />
+			<int key="@@case_index" value="19" />
+		</event>
+		<event>
+			<string key="concept:name" value="Activity_B" />
+			<date key="time:timestamp" value="2024-01-20T16:30:00+00:00" />
+			<int key="@@index" value="160" />
+			<int key="@@case_index" value="19" />
+		</event>
+		<event>
+			<string key="concept:name" value="Activity_C" />
+			<date key="time:timestamp" value="2024-01-20T16:35:00+00:00" />
+			<int key="@@index" value="161" />
+			<int key="@@case_index" value="19" />
+		</event>
+		<event>
+			<string key="concept:name" value="Activity_B" />
+			<date key="time:timestamp" value="2024-01-20T18:03:00+00:00" />
+			<int key="@@index" value="162" />
+			<int key="@@case_index" value="19" />
+		</event>
+		<event>
+			<string key="concept:name" value="Activity_D" />
+			<date key="time:timestamp" value="2024-01-20T18:19:00+00:00" />
+			<int key="@@index" value="163" />
+			<int key="@@case_index" value="19" />
+		</event>
+		<event>
+			<string key="concept:name" value="Activity_D" />
+			<date key="time:timestamp" value="2024-01-20T18:53:00+00:00" />
+			<int key="@@index" value="164" />
+			<int key="@@case_index" value="19" />
+		</event>
+		<event>
+			<string key="concept:name" value="Activity_B" />
+			<date key="time:timestamp" value="2024-01-20T20:19:00+00:00" />
+			<int key="@@index" value="165" />
+			<int key="@@case_index" value="19" />
+		</event>
+		<event>
+			<string key="concept:name" value="Activity_D" />
+			<date key="time:timestamp" value="2024-01-20T21:38:00+00:00" />
+			<int key="@@index" value="166" />
+			<int key="@@case_index" value="19" />
+		</event>
+		<event>
+			<string key="concept:name" value="Activity_C" />
+			<date key="time:timestamp" value="2024-01-20T22:02:00+00:00" />
+			<int key="@@index" value="167" />
+			<int key="@@case_index" value="19" />
+		</event>
+		<event>
+			<string key="concept:name" value="Activity_D" />
+			<date key="time:timestamp" value="2024-01-20T22:41:00+00:00" />
+			<int key="@@index" value="168" />
+			<int key="@@case_index" value="19" />
+		</event>
+		<event>
+			<string key="concept:name" value="Activity_E" />
+			<date key="time:timestamp" value="2024-01-20T23:29:00+00:00" />
+			<int key="@@index" value="169" />
+			<int key="@@case_index" value="19" />
+		</event>
+	</trace>
+</log>
