@@ -61,6 +61,7 @@ from specify_cli.core.jtbd_metrics import (
 from specify_cli.core.telemetry import metric_counter, metric_histogram, span
 
 __all__ = [
+    "DashboardMetrics",
     "JTBDReport",
     "JobFeatureMapping",
     "JobValidationResult",
@@ -75,6 +76,7 @@ __all__ = [
     "calculate_satisfaction_scores",
     "create_job_completion",
     "create_outcome_achievement",
+    "generate_dashboard_metrics",
     "generate_jtbd_report",
     "identify_painpoint_patterns",
     "validate_job_completion",
@@ -208,6 +210,35 @@ class PainpointAnalysis:
     most_common_category: PainpointCategory | None
     avg_resolution_effectiveness: float
     top_performing_features: list[tuple[str, float]] = field(default_factory=list)
+
+
+@dataclass
+class DashboardMetrics:
+    """Real-time dashboard metrics aggregation."""
+
+    # Job metrics
+    total_jobs: int
+    completed_jobs: int
+    failed_jobs: int
+    completion_rate: float
+
+    # Outcome metrics (optional)
+    outcomes_summary: dict[str, Any] | None = None
+
+    # Satisfaction metrics (optional)
+    satisfaction_summary: dict[str, Any] | None = None
+
+    # Feature performance
+    top_features: list[tuple[str, float]] = field(default_factory=list)
+
+    # Painpoint summary
+    painpoint_summary: list[dict[str, Any]] = field(default_factory=list)
+
+    # Metadata
+    start_date: datetime = field(default_factory=lambda: datetime.now(UTC))
+    end_date: datetime = field(default_factory=lambda: datetime.now(UTC))
+    persona: str | None = None
+    generated_at: datetime = field(default_factory=lambda: datetime.now(UTC))
 
 
 # =============================================================================
@@ -1137,3 +1168,149 @@ def identify_painpoint_patterns(
         metric_histogram("ops.jtbd.pattern_duration")(duration)
 
         return analysis
+
+
+# =============================================================================
+# Dashboard Metrics Operations
+# =============================================================================
+
+
+def generate_dashboard_metrics(
+    start_date: datetime,
+    end_date: datetime,
+    persona: str | None = None,
+    jobs: list[dict[str, Any]] | None = None,
+    outcomes: list[OutcomeAchieved] | None = None,
+    satisfaction_data: list[UserSatisfaction] | None = None,
+    painpoints: list[PainpointResolved] | None = None,
+) -> DashboardMetrics:
+    """Generate real-time dashboard metrics.
+
+    Pure aggregation of JTBD metrics for dashboard display
+    without performing any I/O operations.
+
+    Parameters
+    ----------
+    start_date : datetime
+        Dashboard start date.
+    end_date : datetime
+        Dashboard end date.
+    persona : str, optional
+        Filter to specific persona.
+    jobs : list[dict[str, Any]], optional
+        Job completion data.
+    outcomes : list[OutcomeAchieved], optional
+        Outcome achievement data.
+    satisfaction_data : list[UserSatisfaction], optional
+        User satisfaction data.
+    painpoints : list[PainpointResolved], optional
+        Painpoint resolution data.
+
+    Returns
+    -------
+    DashboardMetrics
+        Aggregated dashboard metrics.
+
+    Examples
+    --------
+    >>> from datetime import datetime, UTC
+    >>> dashboard = generate_dashboard_metrics(
+    ...     start_date=datetime(2025, 1, 1, tzinfo=UTC),
+    ...     end_date=datetime(2025, 1, 31, tzinfo=UTC),
+    ...     persona="python-developer"
+    ... )
+    >>> assert dashboard.persona == "python-developer"
+    """
+    start_time = time.time()
+
+    with span("ops.jtbd.generate_dashboard", persona=persona or "all"):
+        jobs_list = jobs or []
+        outcomes_list = outcomes or []
+        satisfaction_list = satisfaction_data or []
+        painpoints_list = painpoints or []
+
+        # Filter by persona if specified
+        if persona:
+            jobs_list = [j for j in jobs_list if j.get("persona") == persona]
+            outcomes_list = [o for o in outcomes_list if o.persona == persona]
+            satisfaction_list = [s for s in satisfaction_list if s.persona == persona]
+            painpoints_list = [p for p in painpoints_list if p.persona == persona]
+
+        # Calculate job statistics
+        total_jobs = len(jobs_list)
+        completed = sum(1 for j in jobs_list if j.get("status") == "completed")
+        failed = sum(1 for j in jobs_list if j.get("status") == "failed")
+        completion_rate = (completed / total_jobs * 100) if total_jobs > 0 else 0.0
+
+        # Calculate outcome summary
+        outcomes_summary_dict: dict[str, Any] | None = None
+        if outcomes_list:
+            outcome_metrics = calculate_outcome_metrics(outcomes_list)
+            outcomes_summary_dict = {
+                "total": outcome_metrics.total_outcomes,
+                "achieved": outcome_metrics.achieved_count,
+                "avg_achievement": outcome_metrics.avg_achievement_rate,
+            }
+
+        # Calculate satisfaction summary
+        satisfaction_summary_dict: dict[str, Any] | None = None
+        if satisfaction_list:
+            satisfaction_scores = calculate_satisfaction_scores(satisfaction_list)
+            satisfaction_summary_dict = {
+                "responses": satisfaction_scores.total_responses,
+                "nps_score": satisfaction_scores.nps_score,
+                "met_expectations": satisfaction_scores.met_expectations_rate,
+            }
+
+        # Identify top features
+        top_features_list: list[tuple[str, float]] = []
+        if outcomes_list:
+            outcome_metrics = calculate_outcome_metrics(outcomes_list)
+            if outcome_metrics.achievement_rates_by_feature:
+                sorted_features = sorted(
+                    outcome_metrics.achievement_rates_by_feature.items(),
+                    key=lambda x: x[1],
+                    reverse=True,
+                )
+                top_features_list = sorted_features[:10]  # Top 10
+
+        # Painpoint summary
+        painpoint_summary_list: list[dict[str, Any]] = []
+        if painpoints_list:
+            analysis = identify_painpoint_patterns(painpoints_list)
+            painpoint_summary_list = [
+                {
+                    "category": p.category.value,
+                    "count": p.occurrence_count,
+                    "effectiveness": p.avg_effectiveness,
+                }
+                for p in analysis.patterns
+            ]
+
+        duration = time.time() - start_time
+
+        dashboard = DashboardMetrics(
+            total_jobs=total_jobs,
+            completed_jobs=completed,
+            failed_jobs=failed,
+            completion_rate=completion_rate,
+            outcomes_summary=outcomes_summary_dict,
+            satisfaction_summary=satisfaction_summary_dict,
+            top_features=top_features_list,
+            painpoint_summary=painpoint_summary_list,
+            start_date=start_date,
+            end_date=end_date,
+            persona=persona,
+        )
+
+        add_span_attributes(
+            dashboard_jobs=total_jobs,
+            dashboard_completed=completed,
+            dashboard_completion_rate=completion_rate,
+            dashboard_duration=duration,
+        )
+
+        metric_counter("ops.jtbd.dashboards_generated")(1)
+        metric_histogram("ops.jtbd.dashboard_duration")(duration)
+
+        return dashboard

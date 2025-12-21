@@ -36,11 +36,13 @@ from specify_cli.runtime.jtbd import (
     load_painpoint_resolutions,
     load_satisfaction_records,
     load_time_to_outcome_records,
+    query_jtbd_sparql,
     save_job_completion,
     save_outcome_achievement,
     save_painpoint_resolution,
     save_satisfaction_record,
     save_time_to_outcome,
+    sync_jtbd_to_rdf,
 )
 
 # =============================================================================
@@ -635,3 +637,156 @@ class TestJTBDStorageIntegration:
             assert (data_dir / "painpoints.jsonl").exists()
             assert (data_dir / "satisfaction.jsonl").exists()
             assert (data_dir / "time_to_outcome.jsonl").exists()
+
+
+# =============================================================================
+# SPARQL Query Tests
+# =============================================================================
+
+
+@pytest.mark.integration
+class TestSPARQLQueryExecution:
+    """Tests for SPARQL query execution against JTBD RDF data."""
+
+    def test_query_jtbd_sparql_basic(self, tmp_path: Path) -> None:
+        """Test basic SPARQL query execution."""
+        # Create sample RDF data
+        rdf_path = tmp_path / "test-metrics.ttl"
+        metrics = {
+            "job_completion_rate": 0.85,
+            "avg_outcome_achievement": 92.3,
+            "total_painpoints_resolved": 15,
+        }
+
+        # Sync to RDF
+        result = sync_jtbd_to_rdf(metrics, rdf_path)
+        assert result["success"] is True
+
+        # Query the RDF
+        query = """
+        PREFIX jtbd: <http://spec-kit.io/ontology/jtbd#>
+
+        SELECT ?metric ?value WHERE {
+            ?s jtbd:jobcompletionrate ?value .
+            BIND("job_completion_rate" AS ?metric)
+        }
+        """
+
+        result = query_jtbd_sparql(query, rdf_path)
+
+        assert result["success"] is True
+        assert result["count"] >= 1
+        assert isinstance(result["results"], list)
+
+    def test_query_jtbd_sparql_multiple_results(self, tmp_path: Path) -> None:
+        """Test SPARQL query returning multiple results."""
+        rdf_path = tmp_path / "test-metrics.ttl"
+        metrics = {
+            "metric1": 10,
+            "metric2": 20,
+            "metric3": 30,
+        }
+
+        # Sync to RDF
+        sync_jtbd_to_rdf(metrics, rdf_path)
+
+        # Query all metrics
+        query = """
+        PREFIX jtbd: <http://spec-kit.io/ontology/jtbd#>
+
+        SELECT ?property ?value WHERE {
+            ?s ?property ?value .
+            FILTER(STRSTARTS(STR(?property), "http://spec-kit.io/ontology/jtbd#"))
+        }
+        """
+
+        result = query_jtbd_sparql(query, rdf_path)
+
+        assert result["success"] is True
+        assert result["count"] > 0
+
+    def test_query_jtbd_sparql_file_not_found(self, tmp_path: Path) -> None:
+        """Test SPARQL query with non-existent file."""
+        rdf_path = tmp_path / "non-existent.ttl"
+
+        query = "SELECT * WHERE { ?s ?p ?o }"
+
+        result = query_jtbd_sparql(query, rdf_path)
+
+        assert result["success"] is False
+        assert "not found" in result["error"]
+        assert result["count"] == 0
+
+    def test_query_jtbd_sparql_invalid_query(self, tmp_path: Path) -> None:
+        """Test SPARQL query with invalid syntax."""
+        rdf_path = tmp_path / "test-metrics.ttl"
+        metrics = {"test_metric": 42}
+
+        # Sync to RDF
+        sync_jtbd_to_rdf(metrics, rdf_path)
+
+        # Invalid query (missing WHERE clause)
+        query = "SELECT ?s ?p ?o"
+
+        result = query_jtbd_sparql(query, rdf_path)
+
+        assert result["success"] is False
+        assert "error" in result
+        assert result["count"] == 0
+
+    def test_query_jtbd_sparql_empty_results(self, tmp_path: Path) -> None:
+        """Test SPARQL query that returns no results."""
+        rdf_path = tmp_path / "test-metrics.ttl"
+        metrics = {"test_metric": 42}
+
+        # Sync to RDF
+        sync_jtbd_to_rdf(metrics, rdf_path)
+
+        # Query for non-existent data
+        query = """
+        PREFIX jtbd: <http://spec-kit.io/ontology/jtbd#>
+
+        SELECT ?value WHERE {
+            ?s jtbd:nonExistentProperty ?value .
+        }
+        """
+
+        result = query_jtbd_sparql(query, rdf_path)
+
+        assert result["success"] is True
+        assert result["count"] == 0
+        assert result["results"] == []
+
+    def test_query_jtbd_sparql_value_types(self, tmp_path: Path) -> None:
+        """Test SPARQL query with different RDF value types."""
+        rdf_path = tmp_path / "test-metrics.ttl"
+        metrics = {
+            "integer_metric": 42,
+            "float_metric": 3.14,
+            "boolean_metric": True,
+            "string_metric": "test",
+        }
+
+        # Sync to RDF
+        sync_jtbd_to_rdf(metrics, rdf_path)
+
+        # Query all properties
+        query = """
+        PREFIX jtbd: <http://spec-kit.io/ontology/jtbd#>
+
+        SELECT ?property ?value WHERE {
+            ?s ?property ?value .
+            FILTER(STRSTARTS(STR(?property), "http://spec-kit.io/ontology/jtbd#"))
+            FILTER(?property != <http://www.w3.org/1999/02/22-rdf-syntax-ns#type>)
+        }
+        """
+
+        result = query_jtbd_sparql(query, rdf_path)
+
+        assert result["success"] is True
+        assert result["count"] > 0
+
+        # Verify result structure
+        for row in result["results"]:
+            assert "property" in row
+            assert "value" in row

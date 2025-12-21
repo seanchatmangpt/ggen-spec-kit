@@ -19,10 +19,9 @@ from __future__ import annotations
 
 import json
 import os
-import sys
-import tempfile
+from collections.abc import Generator
 from pathlib import Path
-from typing import TYPE_CHECKING, Any, Generator
+from typing import TYPE_CHECKING, Any
 from unittest.mock import MagicMock, patch
 
 import pytest
@@ -65,7 +64,7 @@ def pytest_collection_modifyitems(config: pytest.Config, items: list[pytest.Item
 
 
 @pytest.fixture
-def tmp_project_dir(tmp_path: Path) -> Generator[Path, None, None]:
+def tmp_project_dir(tmp_path: Path) -> Path:
     """Create a temporary directory for project tests.
 
     Yields
@@ -75,11 +74,11 @@ def tmp_project_dir(tmp_path: Path) -> Generator[Path, None, None]:
     """
     project_dir = tmp_path / "test-project"
     project_dir.mkdir(parents=True)
-    yield project_dir
+    return project_dir
 
 
 @pytest.fixture
-def tmp_template_dir(tmp_path: Path) -> Generator[Path, None, None]:
+def tmp_template_dir(tmp_path: Path) -> Path:
     """Create a temporary directory with mock template structure.
 
     Yields
@@ -103,7 +102,7 @@ def tmp_template_dir(tmp_path: Path) -> Generator[Path, None, None]:
         "# Template Rules"
     )
 
-    yield template_dir
+    return template_dir
 
 
 @pytest.fixture
@@ -357,7 +356,7 @@ def cli_app():
 
 
 @pytest.fixture
-def mock_config_file(tmp_path: Path) -> Generator[Path, None, None]:
+def mock_config_file(tmp_path: Path) -> Path:
     """Create a mock configuration file.
 
     Yields
@@ -383,7 +382,7 @@ enabled = true
 ttl_seconds = 3600
 """
     config_file.write_text(config_content)
-    yield config_file
+    return config_file
 
 
 @pytest.fixture

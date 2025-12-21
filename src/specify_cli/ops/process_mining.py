@@ -106,7 +106,8 @@ def save_log(log: Any, output_path: Path) -> None:
     suffix = output_path.suffix.lower()
 
     if suffix == ".csv":
-        pm4py.write_csv(log, str(output_path))
+        # pm4py.write_csv doesn't exist in newer versions, use write
+        pm4py.write(log, str(output_path), case_id_key="case:concept:name")
     elif suffix == ".xes":
         pm4py.write_xes(log, str(output_path))
     else:
@@ -309,7 +310,8 @@ def convert_model(
         pm4py.write_pnml(net, im, fm, str(output_file))
     elif output_type == "bpmn" and input_type == "pnml":
         net, im, fm = model
-        bpmn = pm4py.convert_petri_net_to_bpmn(net, im, fm)
+        # pm4py uses convert_to_bpmn, not convert_petri_net_to_bpmn
+        bpmn = pm4py.convert_to_bpmn(net, im, fm)
         pm4py.write_bpmn(bpmn, str(output_file))
     else:
         raise ValueError(f"Unsupported conversion: {input_type} -> {output_type}")
@@ -383,7 +385,8 @@ def filter_log(
     if filter_type == "end" and filter_value:
         return pm4py.filter_end_activities(log, [filter_value])
     if filter_type == "length" and min_length is not None:
-        return pm4py.filter_trace_length(log, min_length, max_length or float("inf"))
+        # pm4py v2.7+ uses filter_case_size instead of filter_trace_length
+        return pm4py.filter_case_size(log, min_length, max_length or float("inf"))
     raise ValueError(f"Invalid filter type or parameters: {filter_type}")
 
 
@@ -412,8 +415,9 @@ def sample_log(
 
     if method == "random":
         if num_traces:
-            return pm4py.sample_log(log, n_traces=num_traces)
+            # pm4py uses sample_cases not sample_log
+            return pm4py.sample_cases(log, num_cases=num_traces)
         if num_events:
-            return pm4py.sample_log(log, n_cases=max(1, num_events // 5))
+            return pm4py.sample_events(log, num_events=num_events)
         raise ValueError("Either num_traces or num_events must be specified")
     raise ValueError(f"Unknown sampling method: {method}")

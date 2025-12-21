@@ -13,6 +13,7 @@ Commands
 * ``specify jtbd outcome`` - Record an outcome achievement
 * ``specify jtbd report`` - Generate JTBD metrics report
 * ``specify jtbd analyze`` - Analyze job-to-feature mapping
+* ``specify jtbd dashboard`` - Display real-time metrics dashboard
 
 Examples
 --------
@@ -31,7 +32,7 @@ See Also
 from __future__ import annotations
 
 import json
-from datetime import UTC, timedelta
+from datetime import UTC, datetime, timedelta
 
 import typer
 from rich.console import Console
@@ -537,6 +538,320 @@ def analyze(
         # Footer
         if persona:
             console.print(f"[dim]Filtered by persona: {persona}[/dim]")
+
+    except typer.Exit:
+        raise
+    except KeyboardInterrupt:
+        console.print()
+        colour("Operation cancelled.", "yellow")
+        raise typer.Exit(130)
+    except Exception as e:
+        console.print()
+        colour(f"[red]Error:[/red] {e}", "red")
+        raise typer.Exit(1)
+
+
+@app.command()
+@instrument_command("jtbd.dashboard", track_args=True)
+def dashboard(
+    persona: str = typer.Option(None, "--persona", "-p", help="Filter by persona"),
+    days: int = typer.Option(30, "--days", "-d", help="Number of days to include"),
+    refresh_seconds: int = typer.Option(
+        0, "--refresh", "-r", help="Auto-refresh interval in seconds (0 to disable)"
+    ),
+    json_output: bool = typer.Option(False, "--json", help="Output as JSON"),
+) -> None:
+    """Display real-time JTBD metrics dashboard.
+
+    Shows a comprehensive overview of JTBD metrics including:
+    - Job completion rate and statistics
+    - Outcome achievement metrics
+    - Top performing features
+    - Satisfaction scores
+    - Painpoint resolution patterns
+
+    The dashboard aggregates data from JSONL files and presents
+    it using Rich tables and panels for easy visualization.
+
+    Examples
+    --------
+        # Show dashboard for all personas
+        $ specify jtbd dashboard
+
+        # Filter by persona
+        $ specify jtbd dashboard --persona python-developer
+
+        # Show last 7 days
+        $ specify jtbd dashboard --days 7
+
+        # Auto-refresh every 5 seconds
+        $ specify jtbd dashboard --refresh 5
+
+        # JSON output for scripting
+        $ specify jtbd dashboard --json
+    """
+    try:
+        from rich.layout import Layout
+        from rich.live import Live
+        from rich.panel import Panel
+
+        # Load data from runtime
+        jobs_data = jtbd_runtime.load_job_completions()
+        outcomes_data = jtbd_runtime.load_outcome_achievements()
+        satisfaction_data = jtbd_runtime.load_satisfaction_records()
+        painpoints_data = jtbd_runtime.load_painpoint_resolutions()
+
+        # Convert outcomes from dict to OutcomeAchieved objects
+        from specify_cli.core.jtbd_metrics import OutcomeAchieved
+
+        outcomes_list = []
+        for o in outcomes_data:
+            outcome = OutcomeAchieved(
+                outcome_id=o.get("outcome_id", ""),
+                metric=o.get("metric", ""),
+                expected_value=o.get("expected_value", 0.0),
+                actual_value=o.get("actual_value", 0.0),
+                feature=o.get("feature", ""),
+                persona=o.get("persona"),
+                context=o.get("context", {}),
+            )
+            outcomes_list.append(outcome)
+
+        # Convert satisfaction from dict to UserSatisfaction objects
+        from specify_cli.core.jtbd_metrics import SatisfactionLevel, UserSatisfaction
+
+        satisfaction_list = []
+        for s in satisfaction_data:
+            satisfaction = UserSatisfaction(
+                outcome_id=s.get("outcome_id", ""),
+                feature=s.get("feature", ""),
+                persona=s.get("persona"),
+                satisfaction_level=SatisfactionLevel(s.get("satisfaction_level", "neutral")),
+                met_expectations=s.get("met_expectations", False),
+                would_recommend=s.get("would_recommend", False),
+                effort_score=s.get("effort_score"),
+                feedback_text=s.get("feedback_text"),
+            )
+            satisfaction_list.append(satisfaction)
+
+        # Convert painpoints from dict to PainpointResolved objects
+        from specify_cli.core.jtbd_metrics import PainpointCategory, PainpointResolved
+
+        painpoints_list = []
+        for p in painpoints_data:
+            painpoint = PainpointResolved(
+                painpoint_id=p.get("painpoint_id", ""),
+                category=PainpointCategory(p.get("category", "manual_effort")),
+                description=p.get("description", ""),
+                feature=p.get("feature", ""),
+                persona=p.get("persona", ""),
+                severity_before=p.get("severity_before", 0),
+                severity_after=p.get("severity_after", 0),
+            )
+            painpoints_list.append(painpoint)
+
+        # Calculate date range
+        end_date = datetime.now(datetime.now().astimezone().tzinfo or UTC)
+        start_date = end_date - timedelta(days=days)
+
+        # Generate dashboard data
+        dashboard_data = jtbd_ops.generate_dashboard_metrics(
+            start_date=start_date,
+            end_date=end_date,
+            persona=persona,
+            jobs=jobs_data,
+            outcomes=outcomes_list,
+            satisfaction_data=satisfaction_list,
+            painpoints=painpoints_list,
+        )
+
+        if json_output:
+            from dataclasses import asdict
+
+            output = asdict(dashboard_data)
+            dump_json(output)
+            return
+
+        # Render the dashboard
+        def make_dashboard() -> Layout:
+            """Generate dashboard layout."""
+            layout = Layout()
+            layout.split_column(
+                Layout(name="header", size=3),
+                Layout(name="body"),
+                Layout(name="footer", size=3),
+            )
+
+            # Header
+            header_text = "[bold cyan]JTBD Metrics Dashboard[/bold cyan]"
+            if persona:
+                header_text += f" - [yellow]{persona}[/yellow]"
+            header_text += f"\n[dim]Last {days} days • Updated: {datetime.now(UTC).strftime('%Y-%m-%d %H:%M:%S UTC')}[/dim]"
+            layout["header"].update(Panel(header_text, style="bold"))
+
+            # Body - split into columns
+            layout["body"].split_row(
+                Layout(name="left"),
+                Layout(name="right"),
+            )
+
+            # Left column - metrics
+            layout["left"].split_column(
+                Layout(name="jobs_panel", size=8),
+                Layout(name="outcomes_panel", size=8),
+                Layout(name="satisfaction_panel", size=8),
+            )
+
+            # Jobs panel
+            jobs_table = Table(show_header=False, box=None)
+            jobs_table.add_column("Metric", style="dim")
+            jobs_table.add_column("Value", style="bold")
+            jobs_table.add_row("Total Jobs", f"[cyan]{dashboard_data.total_jobs}[/cyan]")
+            jobs_table.add_row("Completed", f"[green]{dashboard_data.completed_jobs}[/green]")
+            jobs_table.add_row("Failed", f"[red]{dashboard_data.failed_jobs}[/red]")
+            jobs_table.add_row(
+                "Completion Rate", f"[cyan]{dashboard_data.completion_rate:.1f}%[/cyan]"
+            )
+            layout["jobs_panel"].update(Panel(jobs_table, title="Job Completions", style="cyan"))
+
+            # Outcomes panel
+            if dashboard_data.outcomes_summary:
+                outcomes_table = Table(show_header=False, box=None)
+                outcomes_table.add_column("Metric", style="dim")
+                outcomes_table.add_column("Value", style="bold")
+                outcomes_table.add_row(
+                    "Total Outcomes", f"[cyan]{dashboard_data.outcomes_summary['total']}[/cyan]"
+                )
+                outcomes_table.add_row(
+                    "Achieved", f"[green]{dashboard_data.outcomes_summary['achieved']}[/green]"
+                )
+                outcomes_table.add_row(
+                    "Avg Achievement",
+                    f"[cyan]{dashboard_data.outcomes_summary['avg_achievement']:.1f}%[/cyan]",
+                )
+                layout["outcomes_panel"].update(
+                    Panel(outcomes_table, title="Outcome Achievement", style="green")
+                )
+            else:
+                layout["outcomes_panel"].update(
+                    Panel("[dim]No outcome data available[/dim]", title="Outcome Achievement")
+                )
+
+            # Satisfaction panel
+            if dashboard_data.satisfaction_summary:
+                sat_table = Table(show_header=False, box=None)
+                sat_table.add_column("Metric", style="dim")
+                sat_table.add_column("Value", style="bold")
+                sat_table.add_row(
+                    "Responses",
+                    f"[cyan]{dashboard_data.satisfaction_summary['responses']}[/cyan]",
+                )
+                if dashboard_data.satisfaction_summary["nps_score"] is not None:
+                    sat_table.add_row(
+                        "NPS Score",
+                        f"[cyan]{dashboard_data.satisfaction_summary['nps_score']:.1f}[/cyan]",
+                    )
+                sat_table.add_row(
+                    "Met Expectations",
+                    f"[cyan]{dashboard_data.satisfaction_summary['met_expectations']:.1f}%[/cyan]",
+                )
+                layout["satisfaction_panel"].update(
+                    Panel(sat_table, title="User Satisfaction", style="yellow")
+                )
+            else:
+                layout["satisfaction_panel"].update(
+                    Panel("[dim]No satisfaction data available[/dim]", title="User Satisfaction")
+                )
+
+            # Right column - tables
+            layout["right"].split_column(
+                Layout(name="top_features", size=12),
+                Layout(name="painpoints", size=12),
+            )
+
+            # Top features table
+            if dashboard_data.top_features:
+                features_table = Table(show_header=True, header_style="bold cyan")
+                features_table.add_column("Rank", style="dim", width=4)
+                features_table.add_column("Feature", style="bold")
+                features_table.add_column("Score", justify="right", width=8)
+
+                for idx, (feature, score) in enumerate(dashboard_data.top_features[:5], 1):
+                    features_table.add_row(
+                        str(idx),
+                        feature[:40] + "..." if len(feature) > 40 else feature,
+                        f"{score:.1f}%",
+                    )
+
+                layout["top_features"].update(
+                    Panel(features_table, title="Top Performing Features", style="cyan")
+                )
+            else:
+                layout["top_features"].update(
+                    Panel("[dim]No feature data available[/dim]", title="Top Performing Features")
+                )
+
+            # Painpoints table
+            if dashboard_data.painpoint_summary:
+                painpoint_table = Table(show_header=True, header_style="bold cyan")
+                painpoint_table.add_column("Category", style="bold")
+                painpoint_table.add_column("Count", justify="right", width=8)
+                painpoint_table.add_column("Effectiveness", justify="right", width=12)
+
+                for category_data in dashboard_data.painpoint_summary[:5]:
+                    painpoint_table.add_row(
+                        category_data["category"],
+                        str(category_data["count"]),
+                        f"{category_data['effectiveness']:.1f}%",
+                    )
+
+                layout["painpoints"].update(
+                    Panel(painpoint_table, title="Painpoint Resolution", style="magenta")
+                )
+            else:
+                layout["painpoints"].update(
+                    Panel("[dim]No painpoint data available[/dim]", title="Painpoint Resolution")
+                )
+
+            # Footer
+            footer_text = "[dim]Press Ctrl+C to exit"
+            if refresh_seconds > 0:
+                footer_text += f" • Refreshing every {refresh_seconds}s"
+            footer_text += "[/dim]"
+            layout["footer"].update(Panel(footer_text))
+
+            return layout
+
+        # Display dashboard
+        if refresh_seconds > 0:
+            # Live updating dashboard
+            import time as time_module
+
+            with Live(make_dashboard(), console=console, refresh_per_second=1) as live:
+                try:
+                    while True:
+                        time_module.sleep(refresh_seconds)
+                        # Reload data
+                        jobs_data = jtbd_runtime.load_job_completions()
+                        outcomes_data = jtbd_runtime.load_outcome_achievements()
+                        satisfaction_data = jtbd_runtime.load_satisfaction_records()
+                        painpoints_data = jtbd_runtime.load_painpoint_resolutions()
+                        # Regenerate dashboard
+                        dashboard_data = jtbd_ops.generate_dashboard_metrics(
+                            start_date=start_date,
+                            end_date=end_date,
+                            persona=persona,
+                            jobs=jobs_data,
+                            outcomes=outcomes_list,
+                            satisfaction_data=satisfaction_list,
+                            painpoints=painpoints_list,
+                        )
+                        live.update(make_dashboard())
+                except KeyboardInterrupt:
+                    pass
+        else:
+            # Static dashboard
+            console.print(make_dashboard())
 
     except typer.Exit:
         raise

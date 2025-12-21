@@ -4,9 +4,6 @@ Tests for SPIFF External Project Validation
 Tests for project discovery, analysis, and validation.
 """
 
-import pytest
-from pathlib import Path
-from unittest.mock import patch, MagicMock
 
 from specify_cli.spiff.ops import (
     ExternalProjectInfo,
@@ -14,9 +11,9 @@ from specify_cli.spiff.ops import (
     discover_external_projects,
 )
 from specify_cli.spiff.ops.external_projects import (
-    _is_python_project,
     _detect_project_type,
     _generate_project_specific_tests,
+    _is_python_project,
 )
 
 

@@ -378,25 +378,180 @@ def _run_receipt(
         )
 
 
-def _validate_shacl(_rdf_content: str, schema_files: list[str]) -> dict[str, Any]:
-    """Validate RDF against SHACL shapes."""
-    # Implementation depends on available tools (pyshacl, ggen, etc.)
-    # For now, return valid if shapes load
+def _validate_shacl(rdf_content: str, schema_files: list[str]) -> dict[str, Any]:
+    """Validate RDF against SHACL shapes.
+
+    Parameters
+    ----------
+    rdf_content : str
+        RDF data in Turtle format to validate.
+    schema_files : list[str]
+        List of SHACL shape file paths.
+
+    Returns
+    -------
+    dict[str, Any]
+        Validation result with 'valid' bool and 'violations' list.
+    """
     try:
-        for schema_file in schema_files:
-            path = Path(schema_file)
-            if not path.exists():
-                return {"valid": False, "violations": [f"Schema not found: {schema_file}"]}
-        return {"valid": True, "violations": []}
-    except Exception as e:
-        return {"valid": False, "violations": [str(e)]}
+        # Import rdflib here to avoid import errors if not installed
+        from rdflib import Graph  # noqa: PLC0415
+    except ImportError:
+        # Graceful degradation: if rdflib not available, skip validation
+        return {"valid": True, "violations": [], "warning": "rdflib not available"}
+
+    with span("ggen.shacl_validate"):
+        try:
+            # Load data graph
+            data_graph = Graph()
+            data_graph.parse(data=rdf_content, format="turtle")
+
+            # Load SHACL shapes
+            shapes_graph = Graph()
+            for schema_file in schema_files:
+                path = Path(schema_file)
+                if not path.exists():
+                    return {"valid": False, "violations": [f"Schema not found: {schema_file}"]}
+                shapes_graph.parse(str(path), format="turtle")
+
+            # Try to use pyshacl if available
+            try:
+                import pyshacl  # noqa: PLC0415
+
+                conforms, _results_graph, results_text = pyshacl.validate(
+                    data_graph,
+                    shacl_graph=shapes_graph,
+                    inference="rdfs",
+                    abort_on_first=False,
+                )
+
+                violations = []
+                if not conforms:
+                    # Parse validation report for violations
+                    violations = [results_text]
+
+                add_span_event(
+                    "ggen.shacl_validated",
+                    {"conforms": conforms, "violations_count": len(violations)},
+                )
+                return {"valid": conforms, "violations": violations}  # noqa: TRY300
+
+            except ImportError:
+                # pyshacl not available - basic validation only
+                # Just check that shapes can be parsed
+                add_span_event(
+                    "ggen.shacl_skipped",
+                    {"reason": "pyshacl not installed"},
+                )
+                return {"valid": True, "violations": [], "warning": "pyshacl not available"}
+
+        except Exception as e:
+            add_span_event("ggen.shacl_failed", {"error": str(e)})
+            return {"valid": False, "violations": [f"SHACL validation error: {e}"]}
 
 
-def _execute_sparql(_rdf_content: str, _query: str) -> dict[str, Any]:
-    """Execute SPARQL query against RDF content."""
-    # Use ggen sync or local SPARQL engine
-    # For now, return empty results placeholder
-    return {"results": []}
+def _execute_sparql(rdf_content: str, query: str) -> dict[str, Any]:
+    """Execute SPARQL query against RDF content.
+
+    Uses rdflib's SPARQL engine to execute queries against RDF data.
+
+    Parameters
+    ----------
+    rdf_content : str
+        RDF data in Turtle format.
+    query : str
+        SPARQL SELECT query.
+
+    Returns
+    -------
+    dict[str, Any]
+        Query results in JSON-compatible format:
+        {
+            "results": [
+                {"var1": "value1", "var2": "value2", ...},
+                ...
+            ],
+            "count": int
+        }
+
+    Raises
+    ------
+    Exception
+        If query execution fails or rdflib is not available.
+    """
+    try:
+        # Import rdflib here to avoid import errors if not installed
+        from rdflib import Graph  # noqa: PLC0415
+    except ImportError as e:
+        raise ImportError(
+            "rdflib is required for SPARQL execution. "
+            "Install with: uv sync or pip install rdflib>=7.0.0"
+        ) from e
+
+    with span("ggen.sparql_execute", {"query_length": len(query)}):
+        try:
+            # Create and load graph
+            graph = Graph()
+            graph.parse(data=rdf_content, format="turtle")
+
+            add_span_event("ggen.sparql_graph_loaded", {"triples_count": len(graph)})
+
+            # Execute SPARQL query
+            query_results = graph.query(query)
+
+            # Convert results to list of dicts
+            results = []
+            for row in query_results:
+                result_dict = {}
+                for var_name in query_results.vars:
+                    value = row[var_name]
+                    # Convert RDF terms to Python types
+                    if value is not None:
+                        result_dict[str(var_name)] = _rdf_term_to_python(value)
+                    else:
+                        result_dict[str(var_name)] = None
+                results.append(result_dict)
+
+            add_span_event(
+                "ggen.sparql_executed",
+                {"results_count": len(results), "variables": [str(v) for v in query_results.vars]},
+            )
+            metric_counter("ggen.sparql.queries")(1)
+            metric_histogram("ggen.sparql.result_count")(float(len(results)))
+
+            return {"results": results, "count": len(results)}
+
+        except Exception as e:
+            metric_counter("ggen.sparql.failed")(1)
+            add_span_event("ggen.sparql_failed", {"error": str(e)})
+            raise
+
+
+def _rdf_term_to_python(term: Any) -> Any:
+    """Convert RDF term to Python type.
+
+    Parameters
+    ----------
+    term : Any
+        RDF term (Literal, URIRef, BNode).
+
+    Returns
+    -------
+    Any
+        Python value (str, int, float, bool, etc.).
+    """
+    from rdflib import BNode, Literal, URIRef  # noqa: PLC0415
+
+    if isinstance(term, Literal):
+        # Return the native Python value
+        return term.toPython()
+    if isinstance(term, URIRef):
+        # Return URI as string
+        return str(term)
+    if isinstance(term, BNode):
+        # Return blank node ID
+        return f"_:{term}"
+    return str(term)
 
 
 def _render_tera(_template: str, _data: Any) -> str:

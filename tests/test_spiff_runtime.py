@@ -4,16 +4,16 @@ Tests for SPIFF Runtime Engine
 Tests for BPMN workflow execution, validation, and statistics.
 """
 
-import pytest
-import tempfile
 from pathlib import Path
+
+import pytest
 
 pytest.importorskip("spiff", minversion=None)
 
 from specify_cli.spiff.runtime import (
+    get_workflow_stats,
     run_bpmn,
     validate_bpmn_file,
-    get_workflow_stats,
 )
 
 

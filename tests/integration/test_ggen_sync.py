@@ -14,7 +14,7 @@ import pytest
 
 # Skip entire module if testcontainers not installed
 pytest.importorskip("testcontainers")
-from testcontainers.core.container import DockerContainer  # noqa: E402
+from testcontainers.core.container import DockerContainer
 
 
 @pytest.fixture(scope="module")
@@ -265,10 +265,10 @@ def test_constitutional_equation_verification(ggen_container):
         assert md_hash_str == md_hash2_str, \
             "Transformation is not deterministic"
 
-        print(f"✓ Constitutional equation verified")
+        print("✓ Constitutional equation verified")
         print(f"  TTL hash: {ttl_hash_str[:16]}...")
         print(f"  MD hash:  {md_hash_str[:16]}...")
-        print(f"  spec.md = μ(feature.ttl) ✓")
+        print("  spec.md = μ(feature.ttl) ✓")
     else:
         pytest.skip("ggen sync did not complete successfully")
 

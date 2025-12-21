@@ -670,9 +670,9 @@ def query_jtbd_sparql(
 
 def _execute_sparql_placeholder(query: str, rdf_path: Path) -> list[dict[str, Any]]:
     """
-    Placeholder SPARQL execution.
+    Execute SPARQL query using rdflib.
 
-    In production, integrate with ggen sync or rdflib SPARQL engine.
+    Loads the TTL file into an rdflib Graph and executes the SPARQL query.
 
     Parameters
     ----------
@@ -684,14 +684,76 @@ def _execute_sparql_placeholder(query: str, rdf_path: Path) -> list[dict[str, An
     Returns
     -------
     list[dict[str, Any]]
-        Query results.
-    """
-    # For now, return empty results
-    # TODO: Integrate with actual SPARQL engine
-    #
-    # Options:
-    # 1. Use rdflib: from rdflib import Graph; g = Graph(); g.parse(rdf_path); ...
-    # 2. Use ggen: run_logged(["ggen", "query", str(rdf_path)], capture=True)
-    # 3. Use oxigraph: oxigraph-based SPARQL endpoint
+        Query results as list of dicts.
 
-    return []
+    Raises
+    ------
+    JTBDError
+        If rdflib is not available or query execution fails.
+    """
+    try:
+        from rdflib import Graph  # noqa: PLC0415
+    except ImportError as e:
+        raise JTBDError(
+            "rdflib is required for SPARQL queries. Install with: uv sync"
+        ) from e
+
+    try:
+        # Load RDF data into graph
+        graph = Graph()
+        graph.parse(rdf_path, format="turtle")
+
+        # Execute SPARQL query
+        query_result = graph.query(query)
+
+        # Convert results to list of dicts
+        results: list[dict[str, Any]] = []
+
+        # Check if vars is available (it should be for SELECT queries)
+        if not query_result.vars:
+            return results
+
+        for row in query_result:
+            # Convert row to dict using variable names from query
+            row_dict: dict[str, Any] = {}
+            for var_name in query_result.vars:
+                value = getattr(row, str(var_name), None)
+                # Convert rdflib literals to Python types
+                if value is not None:
+                    row_dict[str(var_name)] = _convert_rdflib_value(value)
+            results.append(row_dict)
+
+        return results
+
+    except Exception as e:
+        raise JTBDError(
+            f"SPARQL query execution failed: {e}",
+            path=rdf_path,
+        ) from e
+
+
+def _convert_rdflib_value(value: Any) -> Any:
+    """
+    Convert rdflib value to Python native type.
+
+    Parameters
+    ----------
+    value : Any
+        rdflib value (Literal, URIRef, etc.).
+
+    Returns
+    -------
+    Any
+        Python native value.
+    """
+    # Import here to avoid dependency at module level
+    from rdflib import Literal, URIRef  # noqa: PLC0415
+
+    if isinstance(value, Literal):
+        # Return Python value from literal
+        return value.toPython()
+    if isinstance(value, URIRef):
+        # Return string representation of URI
+        return str(value)
+    # Already a Python value
+    return value

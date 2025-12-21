@@ -22,8 +22,9 @@ def runner() -> CliRunner:
 @pytest.fixture
 def init_app():
     """Get the init command app."""
-    from specify_cli.commands.init import init
     import typer
+
+    from specify_cli.commands.init import init
 
     # Create a simple app that wraps the init command directly
     # This avoids the subcommand resolution issue

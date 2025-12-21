@@ -442,7 +442,8 @@ def test_filter_log_by_length(mock_event_log: MagicMock) -> None:
     pytest.importorskip("pm4py")
     filtered_log = MagicMock()
 
-    with patch("pm4py.filter_trace_length") as mock_filter:
+    # pm4py v2.7+ uses filter_case_size instead of filter_trace_length
+    with patch("pm4py.filter_case_size") as mock_filter:
         mock_filter.return_value = filtered_log
 
         result = pm_ops.filter_log(mock_event_log, filter_type="length", min_length=3, max_length=10)
@@ -481,13 +482,14 @@ def test_sample_log_by_traces(mock_event_log: MagicMock) -> None:
     pytest.importorskip("pm4py")
     sampled_log = MagicMock()
 
-    with patch("pm4py.sample_log") as mock_sample:
+    # pm4py v2.7+ uses sample_cases instead of sample_log
+    with patch("pm4py.sample_cases") as mock_sample:
         mock_sample.return_value = sampled_log
 
         result = pm_ops.sample_log(mock_event_log, num_traces=25)
 
         assert result == sampled_log
-        mock_sample.assert_called_once_with(mock_event_log, n_traces=25)
+        mock_sample.assert_called_once_with(mock_event_log, num_cases=25)
 
 
 @pytest.mark.unit

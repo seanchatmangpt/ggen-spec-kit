@@ -200,19 +200,10 @@ feature.ttl → μ₁ → μ₂ → μ₃ → μ₄ → μ₅ → spec.md + rece
 # 1. Edit RDF specification (source of truth)
 vim ontology/cli-commands.ttl
 
-# 2. Validate RDF syntax and SHACL constraints
-specify ggen validate-rdf ontology/cli-commands.ttl
+# 2. Generate Python code, docs, tests from RDF using ggen sync
+ggen sync  # Reads ggen.toml from CWD (ONLY command available)
 
-# 3. Generate Python code, docs, tests from RDF
-ggen sync  # Reads ggen.toml from CWD
-
-# 4. Verify cryptographic receipts
-specify ggen verify
-
-# 5. Check idempotence (μ∘μ = μ)
-specify ggen check-idempotence
-
-# 6. Run generated tests
+# 3. Run generated tests
 uv run pytest tests/
 ```
 
@@ -300,17 +291,11 @@ ggen sync  # Generates Python code, tests, docs
 ### Verification Commands
 
 ```bash
-# Check if generated files match RDF source
-specify ggen verify
-
-# Verify idempotence (running twice produces identical output)
-specify ggen check-idempotence
-
-# Validate RDF against SHACL shapes
-specify ggen validate-rdf ontology/cli-commands.ttl
+# Run ggen sync (ONLY ggen command available in v5.0.2)
+ggen sync
 
 # Full verification pipeline
-specify ggen sync && specify ggen verify && uv run pytest tests/
+ggen sync && uv run pytest tests/
 ```
 
 ### Constitutional Violations

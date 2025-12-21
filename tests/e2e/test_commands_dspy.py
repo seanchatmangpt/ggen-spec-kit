@@ -7,8 +7,6 @@ Tests the complete DSPy optimize command implementation including:
 - Error handling
 """
 
-import json
-from pathlib import Path
 
 import pytest
 

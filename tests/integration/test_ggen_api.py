@@ -125,12 +125,14 @@ class TestGgenSyncCommand:
 
         # Actual options in ggen v5.0.2 (verified from actual help output)
         expected_options = [
-            "--from",  # Source ontology directory
-            "--to",  # Target output directory
-            "--mode",  # Sync mode
-            "--dry-run",  # Preview changes without writing (hyphenated)
+            "--manifest",  # Path to ggen.toml manifest
+            "--output_dir",  # Output directory
+            "--dry_run",  # Preview changes without writing (underscore)
             "--force",  # Override conflicts
-            "-v",  # Verbose output (short form)
+            "--verbose",  # Verbose output
+            "--watch",  # Watch mode for development
+            "--validate_only",  # Validate without generating
+            "--format",  # Output format (json, text)
         ]
 
         for option in expected_options:

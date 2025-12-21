@@ -4,9 +4,7 @@ Tests for SPIFF OTEL Validation Operations
 Tests for OTEL validation workflows and result tracking.
 """
 
-import pytest
-from pathlib import Path
-from unittest.mock import patch, MagicMock
+from unittest.mock import patch
 
 from specify_cli.spiff.ops import (
     OTELValidationResult,

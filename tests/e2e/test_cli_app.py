@@ -20,8 +20,7 @@ Examples:
 from __future__ import annotations
 
 from pathlib import Path
-from typing import Any
-from unittest.mock import MagicMock, patch
+from unittest.mock import patch
 
 import pytest
 from typer.testing import CliRunner
@@ -293,7 +292,6 @@ def test_banner_group_used(cli_runner: CliRunner) -> None:
     """
     # Test that the app uses BannerGroup
     from specify_cli.app import app
-    from specify_cli.cli import BannerGroup
 
     # App should have BannerGroup as cls
     # This is more of a structural test

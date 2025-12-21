@@ -34,6 +34,35 @@ __all__ = [
 ]
 
 
+def _build_pytest_command(kwargs: dict[str, Any]) -> list[str]:
+    """Build pytest command with optional arguments."""
+    cmd = ["pytest", "tests/", "-v"]
+
+    # Add optional arguments from kwargs
+    if kwargs.get("verbose"):
+        cmd.append("-vv")
+    if kwargs.get("quiet"):
+        cmd.remove("-v")
+        cmd.append("-q")
+    if kwargs.get("failed_first"):
+        cmd.append("--lf")
+    if kwargs.get("parallel"):
+        cmd.extend(["-n", "auto"])
+    if kwargs.get("markers"):
+        cmd.extend(["-m", str(kwargs["markers"])])
+
+    # Add any additional pytest options
+    known_options = {"verbose", "quiet", "failed_first", "parallel", "markers"}
+    for key, value in kwargs.items():
+        if key not in known_options:
+            if isinstance(value, bool) and value:
+                cmd.append(f"--{key}")
+            elif not isinstance(value, bool) and value is not None:
+                cmd.extend([f"--{key}", str(value)])
+
+    return cmd
+
+
 @timed
 def run_tests(**kwargs: Any) -> dict[str, Any]:
     """
@@ -72,15 +101,8 @@ def run_tests(**kwargs: Any) -> dict[str, Any]:
         metric_counter("tests.operations_executed")
 
         try:
-            # Build command
-            cmd = ["tests", "run"]
-
-            # Add string arguments (kwargs values)
-            for key, value in kwargs.items():
-                if isinstance(value, bool) and value:
-                    cmd.append(f"--{key}")
-                elif not isinstance(value, bool) and value is not None:
-                    cmd.extend([f"--{key}", str(value)])
+            # Build pytest command
+            cmd = _build_pytest_command(kwargs)
 
             # Execute subprocess with logging
             output = run_logged(cmd, capture=True, check=True)
@@ -173,15 +195,30 @@ def coverage(**kwargs: Any) -> dict[str, Any]:
         metric_counter("tests.operations_executed")
 
         try:
-            # Build command
-            cmd = ["tests", "coverage"]
+            # Build pytest coverage command
+            cmd = ["pytest", "--cov=src/specify_cli", "--cov-report=term-missing"]
 
-            # Add string arguments (kwargs values)
+            # Add optional coverage arguments
+            if kwargs.get("html"):
+                cmd.append("--cov-report=html:reports/coverage")
+            if kwargs.get("xml"):
+                cmd.append("--cov-report=xml")
+            if kwargs.get("json"):
+                cmd.append("--cov-report=json")
+            if kwargs.get("fail_under"):
+                cmd.extend(["--cov-fail-under", str(kwargs["fail_under"])])
+
+            # Add test directory (default to tests/)
+            test_dir = kwargs.get("test_dir", "tests/")
+            cmd.append(test_dir)
+
+            # Add any additional pytest options
             for key, value in kwargs.items():
-                if isinstance(value, bool) and value:
-                    cmd.append(f"--{key}")
-                elif not isinstance(value, bool) and value is not None:
-                    cmd.extend([f"--{key}", str(value)])
+                if key not in ("html", "xml", "json", "fail_under", "test_dir"):
+                    if isinstance(value, bool) and value:
+                        cmd.append(f"--{key}")
+                    elif not isinstance(value, bool) and value is not None:
+                        cmd.extend([f"--{key}", str(value)])
 
             # Execute subprocess with logging
             output = run_logged(cmd, capture=True, check=True)
@@ -274,15 +311,38 @@ def ci(**kwargs: Any) -> dict[str, Any]:
         metric_counter("tests.operations_executed")
 
         try:
-            # Build command
-            cmd = ["tests", "ci"]
+            # Build comprehensive CI test command
+            # Runs all tests with coverage, strict mode, and CI-friendly output
+            cmd = [
+                "pytest",
+                "tests/",
+                "-v",
+                "--cov=src/specify_cli",
+                "--cov-report=term-missing",
+                "--cov-report=xml",
+                "--tb=short",
+                "--strict-markers",
+            ]
 
-            # Add string arguments (kwargs values)
+            # Add fail-under threshold for CI (default 80%)
+            fail_under = kwargs.get("fail_under", 80)
+            cmd.extend(["--cov-fail-under", str(fail_under)])
+
+            # Add parallel execution for faster CI
+            if kwargs.get("parallel", True):
+                cmd.extend(["-n", "auto"])
+
+            # Add random order for test independence
+            if kwargs.get("random_order", True):
+                cmd.append("--random-order")
+
+            # Add any additional pytest options
             for key, value in kwargs.items():
-                if isinstance(value, bool) and value:
-                    cmd.append(f"--{key}")
-                elif not isinstance(value, bool) and value is not None:
-                    cmd.extend([f"--{key}", str(value)])
+                if key not in ("fail_under", "parallel", "random_order"):
+                    if isinstance(value, bool) and value:
+                        cmd.append(f"--{key}")
+                    elif not isinstance(value, bool) and value is not None:
+                        cmd.extend([f"--{key}", str(value)])
 
             # Execute subprocess with logging
             output = run_logged(cmd, capture=True, check=True)

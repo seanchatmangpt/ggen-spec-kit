@@ -15,15 +15,14 @@ from __future__ import annotations
 
 import math
 import re
-from collections import Counter
 from dataclasses import dataclass
 from typing import Any
 
 __all__ = [
-    "check_spec_completeness",
-    "check_code_fidelity",
-    "check_architecture_compliance",
     "ValidationReport",
+    "check_architecture_compliance",
+    "check_code_fidelity",
+    "check_spec_completeness",
 ]
 
 

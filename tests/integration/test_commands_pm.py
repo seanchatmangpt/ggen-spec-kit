@@ -19,7 +19,6 @@ from __future__ import annotations
 import json
 import re
 from pathlib import Path
-from typing import Any
 from unittest.mock import MagicMock, Mock, patch
 
 import pytest
@@ -718,3 +717,513 @@ def test_pm_discover_invalid_algorithm(
 
         assert result.exit_code != 0
         assert "Invalid input" in result.stdout or "Error" in result.stdout
+
+
+# ============================================================================
+# Test: ops module functions directly (for coverage)
+# ============================================================================
+
+
+@pytest.mark.integration
+def test_ops_save_model_petri_pnml(
+    tmp_path: Path,
+    mock_petri_net: tuple[MagicMock, MagicMock, MagicMock],
+) -> None:
+    """
+    Test saving Petri net model to PNML.
+
+    Verifies:
+        - save_model function works with PNML format
+        - pm4py write_pnml is called
+    """
+    pytest.importorskip("pm4py")
+    from specify_cli.ops.process_mining import save_model
+
+    output_file = tmp_path / "model.pnml"
+
+    with patch("pm4py.write_pnml") as mock_write:
+        save_model(mock_petri_net, output_file, model_type="petri")
+        mock_write.assert_called_once()
+
+
+@pytest.mark.integration
+def test_ops_save_model_bpmn(tmp_path: Path) -> None:
+    """
+    Test saving BPMN model.
+
+    Verifies:
+        - save_model function works with BPMN format
+        - pm4py write_bpmn is called
+    """
+    pytest.importorskip("pm4py")
+    from specify_cli.ops.process_mining import save_model
+
+    mock_bpmn = MagicMock()
+    output_file = tmp_path / "model.bpmn"
+
+    with patch("pm4py.write_bpmn") as mock_write:
+        save_model(mock_bpmn, output_file, model_type="bpmn")
+        mock_write.assert_called_once()
+
+
+@pytest.mark.integration
+def test_ops_save_model_unsupported_format(
+    tmp_path: Path,
+    mock_petri_net: tuple[MagicMock, MagicMock, MagicMock],
+) -> None:
+    """
+    Test saving model with unsupported format.
+
+    Verifies:
+        - ValueError is raised for unsupported formats
+    """
+    pytest.importorskip("pm4py")
+    from specify_cli.ops.process_mining import save_model
+
+    output_file = tmp_path / "model.txt"
+
+    with pytest.raises(ValueError, match="Unsupported output format"):
+        save_model(mock_petri_net, output_file, model_type="petri")
+
+
+@pytest.mark.integration
+def test_ops_save_log_csv(tmp_path: Path, mock_event_log: MagicMock) -> None:
+    """
+    Test saving event log to CSV.
+
+    Verifies:
+        - save_log function works with CSV format
+        - pm4py write is called (write delegates to format-specific writers)
+    """
+    pytest.importorskip("pm4py")
+    from specify_cli.ops.process_mining import save_log
+
+    output_file = tmp_path / "log.csv"
+
+    # pm4py.write is the generic write function
+    with patch("pm4py.write") as mock_write:
+        save_log(mock_event_log, output_file)
+        mock_write.assert_called_once()
+
+
+@pytest.mark.integration
+def test_ops_save_log_xes(tmp_path: Path, mock_event_log: MagicMock) -> None:
+    """
+    Test saving event log to XES.
+
+    Verifies:
+        - save_log function works with XES format
+        - pm4py write_xes is called
+    """
+    pytest.importorskip("pm4py")
+    from specify_cli.ops.process_mining import save_log
+
+    output_file = tmp_path / "log.xes"
+
+    with patch("pm4py.write_xes") as mock_write:
+        save_log(mock_event_log, output_file)
+        mock_write.assert_called_once()
+
+
+@pytest.mark.integration
+def test_ops_save_log_unsupported_format(tmp_path: Path, mock_event_log: MagicMock) -> None:
+    """
+    Test saving log with unsupported format.
+
+    Verifies:
+        - ValueError is raised for unsupported formats
+    """
+    pytest.importorskip("pm4py")
+    from specify_cli.ops.process_mining import save_log
+
+    output_file = tmp_path / "log.txt"
+
+    with pytest.raises(ValueError, match="Unsupported output format"):
+        save_log(mock_event_log, output_file)
+
+
+@pytest.mark.integration
+def test_ops_discover_all_algorithms(mock_event_log: MagicMock) -> None:
+    """
+    Test all discovery algorithms.
+
+    Verifies:
+        - All supported algorithms work
+        - Each returns correct model type
+    """
+    pytest.importorskip("pm4py")
+    from specify_cli.ops.process_mining import discover_process_model
+
+    mock_petri = (MagicMock(), MagicMock(), MagicMock())
+    # Note: pm4py uses "heuristics" not "heuristic"
+    algorithms = ["alpha", "alpha_plus", "inductive", "ilp"]
+
+    for algo in algorithms:
+        with patch(f"pm4py.discover_petri_net_{algo}") as mock_discover:
+            mock_discover.return_value = mock_petri
+
+            model, model_type = discover_process_model(mock_event_log, algorithm=algo)
+
+            assert model == mock_petri
+            assert model_type == "petri"
+            mock_discover.assert_called_once()
+
+    # Test heuristics separately since pm4py uses "heuristics" not "heuristic"
+    with patch("pm4py.discover_petri_net_heuristics") as mock_discover:
+        mock_discover.return_value = mock_petri
+        model, model_type = discover_process_model(mock_event_log, algorithm="heuristic")
+        assert model == mock_petri
+        assert model_type == "petri"
+
+
+@pytest.mark.integration
+def test_ops_conform_bpmn_model(tmp_path: Path, mock_event_log: MagicMock) -> None:
+    """
+    Test conformance checking with BPMN model.
+
+    Verifies:
+        - BPMN models are converted to Petri nets
+        - Conformance is computed correctly
+    """
+    pytest.importorskip("pm4py")
+    from specify_cli.ops.process_mining import conform_trace
+
+    model_file = tmp_path / "model.bpmn"
+    model_file.write_text('<?xml version="1.0" encoding="UTF-8"?><bpmn></bpmn>')
+
+    mock_bpmn = MagicMock()
+    mock_petri = (MagicMock(), MagicMock(), MagicMock())
+
+    with patch("pm4py.read_bpmn") as mock_read_bpmn, \
+         patch("pm4py.convert_to_petri_net") as mock_convert, \
+         patch("pm4py.conformance_diagnostics_token_based_replay") as mock_conformance, \
+         patch("pm4py.fitness_token_based_replay") as mock_fitness, \
+         patch("pm4py.precision_token_based_replay") as mock_precision:
+
+        mock_read_bpmn.return_value = mock_bpmn
+        mock_convert.return_value = mock_petri
+        mock_conformance.return_value = []
+        mock_fitness.return_value = {"average_trace_fitness": 0.85}
+        mock_precision.return_value = 0.80
+
+        result = conform_trace(mock_event_log, model_file, method="token")
+
+        assert result["fitness"] == 0.85
+        assert result["precision"] == 0.80
+        mock_read_bpmn.assert_called_once()
+        mock_convert.assert_called_once()
+
+
+@pytest.mark.integration
+def test_ops_conform_unsupported_model_format(tmp_path: Path, mock_event_log: MagicMock) -> None:
+    """
+    Test conformance with unsupported model format.
+
+    Verifies:
+        - ValueError is raised for unsupported model formats
+    """
+    pytest.importorskip("pm4py")
+    from specify_cli.ops.process_mining import conform_trace
+
+    model_file = tmp_path / "model.txt"
+    model_file.write_text("unsupported")
+
+    with pytest.raises(ValueError, match="Unsupported model format"):
+        conform_trace(mock_event_log, model_file)
+
+
+@pytest.mark.integration
+def test_ops_conform_unknown_method(tmp_path: Path, mock_event_log: MagicMock) -> None:
+    """
+    Test conformance with unknown method.
+
+    Verifies:
+        - ValueError is raised for unknown conformance methods
+    """
+    pytest.importorskip("pm4py")
+    from specify_cli.ops.process_mining import conform_trace
+
+    model_file = tmp_path / "model.pnml"
+    model_file.write_text('<?xml version="1.0" encoding="UTF-8"?><pnml></pnml>')
+
+    mock_petri = (MagicMock(), MagicMock(), MagicMock())
+
+    with patch("pm4py.read_pnml") as mock_read:
+        mock_read.return_value = mock_petri
+
+        with pytest.raises(ValueError, match="Unknown conformance method"):
+            conform_trace(mock_event_log, model_file, method="unknown")
+
+
+@pytest.mark.integration
+def test_ops_filter_by_start_activity(mock_event_log: MagicMock) -> None:
+    """
+    Test filtering log by start activity.
+
+    Verifies:
+        - Start activity filter is applied
+        - Correct pm4py function is called
+    """
+    pytest.importorskip("pm4py")
+    from specify_cli.ops.process_mining import filter_log
+
+    filtered_log = MagicMock()
+
+    with patch("pm4py.filter_start_activities") as mock_filter:
+        mock_filter.return_value = filtered_log
+
+        result = filter_log(mock_event_log, filter_type="start", filter_value="Start")
+
+        assert result == filtered_log
+        mock_filter.assert_called_once()
+
+
+@pytest.mark.integration
+def test_ops_filter_by_end_activity(mock_event_log: MagicMock) -> None:
+    """
+    Test filtering log by end activity.
+
+    Verifies:
+        - End activity filter is applied
+        - Correct pm4py function is called
+    """
+    pytest.importorskip("pm4py")
+    from specify_cli.ops.process_mining import filter_log
+
+    filtered_log = MagicMock()
+
+    with patch("pm4py.filter_end_activities") as mock_filter:
+        mock_filter.return_value = filtered_log
+
+        result = filter_log(mock_event_log, filter_type="end", filter_value="End")
+
+        assert result == filtered_log
+        mock_filter.assert_called_once()
+
+
+@pytest.mark.integration
+def test_ops_sample_by_events(mock_event_log: MagicMock) -> None:
+    """
+    Test sampling log by number of events.
+
+    Verifies:
+        - Event-based sampling is used for events
+        - Correct function is called
+    """
+    pytest.importorskip("pm4py")
+    from specify_cli.ops.process_mining import sample_log
+
+    sampled_log = MagicMock()
+
+    # pm4py uses sample_events for event-based sampling
+    with patch("pm4py.sample_events") as mock_sample:
+        mock_sample.return_value = sampled_log
+
+        result = sample_log(mock_event_log, num_events=100, method="random")
+
+        assert result == sampled_log
+        mock_sample.assert_called_once_with(mock_event_log, num_events=100)
+
+
+@pytest.mark.integration
+def test_ops_convert_model_pnml_to_bpmn(tmp_path: Path) -> None:
+    """
+    Test converting PNML to BPMN.
+
+    Verifies:
+        - Model conversion works
+        - Correct conversion function is called
+    """
+    pytest.importorskip("pm4py")
+    from specify_cli.ops.process_mining import convert_model
+
+    input_file = tmp_path / "input.pnml"
+    input_file.write_text('<?xml version="1.0" encoding="UTF-8"?><pnml></pnml>')
+    output_file = tmp_path / "output.bpmn"
+
+    mock_petri = (MagicMock(), MagicMock(), MagicMock())
+    mock_bpmn = MagicMock()
+
+    # pm4py uses convert_to_bpmn not convert_petri_net_to_bpmn
+    with patch("pm4py.read_pnml") as mock_read, \
+         patch("pm4py.convert_to_bpmn") as mock_convert, \
+         patch("pm4py.write_bpmn") as mock_write:
+
+        mock_read.return_value = mock_petri
+        mock_convert.return_value = mock_bpmn
+
+        convert_model(input_file, output_file, input_type="pnml", output_type="bpmn")
+
+        mock_read.assert_called_once()
+        mock_convert.assert_called_once()
+        mock_write.assert_called_once()
+
+
+@pytest.mark.integration
+def test_ops_convert_model_bpmn_to_pnml(tmp_path: Path) -> None:
+    """
+    Test converting BPMN to PNML.
+
+    Verifies:
+        - Reverse conversion works
+        - Correct functions are called
+    """
+    pytest.importorskip("pm4py")
+    from specify_cli.ops.process_mining import convert_model
+
+    input_file = tmp_path / "input.bpmn"
+    input_file.write_text('<?xml version="1.0" encoding="UTF-8"?><bpmn></bpmn>')
+    output_file = tmp_path / "output.pnml"
+
+    mock_bpmn = MagicMock()
+    mock_petri = (MagicMock(), MagicMock(), MagicMock())
+
+    with patch("pm4py.read_bpmn") as mock_read, \
+         patch("pm4py.convert_to_petri_net") as mock_convert, \
+         patch("pm4py.write_pnml") as mock_write:
+
+        mock_read.return_value = mock_bpmn
+        mock_convert.return_value = mock_petri
+
+        convert_model(input_file, output_file, input_type="bpmn", output_type="pnml")
+
+        mock_read.assert_called_once()
+        mock_convert.assert_called_once()
+        mock_write.assert_called_once()
+
+
+@pytest.mark.integration
+def test_ops_convert_model_unsupported_conversion(tmp_path: Path) -> None:
+    """
+    Test unsupported model conversion.
+
+    Verifies:
+        - ValueError is raised for unsupported conversions
+    """
+    pytest.importorskip("pm4py")
+    from specify_cli.ops.process_mining import convert_model
+
+    input_file = tmp_path / "input.pnml"
+    input_file.write_text('<?xml version="1.0" encoding="UTF-8"?><pnml></pnml>')
+    output_file = tmp_path / "output.pnml"
+
+    mock_petri = (MagicMock(), MagicMock(), MagicMock())
+
+    with patch("pm4py.read_pnml") as mock_read:
+        mock_read.return_value = mock_petri
+
+        with pytest.raises(ValueError, match="Unsupported conversion"):
+            convert_model(input_file, output_file, input_type="pnml", output_type="pnml")
+
+
+@pytest.mark.integration
+def test_ops_convert_model_file_not_found(tmp_path: Path) -> None:
+    """
+    Test model conversion with non-existent input file.
+
+    Verifies:
+        - FileNotFoundError is raised
+    """
+    pytest.importorskip("pm4py")
+    from specify_cli.ops.process_mining import convert_model
+
+    input_file = tmp_path / "nonexistent.pnml"
+    output_file = tmp_path / "output.bpmn"
+
+    with pytest.raises(FileNotFoundError, match="Input file not found"):
+        convert_model(input_file, output_file)
+
+
+@pytest.mark.integration
+def test_ops_visualize_petri_net(tmp_path: Path) -> None:
+    """
+    Test visualizing Petri net.
+
+    Verifies:
+        - Visualization function is called
+        - PNG format is used
+    """
+    pytest.importorskip("pm4py")
+    from specify_cli.ops.process_mining import visualize_model
+
+    mock_petri = (MagicMock(), MagicMock(), MagicMock())
+    output_file = tmp_path / "model.png"
+
+    with patch("pm4py.save_vis_petri_net") as mock_save:
+        visualize_model(mock_petri, output_file, model_type="petri", format="png")
+        mock_save.assert_called_once()
+
+
+@pytest.mark.integration
+def test_ops_visualize_bpmn(tmp_path: Path) -> None:
+    """
+    Test visualizing BPMN model.
+
+    Verifies:
+        - BPMN visualization works
+        - SVG format is supported
+    """
+    pytest.importorskip("pm4py")
+    from specify_cli.ops.process_mining import visualize_model
+
+    mock_bpmn = MagicMock()
+    output_file = tmp_path / "model.svg"
+
+    with patch("pm4py.save_vis_bpmn") as mock_save:
+        visualize_model(mock_bpmn, output_file, model_type="bpmn", format="svg")
+        mock_save.assert_called_once()
+
+
+@pytest.mark.integration
+def test_ops_visualize_process_tree(tmp_path: Path) -> None:
+    """
+    Test visualizing process tree.
+
+    Verifies:
+        - Process tree visualization works
+    """
+    pytest.importorskip("pm4py")
+    from specify_cli.ops.process_mining import visualize_model
+
+    mock_tree = MagicMock()
+    output_file = tmp_path / "tree.png"
+
+    with patch("pm4py.save_vis_process_tree") as mock_save:
+        visualize_model(mock_tree, output_file, model_type="tree", format="png")
+        mock_save.assert_called_once()
+
+
+@pytest.mark.integration
+def test_ops_visualize_unsupported_format(tmp_path: Path) -> None:
+    """
+    Test visualization with unsupported format.
+
+    Verifies:
+        - ValueError is raised for unsupported formats
+    """
+    pytest.importorskip("pm4py")
+    from specify_cli.ops.process_mining import visualize_model
+
+    mock_petri = (MagicMock(), MagicMock(), MagicMock())
+    output_file = tmp_path / "model.pdf"
+
+    with pytest.raises(ValueError, match="Unsupported visualization format"):
+        visualize_model(mock_petri, output_file, model_type="petri", format="pdf")
+
+
+@pytest.mark.integration
+def test_ops_visualize_unsupported_model_type(tmp_path: Path) -> None:
+    """
+    Test visualization with unsupported model type.
+
+    Verifies:
+        - ValueError is raised for unsupported model types
+    """
+    pytest.importorskip("pm4py")
+    from specify_cli.ops.process_mining import visualize_model
+
+    mock_model = MagicMock()
+    output_file = tmp_path / "model.png"
+
+    with pytest.raises(ValueError, match="Unsupported model type"):
+        visualize_model(mock_model, output_file, model_type="unknown", format="png")
