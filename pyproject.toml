@@ -13,6 +13,8 @@ dependencies = [
     "dspy>=2.5.0",
     "pm4py>=2.7.0",
     "pandas>=2.0.0",
+    "SpiffWorkflow>=2.0.0",
+    "lxml>=4.9.0",
 ]
 
 # External system dependencies (must be installed separately):
