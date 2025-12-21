@@ -14,6 +14,7 @@ Full pipeline tests (14 transformations) will be added in Week 2.
 
 from __future__ import annotations
 
+import os
 import subprocess
 from pathlib import Path
 
@@ -33,7 +34,7 @@ def run_ggen_command(args: list[str]) -> tuple[str, str, int]:
     tuple[str, str, int]
         (stdout, stderr, returncode)
     """
-    cmd = ["ggen"] + args
+    cmd = ["ggen", *args]
     result = subprocess.run(
         cmd,
         check=False,
@@ -70,8 +71,6 @@ class TestGgenBinaryAvailability:
         assert ggen_path.exists(), f"ggen binary not found at {ggen_path}"
         assert ggen_path.is_file(), f"{ggen_path} is not a file"
         # Check execute permission
-        import os
-
         assert os.access(ggen_path, os.X_OK), f"{ggen_path} is not executable"
 
 
@@ -80,7 +79,7 @@ class TestGgenVersion:
 
     def test_version_flag_exists(self) -> None:
         """Verify --version flag is recognized."""
-        stdout, stderr, returncode = run_ggen_command(["--version"])
+        _stdout, _stderr, returncode = run_ggen_command(["--version"])
         # NOTE: ggen v5.0.2 currently returns exit code 0 but empty output
         # This is a known issue documented in GGEN_API_ANALYSIS.md
         assert returncode == 0, f"--version failed with code {returncode}"
@@ -88,7 +87,7 @@ class TestGgenVersion:
     @pytest.mark.xfail(reason="ggen v5.0.2 returns empty version string (known issue)")
     def test_version_output_format(self) -> None:
         """Verify version output contains version string."""
-        stdout, stderr, _returncode = run_ggen_command(["--version"])
+        stdout, _stderr, _returncode = run_ggen_command(["--version"])
         # Expected format: "ggen 5.0.2" or similar
         assert "ggen" in stdout.lower() or "5.0" in stdout, (
             f"Version output doesn't contain version info: {stdout}"
@@ -100,7 +99,7 @@ class TestGgenHelpCommand:
 
     def test_help_flag_works(self) -> None:
         """Verify --help flag shows help text."""
-        stdout, stderr, returncode = run_ggen_command(["--help"])
+        stdout, _stderr, returncode = run_ggen_command(["--help"])
         assert returncode == 0, f"--help failed with code {returncode}"
         assert "Usage: ggen" in stdout, "Help text missing usage line"
         assert "sync" in stdout, "Help text missing 'sync' command"
@@ -141,7 +140,7 @@ class TestGgenSyncCommand:
     def test_sync_accepts_manifest_flag(self) -> None:
         """Verify sync accepts --manifest flag."""
         # This test documents the known CLI parsing issue
-        stdout, stderr, returncode = run_ggen_command(
+        _stdout, stderr, returncode = run_ggen_command(
             [
                 "sync",
                 "--manifest",
@@ -171,13 +170,13 @@ class TestGgenOldAPIRemoved:
 
     def test_generate_command_removed(self) -> None:
         """Verify 'ggen generate' command no longer exists."""
-        _stdout, stderr, returncode = run_ggen_command(["generate", "--help"])
+        _stdout, _stderr, returncode = run_ggen_command(["generate", "--help"])
         # Should fail because generate command doesn't exist
         assert returncode != 0, "generate command should not exist in v5.0.2"
 
     def test_validate_command_removed(self) -> None:
         """Verify 'ggen validate' command no longer exists."""
-        _stdout, stderr, returncode = run_ggen_command(["validate", "--help"])
+        _stdout, _stderr, returncode = run_ggen_command(["validate", "--help"])
         # Should fail because validate command doesn't exist
         assert returncode != 0, "validate command should not exist in v5.0.2"
 
@@ -233,7 +232,7 @@ class TestGgenSyncExecution:
         # Should succeed if it finds the schema directory
         if result.returncode == 0:
             # Verify it generated something
-            generated_dir = tmp_path / "src" / "generated"
+            tmp_path / "src" / "generated"
             # May or may not generate - depends on ggen's behavior
             # Just verify it didn't crash
 
