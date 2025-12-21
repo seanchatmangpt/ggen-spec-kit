@@ -325,62 +325,8 @@ Our research and experimentation focus on:
 - [uv](https://docs.astral.sh/uv/) for package management
 - [Python 3.11+](https://www.python.org/downloads/)
 - [Git](https://git-scm.com/downloads)
-- **[ggen v6](https://github.com/seanchatmangpt/ggen)** - RDF-first code generation engine
-
-### Installing ggen
-
-ggen is required for RDF-first specification workflows. Install via cargo:
-
-```bash
-# Install from crates.io (when published)
-cargo install ggen
-
-# Or install from source
-git clone https://github.com/seanchatmangpt/ggen.git
-cd ggen
-cargo install --path crates/ggen-cli
-
-# Verify installation
-ggen --version  # Should show v6.x.x or higher
-```
-
-**What is ggen?** ggen v6 is an ontology-driven code generation engine that transforms RDF/Turtle specifications into markdown artifacts via deterministic transformations (`spec.md = μ(feature.ttl)`). It uses SHACL validation, SPARQL queries, and Tera templates configured in `ggen.toml` files.
-
-## 🧪 Testing & Validation
-
-Spec-Kit includes testcontainer-based integration tests that validate the ggen RDF-first workflow. These tests verify the constitutional equation `spec.md = μ(feature.ttl)` and ensure deterministic transformations.
-
-### Running Validation Tests
-
-```bash
-# Install test dependencies
-uv pip install -e ".[test]"
-
-# Run all tests (requires Docker)
-pytest tests/ -v
-
-# Run integration tests only
-pytest tests/integration/ -v -s
-
-# View test documentation
-cat tests/README.md
-```
-
-### What Gets Validated
-
-- ✅ **ggen sync** generates markdown from TTL sources
-- ✅ **Idempotence**: μ∘μ = μ (running twice produces identical output)
-- ✅ **TTL syntax validation** rejects invalid RDF
-- ✅ **Constitutional equation**: Deterministic transformation with hash verification
-- ✅ **Five-stage pipeline**: μ₁→μ₂→μ₃→μ₄→μ₅
-
-**Requirements**: Docker must be running. Tests use testcontainers to spin up a Rust environment, install ggen, and validate the complete workflow.
-
-See [tests/README.md](./tests/README.md) for detailed documentation on the validation suite, including:
-- Test architecture and fixtures
-- CI/CD integration examples
-- Troubleshooting guide
-- Adding new tests
+- **[Rust and cargo](https://rustup.rs/)** - Required for ontology-driven code generation
+- **[ggen](https://crates.io/crates/ggen)** - Transform RDF ontologies into typed code (`cargo install ggen`)
 
 If you encounter issues with an agent, please open an issue so we can refine the integration.
 
@@ -388,6 +334,63 @@ If you encounter issues with an agent, please open an issue so we can refine the
 
 - **[Complete Spec-Driven Development Methodology](./spec-driven.md)** - Deep dive into the full process
 - **[Detailed Walkthrough](#-detailed-process)** - Step-by-step implementation guide
+
+## 🧬 Ontology as Source Code
+
+Your domain ontology in RDF is the authoritative source. [ggen](https://crates.io/crates/ggen) compiles it into type-safe implementations across any language.
+
+### Ontology-Driven Development
+
+Software systems are defined in RDF ontologies and compiled into executable code:
+
+- **Single Source of Truth**: RDF ontology defines your domain model
+- **Deterministic Compilation**: Same ontology → identical code, always
+- **Semantic Inference**: SPARQL materializes implicit knowledge
+- **Multi-language Native**: One ontology → Python, TypeScript, Rust, Java, C#, Go
+- **Machine + Human Readable**: Both compilers and domain experts understand RDF
+
+### Quick Setup
+
+1. Install Rust and cargo:
+   ```bash
+   curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh
+   ```
+
+2. Install ggen:
+   ```bash
+   cargo install ggen
+   ```
+
+3. Initialize ggen in your project:
+   ```bash
+   # From your spec-kit project root
+   cp templates/ggen.toml .
+   cp -r templates/schema .
+   cp -r templates/ggen .
+   ```
+
+4. Compile your ontology:
+   ```bash
+   ggen sync
+   ```
+
+### The Development Workflow
+
+Software is built with Spec-Kit through this process:
+
+1. **Specify** (`/speckit.specify`) - Capture requirements and user stories
+2. **Model** - Formalize domain knowledge in RDF ontology (compile target)
+3. **Plan** (`/speckit.plan`) - Choose architecture and target runtimes
+4. **Compile** - Run `ggen sync` to generate type systems for all targets
+5. **Tasks** (`/speckit.tasks`) - Break down business logic implementation
+6. **Implement** (`/speckit.implement`) - Write logic against generated types
+7. **Evolve** - Modify ontology, recompile, types update automatically
+
+**The ontology is your source code. Generated classes are build artifacts.**
+
+When your domain understanding changes, you update the ontology and recompile. Types update automatically across all target languages.
+
+See the [ggen documentation](./templates/ggen/README.md) organized by the [Diátaxis framework](https://diataxis.fr/).
 
 ---
 

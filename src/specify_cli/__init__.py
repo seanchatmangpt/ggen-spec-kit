@@ -419,6 +419,13 @@ def check():
         for tool in tools_to_check:
             check_tool(tool, tracker)
 
+    # Check build tools
+    tracker.add("cargo", "Rust package manager (cargo)")
+    cargo_ok = check_tool("cargo", tracker=tracker)
+
+    tracker.add("ggen", "Ontology-driven code generator (ggen)")
+    ggen_ok = check_tool("ggen", tracker=tracker)
+
     console.print(tracker.render())
     console.print()
 
@@ -1645,6 +1652,20 @@ def pm_execute(
 # End Workflow Automation Commands
 # =============================================================================
 
+
+    if not cargo_ok:
+        console.print("[yellow]⚠ Cargo is required for ontology compilation[/yellow]")
+        console.print("[dim]  Install Rust: curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh[/dim]")
+        console.print("[dim]  Visit: https://rustup.rs/[/dim]")
+
+    if not ggen_ok and cargo_ok:
+        console.print("[yellow]⚠ ggen is required for compiling ontologies[/yellow]")
+        console.print("[dim]  Install: cargo install ggen[/dim]")
+        console.print("[dim]  Visit: https://crates.io/crates/ggen[/dim]")
+
+    if not ggen_ok and not cargo_ok:
+        console.print("[yellow]⚠ Spec-driven development requires ontology compilation[/yellow]")
+        console.print("[dim]  Install Rust and ggen to continue[/dim]")
 
 @app.command()
 def version():
