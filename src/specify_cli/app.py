@@ -65,6 +65,7 @@ from rich.console import Console
 from specify_cli.cli import BannerGroup, show_banner
 from specify_cli.commands import (
     check_app,
+    ggen_app,
     init_app,
     spiff_app,
     version_app,
@@ -99,6 +100,9 @@ app.add_typer(version_app, name="version", help="Show version information")
 
 # Workflow commands (SpiffWorkflow)
 app.add_typer(spiff_app, name="wf", help="Workflow automation (SpiffWorkflow)")
+
+# ggen commands (RDF-first code generation)
+app.add_typer(ggen_app, name="ggen", help="RDF-first code generation (ggen v5.0.2)")
 
 
 # Try to add process mining commands if pm4py is available

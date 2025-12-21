@@ -8,13 +8,13 @@ to enable LLM-powered specification generation and optimization.
 import json
 import os
 from pathlib import Path
-from typing import Optional
+from typing import Any
 
 import typer
 from rich.console import Console
 from rich.panel import Panel
-from rich.table import Table
 from rich.syntax import Syntax
+from rich.table import Table
 
 try:
     import dspy
@@ -73,16 +73,16 @@ def check_dspy_available():
         raise typer.Exit(1)
 
 
-def load_config(config_path: Path = None) -> dict:
+def load_config(config_path: Path | None = None) -> dict:
     """Load DSPy configuration from file."""
     path = config_path or DEFAULT_CONFIG_PATH
     if path.exists():
-        with open(path, "r") as f:
+        with open(path) as f:
             return json.load(f)
     return {}
 
 
-def save_config(config: dict, config_path: Path = None):
+def save_config(config: dict, config_path: Path | None = None) -> None:
     """Save DSPy configuration to file."""
     path = config_path or DEFAULT_CONFIG_PATH
     path.parent.mkdir(parents=True, exist_ok=True)
@@ -91,7 +91,7 @@ def save_config(config: dict, config_path: Path = None):
     console.print(f"[green]Configuration saved to {path}[/green]")
 
 
-def get_configured_lm(config: dict = None):
+def get_configured_lm(config: dict | None = None) -> Any:
     """Get a configured DSPy LM instance based on stored config."""
     check_dspy_available()
 
@@ -133,11 +133,11 @@ def get_configured_lm(config: dict = None):
 
 @dspy_app.command()
 def configure(
-    provider: str = typer.Option(None, "--provider", "-p", help="LM provider: openai, anthropic, google, ollama"),
-    model: str = typer.Option(None, "--model", "-m", help="Model name to use"),
-    base_url: str = typer.Option(None, "--base-url", help="Base URL for Ollama or custom endpoints"),
+    provider: str | None = typer.Option(None, "--provider", "-p", help="LM provider: openai, anthropic, google, ollama"),
+    model: str | None = typer.Option(None, "--model", "-m", help="Model name to use"),
+    base_url: str | None = typer.Option(None, "--base-url", help="Base URL for Ollama or custom endpoints"),
     show: bool = typer.Option(False, "--show", "-s", help="Show current configuration"),
-):
+) -> None:
     """
     Configure DSPy language model settings.
 
@@ -212,11 +212,11 @@ def configure(
 @dspy_app.command()
 def run(
     signature: str = typer.Argument(..., help="DSPy signature (e.g., 'question -> answer' or 'context, question -> answer')"),
-    input_text: str = typer.Option(None, "--input", "-i", help="Input text for the signature"),
-    input_file: Path = typer.Option(None, "--file", "-f", help="Read input from file"),
-    output_file: Path = typer.Option(None, "--output", "-o", help="Write output to file"),
+    input_text: str | None = typer.Option(None, "--input", "-i", help="Input text for the signature"),
+    input_file: Path | None = typer.Option(None, "--file", "-f", help="Read input from file"),
+    output_file: Path | None = typer.Option(None, "--output", "-o", help="Write output to file"),
     verbose: bool = typer.Option(False, "--verbose", "-v", help="Show detailed output"),
-):
+) -> None:
     """
     Run a DSPy signature with input.
 
@@ -313,9 +313,9 @@ def run(
 def generate(
     spec_type: str = typer.Argument(..., help="Type of specification to generate: requirement, user-story, task, plan"),
     description: str = typer.Option(..., "--description", "-d", help="Description or context for generation"),
-    output_file: Path = typer.Option(None, "--output", "-o", help="Write output to file"),
+    output_file: Path | None = typer.Option(None, "--output", "-o", help="Write output to file"),
     format_type: str = typer.Option("markdown", "--format", "-f", help="Output format: markdown, ttl, json"),
-):
+) -> None:
     """
     Generate specifications using DSPy.
 
@@ -419,17 +419,16 @@ def generate(
         if output_file:
             output_file.write_text(output)
             console.print(f"[green]Output written to {output_file}[/green]")
+        elif format_type == "markdown":
+            console.print(Panel(output, title=f"[green]Generated {spec_type.title()}[/green]", border_style="green"))
+        elif format_type == "ttl":
+            syntax = Syntax(output, "turtle", theme="monokai", line_numbers=True)
+            console.print(Panel(syntax, title=f"[green]Generated {spec_type.title()} (Turtle)[/green]", border_style="green"))
+        elif format_type == "json":
+            syntax = Syntax(output, "json", theme="monokai", line_numbers=True)
+            console.print(Panel(syntax, title=f"[green]Generated {spec_type.title()} (JSON)[/green]", border_style="green"))
         else:
-            if format_type == "markdown":
-                console.print(Panel(output, title=f"[green]Generated {spec_type.title()}[/green]", border_style="green"))
-            elif format_type == "ttl":
-                syntax = Syntax(output, "turtle", theme="monokai", line_numbers=True)
-                console.print(Panel(syntax, title=f"[green]Generated {spec_type.title()} (Turtle)[/green]", border_style="green"))
-            elif format_type == "json":
-                syntax = Syntax(output, "json", theme="monokai", line_numbers=True)
-                console.print(Panel(syntax, title=f"[green]Generated {spec_type.title()} (JSON)[/green]", border_style="green"))
-            else:
-                console.print(output)
+            console.print(output)
 
     except Exception as e:
         console.print(f"[red]Error generating {spec_type}: {e}[/red]")
@@ -452,7 +451,7 @@ def format_as_markdown(spec_type: str, result) -> str:
 
 {getattr(result, 'acceptance_criteria', '')}
 """
-    elif spec_type == "user-story":
+    if spec_type == "user-story":
         return f"""# User Story: {getattr(result, 'story_id', 'US-XXX')}
 
 **As a** {getattr(result, 'as_a', '')}
@@ -465,7 +464,7 @@ def format_as_markdown(spec_type: str, result) -> str:
 
 {getattr(result, 'acceptance_criteria', '')}
 """
-    elif spec_type == "task":
+    if spec_type == "task":
         return f"""# {getattr(result, 'title', 'Task')}
 
 **ID:** {getattr(result, 'task_id', 'TASK-XXX')}
@@ -483,8 +482,8 @@ def format_as_markdown(spec_type: str, result) -> str:
 
 {getattr(result, 'dependencies', 'None')}
 """
-    else:  # plan
-        return f"""# {getattr(result, 'title', 'Implementation Plan')}
+    # plan
+    return f"""# {getattr(result, 'title', 'Implementation Plan')}
 
 **ID:** {getattr(result, 'plan_id', 'PLAN-XXX')}
 
@@ -518,32 +517,32 @@ def format_as_ttl(spec_type: str, result) -> str:
 
 """
     if spec_type == "requirement":
-        req_id = getattr(result, 'requirement_id', 'REQ-001').replace('-', '_')
+        req_id = getattr(result, "requirement_id", "REQ-001").replace("-", "_")
         return prefix + f"""spec:{req_id} a spec:FunctionalRequirement ;
     rdfs:label "{getattr(result, 'title', '')}" ;
     spec:priority "{getattr(result, 'priority', 'Medium')}" ;
     spec:description \"\"\"{getattr(result, 'requirement_text', getattr(result, 'description', ''))}\"\"\" ;
     spec:acceptanceCriteria \"\"\"{getattr(result, 'acceptance_criteria', '')}\"\"\" .
 """
-    elif spec_type == "user-story":
-        story_id = getattr(result, 'story_id', 'US-001').replace('-', '_')
+    if spec_type == "user-story":
+        story_id = getattr(result, "story_id", "US-001").replace("-", "_")
         return prefix + f"""spec:{story_id} a spec:UserStory ;
     spec:asA "{getattr(result, 'as_a', '')}" ;
     spec:iWant "{getattr(result, 'i_want', '')}" ;
     spec:soThat "{getattr(result, 'so_that', '')}" ;
     spec:acceptanceCriteria \"\"\"{getattr(result, 'acceptance_criteria', '')}\"\"\" .
 """
-    elif spec_type == "task":
-        task_id = getattr(result, 'task_id', 'TASK-001').replace('-', '_')
+    if spec_type == "task":
+        task_id = getattr(result, "task_id", "TASK-001").replace("-", "_")
         return prefix + f"""spec:{task_id} a spec:Task ;
     rdfs:label "{getattr(result, 'title', '')}" ;
     spec:description \"\"\"{getattr(result, 'task_description', getattr(result, 'description', ''))}\"\"\" ;
     spec:estimatedEffort "{getattr(result, 'estimated_effort', 'TBD')}" ;
     spec:steps \"\"\"{getattr(result, 'steps', '')}\"\"\" .
 """
-    else:  # plan
-        plan_id = getattr(result, 'plan_id', 'PLAN-001').replace('-', '_')
-        return prefix + f"""spec:{plan_id} a spec:Plan ;
+    # plan
+    plan_id = getattr(result, "plan_id", "PLAN-001").replace("-", "_")
+    return prefix + f"""spec:{plan_id} a spec:Plan ;
     rdfs:label "{getattr(result, 'title', '')}" ;
     spec:overview \"\"\"{getattr(result, 'overview', '')}\"\"\" ;
     spec:phases \"\"\"{getattr(result, 'phases', '')}\"\"\" ;
@@ -559,42 +558,42 @@ def format_as_json(spec_type: str, result) -> str:
 
     if spec_type == "requirement":
         data = {
-            "id": getattr(result, 'requirement_id', 'REQ-001'),
+            "id": getattr(result, "requirement_id", "REQ-001"),
             "type": "FunctionalRequirement",
-            "title": getattr(result, 'title', ''),
-            "description": getattr(result, 'requirement_text', getattr(result, 'description', '')),
-            "priority": getattr(result, 'priority', 'Medium'),
-            "acceptanceCriteria": getattr(result, 'acceptance_criteria', ''),
+            "title": getattr(result, "title", ""),
+            "description": getattr(result, "requirement_text", getattr(result, "description", "")),
+            "priority": getattr(result, "priority", "Medium"),
+            "acceptanceCriteria": getattr(result, "acceptance_criteria", ""),
         }
     elif spec_type == "user-story":
         data = {
-            "id": getattr(result, 'story_id', 'US-001'),
+            "id": getattr(result, "story_id", "US-001"),
             "type": "UserStory",
-            "asA": getattr(result, 'as_a', ''),
-            "iWant": getattr(result, 'i_want', ''),
-            "soThat": getattr(result, 'so_that', ''),
-            "acceptanceCriteria": getattr(result, 'acceptance_criteria', ''),
+            "asA": getattr(result, "as_a", ""),
+            "iWant": getattr(result, "i_want", ""),
+            "soThat": getattr(result, "so_that", ""),
+            "acceptanceCriteria": getattr(result, "acceptance_criteria", ""),
         }
     elif spec_type == "task":
         data = {
-            "id": getattr(result, 'task_id', 'TASK-001'),
+            "id": getattr(result, "task_id", "TASK-001"),
             "type": "Task",
-            "title": getattr(result, 'title', ''),
-            "description": getattr(result, 'task_description', getattr(result, 'description', '')),
-            "estimatedEffort": getattr(result, 'estimated_effort', 'TBD'),
-            "steps": getattr(result, 'steps', ''),
-            "dependencies": getattr(result, 'dependencies', ''),
+            "title": getattr(result, "title", ""),
+            "description": getattr(result, "task_description", getattr(result, "description", "")),
+            "estimatedEffort": getattr(result, "estimated_effort", "TBD"),
+            "steps": getattr(result, "steps", ""),
+            "dependencies": getattr(result, "dependencies", ""),
         }
     else:  # plan
         data = {
-            "id": getattr(result, 'plan_id', 'PLAN-001'),
+            "id": getattr(result, "plan_id", "PLAN-001"),
             "type": "Plan",
-            "title": getattr(result, 'title', ''),
-            "overview": getattr(result, 'overview', ''),
-            "phases": getattr(result, 'phases', ''),
-            "milestones": getattr(result, 'milestones', ''),
-            "risks": getattr(result, 'risks', ''),
-            "successCriteria": getattr(result, 'success_criteria', ''),
+            "title": getattr(result, "title", ""),
+            "overview": getattr(result, "overview", ""),
+            "phases": getattr(result, "phases", ""),
+            "milestones": getattr(result, "milestones", ""),
+            "risks": getattr(result, "risks", ""),
+            "successCriteria": getattr(result, "success_criteria", ""),
         }
 
     return json.dumps(data, indent=2)
@@ -602,76 +601,182 @@ def format_as_json(spec_type: str, result) -> str:
 
 @dspy_app.command()
 def optimize(
-    module_file: Path = typer.Argument(..., help="Path to Python file containing DSPy module"),
-    train_file: Path = typer.Option(..., "--train", "-t", help="Path to training data (JSON)"),
-    output_file: Path = typer.Option(None, "--output", "-o", help="Output path for optimized module"),
-    optimizer: str = typer.Option("bootstrap", "--optimizer", help="Optimizer: bootstrap, mipro, copro"),
-    max_demos: int = typer.Option(4, "--max-demos", help="Maximum number of demonstrations"),
-):
+    spec_file: Path = typer.Argument(..., help="Path to specification file (TTL or JSON)"),
+    metric: str = typer.Option("coverage", "--metric", "-m", help="Optimization metric: coverage, clarity, brevity, performance"),
+    iterations: int = typer.Option(3, "--iterations", "-i", help="Number of optimization iterations"),
+    model: str | None = typer.Option(None, "--model", help="Override LLM model for optimization"),
+    temperature: float = typer.Option(0.7, "--temperature", "-t", help="LLM temperature (0.0-1.0)"),
+    output_file: Path | None = typer.Option(None, "--output", "-o", help="Output path for optimized spec"),
+    verbose: bool = typer.Option(False, "--verbose", "-v", help="Show detailed optimization progress"),
+) -> None:
     """
-    Optimize a DSPy module with training data.
+    Optimize a specification using DSPy with LLM-powered iterative refinement.
 
-    The training data should be a JSON file with a list of examples:
-    [
-        {"input": "...", "output": "..."},
-        ...
-    ]
+    This command uses DSPy's ChainOfThought to iteratively improve specifications
+    based on the selected metric (coverage, clarity, brevity, or performance).
+
+    The optimization process:
+    1. Loads the specification file (TTL or JSON format)
+    2. Creates a DSPy program for spec optimization
+    3. Runs N iterations of improvement
+    4. Measures improvement at each iteration
+    5. Returns optimized spec with metrics
 
     Examples:
-        specify dspy optimize my_module.py --train examples.json
-        specify dspy optimize my_module.py --train examples.json --optimizer mipro
+        # Optimize for coverage (default)
+        specify dspy optimize ontology/spec-kit-schema.ttl
+
+        # Optimize for clarity with 5 iterations
+        specify dspy optimize memory/documentation.ttl --metric clarity --iterations 5
+
+        # Save optimized output
+        specify dspy optimize spec.json --output optimized_spec.json
+
+        # Use specific model with low temperature
+        specify dspy optimize spec.ttl --model gpt-4o --temperature 0.3 --verbose
     """
+    from specify_cli.core.shell import timed
+
+    @timed
+    def run_optimization() -> None:
+        _optimize_spec_cli(
+            spec_file=spec_file,
+            metric=metric,
+            iterations=iterations,
+            model=model,
+            temperature=temperature,
+            output_file=output_file,
+            verbose=verbose,
+        )
+
+    run_optimization()
+
+
+def _optimize_spec_cli(
+    spec_file: Path,
+    metric: str,
+    iterations: int,
+    model: str | None,
+    temperature: float,
+    output_file: Path | None,
+    verbose: bool,
+) -> None:
+    """CLI wrapper for optimize_spec (separated for testing)."""
     check_dspy_available()
 
+    # Validate inputs
+    if not spec_file.exists():
+        console.print(f"[red]Spec file not found: {spec_file}[/red]")
+        raise typer.Exit(1)
+
+    if metric not in ["coverage", "clarity", "brevity", "performance"]:
+        console.print(f"[red]Invalid metric: {metric}. Choose: coverage, clarity, brevity, performance[/red]")
+        raise typer.Exit(1)
+
+    if iterations < 1 or iterations > 10:
+        console.print("[red]Iterations must be between 1 and 10[/red]")
+        raise typer.Exit(1)
+
+    if temperature < 0.0 or temperature > 1.0:
+        console.print("[red]Temperature must be between 0.0 and 1.0[/red]")
+        raise typer.Exit(1)
+
+    # Load configuration
     config = load_config()
     if not config:
         console.print("[red]DSPy not configured. Run 'specify dspy configure' first.[/red]")
         raise typer.Exit(1)
 
-    if not module_file.exists():
-        console.print(f"[red]Module file not found: {module_file}[/red]")
-        raise typer.Exit(1)
+    # Override model if specified
+    if model:
+        config["model"] = model
 
-    if not train_file.exists():
-        console.print(f"[red]Training file not found: {train_file}[/red]")
-        raise typer.Exit(1)
-
-    # Load training data
+    # Load spec file format
     try:
-        with open(train_file) as f:
-            train_data = json.load(f)
-    except json.JSONDecodeError as e:
-        console.print(f"[red]Invalid JSON in training file: {e}[/red]")
+        spec_format = "ttl" if spec_file.suffix.lower() in [".ttl", ".turtle", ".rdf"] else "json"
+    except Exception as e:
+        console.print(f"[red]Error reading spec file: {e}[/red]")
         raise typer.Exit(1)
 
-    # Configure DSPy
-    lm = get_configured_lm(config)
-    dspy.configure(lm=lm)
+    # Configure DSPy with temperature
+    try:
+        lm = get_configured_lm(config)
+        # Update temperature if different from default
+        if hasattr(lm, "kwargs"):
+            lm.kwargs["temperature"] = temperature
+        elif hasattr(lm, "model_kwargs"):
+            lm.model_kwargs["temperature"] = temperature
 
+        dspy.configure(lm=lm)
+    except Exception as e:
+        console.print(f"[red]Error configuring DSPy: {e}[/red]")
+        raise typer.Exit(1)
+
+    # Show optimization parameters
     console.print(Panel(
-        f"[bold]Module:[/bold] {module_file}\n"
-        f"[bold]Training examples:[/bold] {len(train_data)}\n"
-        f"[bold]Optimizer:[/bold] {optimizer}\n"
-        f"[bold]Max demos:[/bold] {max_demos}",
-        title="Starting Optimization",
+        f"[bold]Spec File:[/bold] {spec_file}\n"
+        f"[bold]Format:[/bold] {spec_format.upper()}\n"
+        f"[bold]Metric:[/bold] {metric}\n"
+        f"[bold]Iterations:[/bold] {iterations}\n"
+        f"[bold]Provider:[/bold] {config.get('provider', 'openai')}\n"
+        f"[bold]Model:[/bold] {config.get('model', 'gpt-4o-mini')}\n"
+        f"[bold]Temperature:[/bold] {temperature}",
+        title="[cyan]DSPy Spec Optimization[/cyan]",
         border_style="cyan"
     ))
 
-    # Convert training data to DSPy examples
-    examples = [dspy.Example(**ex).with_inputs(*[k for k in ex.keys() if k != 'output']) for ex in train_data]
+    # Run optimization using the imported function
+    from specify_cli._dspy_optimize_impl import optimize_spec
 
-    console.print(f"[cyan]Loaded {len(examples)} training examples[/cyan]")
-    console.print(f"[yellow]Note: Full optimization requires loading the module dynamically.[/yellow]")
-    console.print(f"[dim]This is a demonstration of the optimization interface.[/dim]")
+    try:
+        result = optimize_spec(
+            spec_file=spec_file,
+            metric=metric,
+            iterations=iterations,
+            model=config.get("model", "gpt-4o-mini"),
+            temperature=temperature,
+        )
 
-    # For a real implementation, we would:
-    # 1. Import the module dynamically
-    # 2. Create the appropriate optimizer
-    # 3. Run optimization
-    # 4. Save the optimized module
+        if not result.success:
+            console.print(Panel(
+                "[red]Optimization failed[/red]\n\n"
+                "[bold]Errors:[/bold]\n" + "\n".join(f"- {e}" for e in result.errors),
+                title="Optimization Failed",
+                border_style="red"
+            ))
+            raise typer.Exit(1)
 
-    if output_file:
-        console.print(f"[green]Optimized module would be saved to: {output_file}[/green]")
+        # Display results
+        console.print(Panel(
+            f"[bold]Iterations:[/bold] {result.iterations}\n"
+            f"[bold]Improvement:[/bold] {result.improvement:.1f}%\n"
+            f"[bold]Metrics:[/bold]\n"
+            + "\n".join(f"  - {k}: {v:.2f}" for k, v in result.metrics.items()),
+            title="[green]Optimization Complete[/green]",
+            border_style="green"
+        ))
+
+        # Save or display optimized spec
+        if output_file:
+            output_file.write_text(result.optimized_spec)
+            console.print(f"[green]Optimized spec saved to: {output_file}[/green]")
+        else:
+            if verbose:
+                console.print("\n[bold]Original Spec:[/bold]")
+                console.print(Panel(result.original_spec[:500] + "..." if len(result.original_spec) > 500 else result.original_spec))
+
+            console.print("\n[bold cyan]Optimized Spec:[/bold cyan]")
+            syntax = Syntax(result.optimized_spec, spec_format, theme="monokai", line_numbers=True)
+            console.print(Panel(syntax, border_style="green"))
+
+    except Exception as e:
+        console.print(f"[red]Optimization error: {e}[/red]")
+        if verbose:
+            import traceback
+            console.print(f"[dim]{traceback.format_exc()}[/dim]")
+        raise typer.Exit(1)
+
+
 
 
 @dspy_app.command()
@@ -685,7 +790,7 @@ def info():
 
     if DSPY_AVAILABLE:
         table.add_row("DSPy Installed", "[green]Yes[/green]")
-        table.add_row("DSPy Version", dspy.__version__ if hasattr(dspy, '__version__') else "unknown")
+        table.add_row("DSPy Version", dspy.__version__ if hasattr(dspy, "__version__") else "unknown")
     else:
         table.add_row("DSPy Installed", "[red]No[/red]")
 
@@ -717,3 +822,9 @@ def info():
 def get_dspy_app():
     """Return the DSPy Typer app for integration with main CLI."""
     return dspy_app
+
+
+# Export optimize_spec function and result class for use in other modules
+from specify_cli._dspy_optimize_impl import OptimizeResult, optimize_spec  # noqa: E402
+
+__all__ = ["OptimizeResult", "dspy_app", "get_dspy_app", "optimize_spec"]

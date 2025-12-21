@@ -9,36 +9,40 @@ Adapted from uvmgr's external project validation framework.
 
 from __future__ import annotations
 
-import subprocess
 import tempfile
+from concurrent.futures import ThreadPoolExecutor, as_completed
 from dataclasses import dataclass, field
 from pathlib import Path
-from typing import Any, Dict, List, Optional
-from concurrent.futures import ThreadPoolExecutor, as_completed
+from typing import Any
 
 # Optional OTEL instrumentation
 try:
-    from ...core.telemetry import metric_counter, metric_histogram, span
     from ...core.instrumentation import add_span_attributes, add_span_event
+    from ...core.telemetry import metric_counter, metric_histogram, span
+
     _otel_available = True
 except ImportError:
     _otel_available = False
 
     def span(*args, **kwargs):
         from contextlib import contextmanager
+
         @contextmanager
         def _no_op():
             yield
+
         return _no_op()
 
     def metric_counter(name):
         def _no_op(value=1):
             return None
+
         return _no_op
 
     def metric_histogram(name):
         def _no_op(value):
             return None
+
         return _no_op
 
     def add_span_attributes(**kwargs):
@@ -47,13 +51,14 @@ except ImportError:
     def add_span_event(name, attributes=None):
         pass
 
+
 __all__ = [
     "ExternalProjectInfo",
     "ExternalValidationResult",
-    "discover_external_projects",
-    "validate_external_project_with_spiff",
     "batch_validate_external_projects",
+    "discover_external_projects",
     "run_8020_external_project_validation",
+    "validate_external_project_with_spiff",
 ]
 
 
@@ -70,9 +75,9 @@ class ExternalProjectInfo:
     project_type: str = "unknown"  # "web", "cli", "library", "data", "ml"
     confidence: float = 0.0
     test_framework: str = ""
-    dependencies: List[str] = field(default_factory=list)
+    dependencies: list[str] = field(default_factory=list)
 
-    def to_dict(self) -> Dict[str, Any]:
+    def to_dict(self) -> dict[str, Any]:
         """Convert to dictionary."""
         return {
             "path": str(self.path),
@@ -95,14 +100,14 @@ class ExternalValidationResult:
     project_name: str
     success: bool
     duration_seconds: float = 0.0
-    analysis: Dict[str, Any] = field(default_factory=dict)
+    analysis: dict[str, Any] = field(default_factory=dict)
     installation_success: bool = False
     validation_success: bool = False
-    test_results: Dict[str, bool] = field(default_factory=dict)
-    errors: List[str] = field(default_factory=list)
-    metrics: Dict[str, Any] = field(default_factory=dict)
+    test_results: dict[str, bool] = field(default_factory=dict)
+    errors: list[str] = field(default_factory=list)
+    metrics: dict[str, Any] = field(default_factory=dict)
 
-    def to_dict(self) -> Dict[str, Any]:
+    def to_dict(self) -> dict[str, Any]:
         """Convert to dictionary for JSON serialization."""
         return {
             "project_path": str(self.project_path),
@@ -122,7 +127,7 @@ def discover_external_projects(
     search_path: Path = Path.home() / "projects",
     max_depth: int = 3,
     min_confidence: float = 0.5,
-) -> List[ExternalProjectInfo]:
+) -> list[ExternalProjectInfo]:
     """
     Discover Python projects by scanning filesystem.
 
@@ -136,17 +141,18 @@ def discover_external_projects(
         List of discovered projects sorted by confidence
     """
     with span("projects.discover", search_path=str(search_path)):
-        add_span_event("discovery.started", {
-            "search_path": str(search_path),
-            "max_depth": max_depth,
-        })
+        add_span_event(
+            "discovery.started",
+            {
+                "search_path": str(search_path),
+                "max_depth": max_depth,
+            },
+        )
 
         projects = []
 
         if not search_path.exists():
-            add_span_event("discovery.search_path_not_found", {
-                "path": str(search_path)
-            })
+            add_span_event("discovery.search_path_not_found", {"path": str(search_path)})
             return projects
 
         # Recursively search for projects
@@ -160,11 +166,14 @@ def discover_external_projects(
                         project_info = _is_python_project(item)
                         if project_info and project_info.confidence >= min_confidence:
                             projects.append(project_info)
-                            add_span_event("discovery.project_found", {
-                                "path": str(item),
-                                "name": project_info.name,
-                                "confidence": project_info.confidence,
-                            })
+                            add_span_event(
+                                "discovery.project_found",
+                                {
+                                    "path": str(item),
+                                    "name": project_info.name,
+                                    "confidence": project_info.confidence,
+                                },
+                            )
                         _search(item, depth + 1)
             except (PermissionError, OSError):
                 pass
@@ -174,9 +183,12 @@ def discover_external_projects(
         # Sort by confidence
         projects.sort(key=lambda p: p.confidence, reverse=True)
 
-        add_span_event("discovery.completed", {
-            "discovered_projects": len(projects),
-        })
+        add_span_event(
+            "discovery.completed",
+            {
+                "discovered_projects": len(projects),
+            },
+        )
 
         metric_counter("discovery.projects_found")(len(projects))
         return projects
@@ -200,6 +212,7 @@ def validate_external_project_with_spiff(
         ExternalValidationResult
     """
     import time
+
     start_time = time.time()
 
     with span("validation.external_project", project_name=project_info.name):
@@ -210,10 +223,13 @@ def validate_external_project_with_spiff(
         )
 
         try:
-            add_span_event("validation.started", {
-                "project": str(project_info.path),
-                "package_manager": project_info.package_manager,
-            })
+            add_span_event(
+                "validation.started",
+                {
+                    "project": str(project_info.path),
+                    "package_manager": project_info.package_manager,
+                },
+            )
 
             # Step 1: Analyze project
             result.analysis = project_info.to_dict()
@@ -227,6 +243,7 @@ def validate_external_project_with_spiff(
             workflow_path = Path(tempfile.gettempdir()) / f"validate_{project_info.name}.bpmn"
 
             from .otel_validation import create_otel_validation_workflow
+
             create_otel_validation_workflow(workflow_path, test_commands)
 
             validation_result = execute_otel_validation_workflow(
@@ -248,11 +265,14 @@ def validate_external_project_with_spiff(
             result.success = validation_result.success
             result.duration_seconds = time.time() - start_time
 
-            add_span_event("validation.completed", {
-                "project": str(project_info.path),
-                "success": result.success,
-                "duration": result.duration_seconds,
-            })
+            add_span_event(
+                "validation.completed",
+                {
+                    "project": str(project_info.path),
+                    "success": result.success,
+                    "duration": result.duration_seconds,
+                },
+            )
 
             metric_counter("external_validation.completed")(1)
             metric_histogram("external_validation.duration")(result.duration_seconds)
@@ -263,21 +283,24 @@ def validate_external_project_with_spiff(
             result.errors.append(str(e))
             result.duration_seconds = time.time() - start_time
 
-            add_span_event("validation.failed", {
-                "project": str(project_info.path),
-                "error": str(e),
-            })
+            add_span_event(
+                "validation.failed",
+                {
+                    "project": str(project_info.path),
+                    "error": str(e),
+                },
+            )
 
             metric_counter("external_validation.failed")(1)
             return result
 
 
 def batch_validate_external_projects(
-    projects: List[ExternalProjectInfo],
+    projects: list[ExternalProjectInfo],
     parallel: bool = True,
     max_workers: int = 4,
     use_8020: bool = True,
-) -> List[ExternalValidationResult]:
+) -> list[ExternalValidationResult]:
     """
     Validate multiple projects in batch.
 
@@ -292,10 +315,13 @@ def batch_validate_external_projects(
         List of validation results
     """
     with span("validation.batch", num_projects=len(projects)):
-        add_span_event("batch_validation.started", {
-            "num_projects": len(projects),
-            "parallel": parallel,
-        })
+        add_span_event(
+            "batch_validation.started",
+            {
+                "num_projects": len(projects),
+                "parallel": parallel,
+            },
+        )
 
         results = []
 
@@ -306,7 +332,8 @@ def batch_validate_external_projects(
                         validate_external_project_with_spiff,
                         project,
                         use_8020=use_8020,
-                    ): project for project in projects
+                    ): project
+                    for project in projects
                 }
 
                 for future in as_completed(futures):
@@ -315,12 +342,14 @@ def batch_validate_external_projects(
                         results.append(result)
                     except Exception as e:
                         project = futures[future]
-                        results.append(ExternalValidationResult(
-                            project_path=project.path,
-                            project_name=project.name,
-                            success=False,
-                            errors=[str(e)],
-                        ))
+                        results.append(
+                            ExternalValidationResult(
+                                project_path=project.path,
+                                project_name=project.name,
+                                success=False,
+                                errors=[str(e)],
+                            )
+                        )
         else:
             for project in projects:
                 result = validate_external_project_with_spiff(project, use_8020=use_8020)
@@ -329,11 +358,14 @@ def batch_validate_external_projects(
         # Calculate summary
         successful = sum(1 for r in results if r.success)
 
-        add_span_event("batch_validation.completed", {
-            "total_projects": len(results),
-            "successful": successful,
-            "failed": len(results) - successful,
-        })
+        add_span_event(
+            "batch_validation.completed",
+            {
+                "total_projects": len(results),
+                "successful": successful,
+                "failed": len(results) - successful,
+            },
+        )
 
         metric_counter("batch_validation.completed")(1)
         metric_histogram("batch_validation.success_rate")(
@@ -346,9 +378,9 @@ def batch_validate_external_projects(
 def run_8020_external_project_validation(
     search_path: Path = Path.home() / "projects",
     max_depth: int = 2,
-    project_type_filter: Optional[str] = None,
+    project_type_filter: str | None = None,
     parallel: bool = True,
-) -> Dict[str, Any]:
+) -> dict[str, Any]:
     """
     Run 80/20 validation on critical external projects.
 
@@ -365,10 +397,13 @@ def run_8020_external_project_validation(
         Summary of validation results
     """
     with span("validation.8020_external_projects", filter=project_type_filter):
-        add_span_event("8020_validation.started", {
-            "search_path": str(search_path),
-            "type_filter": project_type_filter,
-        })
+        add_span_event(
+            "8020_validation.started",
+            {
+                "search_path": str(search_path),
+                "type_filter": project_type_filter,
+            },
+        )
 
         # Discover projects
         all_projects = discover_external_projects(search_path, max_depth=max_depth)
@@ -402,21 +437,22 @@ def run_8020_external_project_validation(
             "results": [r.to_dict() for r in results],
         }
 
-        add_span_event("8020_validation.completed", {
-            "total_discovered": len(all_projects),
-            "validated": len(results),
-            "successful": successful,
-        })
+        add_span_event(
+            "8020_validation.completed",
+            {
+                "total_discovered": len(all_projects),
+                "validated": len(results),
+                "successful": successful,
+            },
+        )
 
         metric_counter("8020_external_validation.executed")(1)
-        metric_histogram("8020_external_validation.success_rate")(
-            summary["success_rate"]
-        )
+        metric_histogram("8020_external_validation.success_rate")(summary["success_rate"])
 
         return summary
 
 
-def _is_python_project(path: Path) -> Optional[ExternalProjectInfo]:
+def _is_python_project(path: Path) -> ExternalProjectInfo | None:
     """
     Check if directory is a Python project with confidence score.
 
@@ -517,17 +553,19 @@ def _detect_project_type(path: Path) -> str:
 def _generate_project_specific_tests(
     project_info: ExternalProjectInfo,
     use_8020: bool = True,
-) -> List[str]:
+) -> list[str]:
     """Generate test commands specific to project."""
     tests = []
 
     if use_8020:
         # Critical path tests
         module_name = project_info.name.replace("-", "_").split(".")[0]
-        tests.extend([
-            f"cd {project_info.path} && python -c 'import {module_name}'",
-            "python -c 'from specify_cli import specify_cli'",
-        ])
+        tests.extend(
+            [
+                f"cd {project_info.path} && python -c 'import {module_name}'",
+                "python -c 'from specify_cli import specify_cli'",
+            ]
+        )
     else:
         # Comprehensive tests
         if project_info.has_tests:

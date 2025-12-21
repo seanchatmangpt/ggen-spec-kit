@@ -3,14 +3,14 @@
 import os
 import subprocess
 from pathlib import Path
-from typing import Optional, Tuple
+from typing import Tuple
 
 from rich.console import Console
 
 console = Console()
 
 
-def is_git_repo(path: Path = None) -> bool:
+def is_git_repo(path: Path | None = None) -> bool:
     """Check if the specified path is inside a git repository."""
     if path is None:
         path = Path.cwd()
@@ -31,7 +31,7 @@ def is_git_repo(path: Path = None) -> bool:
         return False
 
 
-def init_git_repo(project_path: Path, quiet: bool = False) -> Tuple[bool, Optional[str]]:
+def init_git_repo(project_path: Path, quiet: bool = False) -> Tuple[bool, str | None]:
     """Initialize a git repository in the specified path.
 
     Args:
@@ -39,7 +39,7 @@ def init_git_repo(project_path: Path, quiet: bool = False) -> Tuple[bool, Option
         quiet: if True suppress console output (tracker handles status)
 
     Returns:
-        Tuple of (success: bool, error_message: Optional[str])
+        Tuple of (success: bool, error_message: str | None)
     """
     try:
         original_cwd = Path.cwd()

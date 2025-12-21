@@ -14,7 +14,7 @@ def load_event_log(
     case_id: str = "case:concept:name",
     activity: str = "concept:name",
     timestamp: str = "time:timestamp",
-):
+) -> Any:
     """
     Load an event log from file (XES or CSV).
 

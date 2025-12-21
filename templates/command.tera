@@ -1,0 +1,366 @@
+{# Command Template - Generates Python Typer CLI commands from RDF specifications #}
+{# Constitutional equation: commands/*.py = μ(cli-commands.ttl) #}
+{# This template implements μ₃ EMIT stage of the constitutional equation #}
+
+{%- set cmd_metadata = sparql_results | first -%}
+
+"""
+specify_cli.commands.{{ cmd_metadata.commandModule }} - {{ cmd_metadata.commandName | title }} Command
+{{ "=" | repeat(count=70) }}
+
+CLI command handler for {{ cmd_metadata.commandDescription | lower }}.
+
+This module provides the Typer command interface for {{ cmd_metadata.commandPurpose | lower }}.
+It handles argument parsing, user interaction, and output formatting,
+delegating business logic to the ops layer (three-tier architecture).
+
+Auto-generated from: ontology/cli-commands.ttl
+Constitutional equation: {{ cmd_metadata.commandModule }}.py = μ(cli-commands.ttl)
+DO NOT EDIT MANUALLY - Edit the RDF source instead.
+
+Examples
+--------
+{%- set examples = sparql_results | filter(attribute="exampleCommand") | unique(attribute="exampleCommand") %}
+{%- for example in examples %}
+    $ {{ example.exampleCommand }}
+{%- endfor %}
+
+See Also
+--------
+- :mod:`specify_cli.ops.{{ cmd_metadata.commandModule }}` : Business logic
+- :mod:`specify_cli.runtime` : Runtime execution
+"""
+
+from __future__ import annotations
+
+{%- set has_path_args = sparql_results | filter(attribute="argType", value="Path") | length > 0 %}
+{%- if has_path_args %}
+from pathlib import Path
+{%- endif %}
+{%- set has_optional = sparql_results | filter(attribute="argRequired", value="false") | length > 0 %}
+{%- if has_optional %}
+from typing import Optional
+{%- endif %}
+
+import typer
+from rich.console import Console
+{%- set has_panel = cmd_metadata.useRichPanel == "true" or cmd_metadata.useRichPanel == true %}
+{%- if has_panel %}
+from rich.panel import Panel
+{%- endif %}
+{%- set has_table = cmd_metadata.useRichTable == "true" or cmd_metadata.useRichTable == true %}
+{%- if has_table %}
+from rich.table import Table
+{%- endif %}
+
+from specify_cli.core.instrumentation import instrument_command
+from specify_cli.core.shell import colour
+{%- if cmd_metadata.needsJsonOutput == "true" or cmd_metadata.needsJsonOutput == true %}
+from specify_cli.core.shell import dump_json
+{%- endif %}
+from specify_cli.ops import {{ cmd_metadata.commandModule }} as {{ cmd_metadata.commandModule }}_ops
+
+console = Console()
+
+app = typer.Typer(
+    name="{{ cmd_metadata.commandModule }}",
+    help="{{ cmd_metadata.commandDescription }}",
+)
+
+{%- set helpers = sparql_results | filter(attribute="helperFunction") | unique(attribute="helperFunction") %}
+{%- for helper in helpers %}
+{%- if helper.helperFunction %}
+
+
+def {{ helper.helperFunction }}({{ helper.helperParams | default(value="") }}) -> {{ helper.helperReturnType | default(value="None") }}:
+    """{{ helper.helperDescription }}"""
+    {{ helper.helperBody | default(value="pass") }}
+{%- endif %}
+{%- endfor %}
+
+{%- set subcommands = sparql_results | filter(attribute="subcommandName") | unique(attribute="subcommandName") | sort(attribute="subcommandOrder") %}
+{%- if subcommands | length > 0 %}
+
+{%- for subcmd in subcommands %}
+
+
+@app.command("{{ subcmd.subcommandName }}")
+@instrument_command("{{ cmd_metadata.commandModule }}.{{ subcmd.subcommandName }}", track_args=True)
+def {{ subcmd.subcommandName | replace(from="-", to="_") }}(
+{%- set subcmd_args = sparql_results | filter(attribute="subcommandName", value=subcmd.subcommandName) | filter(attribute="argName") | sort(attribute="argOrder") %}
+{%- if subcmd_args | length > 0 %}
+{%- for arg in subcmd_args %}
+{%- if arg.argKind == "argument" %}
+    {{ arg.argName }}: {% if arg.argRequired == "false" or arg.argRequired == false %}Optional[{{ arg.argType }}]{% else %}{{ arg.argType }}{% endif %} = typer.Argument(
+        {% if arg.argRequired == "false" or arg.argRequired == false %}{{ arg.argDefault | default(value="None") }}{% else %}...{% endif %},
+        help="{{ arg.argHelp }}",
+    ),
+{%- endif %}
+{%- endfor %}
+{%- set opts = sparql_results | filter(attribute="subcommandName", value=subcmd.subcommandName) | filter(attribute="argKind", value="option") | sort(attribute="argOrder") %}
+{%- for opt in opts %}
+    {{ opt.argName | replace(from="-", to="_") }}: {{ opt.argType }} = typer.Option(
+        {{ opt.argDefault | default(value="None") }},
+        "{{ opt.argFlag | default(value="--" ~ opt.argName) }}"
+{%- if opt.argShortFlag %}, "{{ opt.argShortFlag }}"{% endif %},
+{%- if opt.argEnvVar %}
+        envvar="{{ opt.argEnvVar }}",
+{%- endif %}
+        help="{{ opt.argHelp }}",
+    ),
+{%- endfor %}
+{%- else %}
+    ctx: typer.Context,
+{%- endif %}
+) -> None:
+    """{{ subcmd.subcommandDescription }}
+
+{%- if subcmd.subcommandLongDescription %}
+
+    {{ subcmd.subcommandLongDescription }}
+{%- endif %}
+
+    Examples:
+{%- set subcmd_examples = sparql_results | filter(attribute="subcommandName", value=subcmd.subcommandName) | filter(attribute="exampleCommand") %}
+{%- for ex in subcmd_examples %}
+        {{ ex.exampleCommand }}
+{%- if ex.exampleDescription %}
+            {{ ex.exampleDescription }}
+{%- endif %}
+{%- endfor %}
+    """
+{%- if subcmd.subcommandValidation %}
+    # Validation
+{{ subcmd.subcommandValidation | indent(first=true, blank=false) }}
+{%- endif %}
+
+    try:
+{%- if subcmd.subcommandPreExecution %}
+{{ subcmd.subcommandPreExecution | indent(first=true, blank=false) }}
+
+{%- endif %}
+        # Call ops layer (three-tier architecture)
+        result = {{ cmd_metadata.commandModule }}_ops.{{ subcmd.opsFunction | default(value=subcmd.subcommandName | replace(from="-", to="_")) }}(
+{%- set call_args = sparql_results | filter(attribute="subcommandName", value=subcmd.subcommandName) | filter(attribute="argName") | sort(attribute="argOrder") %}
+{%- for arg in call_args %}
+            {{ arg.opsParamName | default(value=arg.argName | replace(from="-", to="_")) }}={{ arg.argName | replace(from="-", to="_") }},
+{%- endfor %}
+        )
+
+{%- if subcmd.outputFormat == "json" %}
+        if json_output:
+            # JSON output format
+            dump_json(result.to_dict())
+            return
+{%- endif %}
+
+{%- if subcmd.outputFormat == "table" %}
+        # Table output
+        console.print()
+        console.print("[bold]{{ subcmd.outputTitle | default(value=subcmd.subcommandName | title ~ " Results") }}[/bold]")
+        console.print()
+
+        table = Table(show_header=True, header_style="bold cyan")
+{%- set table_cols = sparql_results | filter(attribute="subcommandName", value=subcmd.subcommandName) | filter(attribute="tableColumn") | sort(attribute="columnOrder") %}
+{%- for col in table_cols %}
+        table.add_column("{{ col.tableColumn }}"{% if col.columnStyle %}, style="{{ col.columnStyle }}"{% endif %})
+{%- endfor %}
+
+{{ subcmd.tablePopulation | indent(first=true, blank=false) }}
+
+        console.print(table)
+        console.print()
+{%- elif subcmd.outputFormat == "panel" %}
+        # Panel output
+        console.print()
+        console.print(Panel(
+            {{ subcmd.panelContent }},
+            title="{{ subcmd.panelTitle }}",
+            border_style="{{ subcmd.panelStyle | default(value="cyan") }}",
+        ))
+        console.print()
+{%- elif subcmd.outputFormat == "text" %}
+        # Text output
+        console.print()
+{{ subcmd.textOutput | indent(first=true, blank=false) }}
+        console.print()
+{%- else %}
+        # Format output with Rich
+        if result.success:
+            console.print()
+            colour("[green]✓[/green] {{ subcmd.successMessage | default(value="Operation completed successfully") }}", "green")
+            console.print()
+{%- if subcmd.successDetails %}
+{{ subcmd.successDetails | indent(first=true, blank=false) }}
+{%- endif %}
+        else:
+            console.print()
+            colour("[red]✗ {{ subcmd.errorMessage | default(value="Operation failed") }}[/red]", "red")
+            for error in result.errors:
+                console.print(f"  • {error}")
+            raise typer.Exit(1)
+{%- endif %}
+
+{%- if subcmd.exceptionHandling %}
+{{ subcmd.exceptionHandling | indent(first=true, blank=false) }}
+{%- else %}
+
+    except KeyboardInterrupt:
+        console.print()
+        colour("Operation cancelled.", "yellow")
+        raise typer.Exit(130)
+
+    except Exception as e:
+        console.print()
+        colour(f"[red]Error:[/red] {e}", "red")
+{%- if subcmd.needsDebug == "true" or subcmd.needsDebug == true %}
+        if debug:
+            import traceback
+            console.print()
+            console.print("[dim]Stack trace:[/dim]")
+            console.print(traceback.format_exc())
+{%- endif %}
+        raise typer.Exit(1)
+{%- endif %}
+{%- endfor %}
+
+{%- else %}
+
+
+@app.callback(invoke_without_command=True)
+@instrument_command("{{ cmd_metadata.commandModule }}", track_args=True)
+def {{ cmd_metadata.commandModule }}(
+{%- set main_args = sparql_results | filter(attribute="argName") | sort(attribute="argOrder") %}
+{%- if main_args | length > 0 %}
+{%- for arg in main_args %}
+{%- if arg.argKind == "argument" %}
+    {{ arg.argName }}: {% if arg.argRequired == "false" or arg.argRequired == false %}Optional[{{ arg.argType }}]{% else %}{{ arg.argType }}{% endif %} = typer.Argument(
+        {% if arg.argRequired == "false" or arg.argRequired == false %}{{ arg.argDefault | default(value="None") }}{% else %}...{% endif %},
+        help="{{ arg.argHelp }}",
+    ),
+{%- endif %}
+{%- endfor %}
+{%- set main_opts = sparql_results | filter(attribute="argKind", value="option") | sort(attribute="argOrder") %}
+{%- for opt in main_opts %}
+    {{ opt.argName | replace(from="-", to="_") }}: {{ opt.argType }} = typer.Option(
+        {{ opt.argDefault | default(value="None") }},
+        "{{ opt.argFlag | default(value="--" ~ opt.argName) }}"
+{%- if opt.argShortFlag %}, "{{ opt.argShortFlag }}"{% endif %},
+{%- if opt.argEnvVar %}
+        envvar="{{ opt.argEnvVar }}",
+{%- endif %}
+        help="{{ opt.argHelp }}",
+    ),
+{%- endfor %}
+{%- else %}
+    ctx: typer.Context,
+{%- endif %}
+) -> None:
+    """{{ cmd_metadata.commandDescription }}
+
+{%- if cmd_metadata.commandLongDescription %}
+
+    {{ cmd_metadata.commandLongDescription }}
+{%- endif %}
+
+    Examples:
+{%- for example in examples %}
+        {{ example.exampleCommand }}
+{%- if example.exampleDescription %}
+            {{ example.exampleDescription }}
+{%- endif %}
+{%- endfor %}
+    """
+{%- if cmd_metadata.commandValidation %}
+    # Validation
+{{ cmd_metadata.commandValidation | indent(first=true, blank=false) }}
+{%- endif %}
+
+    try:
+{%- if cmd_metadata.commandPreExecution %}
+{{ cmd_metadata.commandPreExecution | indent(first=true, blank=false) }}
+
+{%- endif %}
+        # Call ops layer (three-tier architecture)
+        result = {{ cmd_metadata.commandModule }}_ops.{{ cmd_metadata.opsFunction | default(value=cmd_metadata.commandModule) }}(
+{%- for arg in main_args %}
+            {{ arg.opsParamName | default(value=arg.argName | replace(from="-", to="_")) }}={{ arg.argName | replace(from="-", to="_") }},
+{%- endfor %}
+        )
+
+{%- if cmd_metadata.outputFormat == "json" %}
+        if json_output:
+            # JSON output format
+            dump_json(result.to_dict())
+            return
+{%- endif %}
+
+{%- if cmd_metadata.outputFormat == "table" %}
+        # Table output
+        console.print()
+        console.print("[bold]{{ cmd_metadata.outputTitle | default(value=cmd_metadata.commandName ~ " Results") }}[/bold]")
+        console.print()
+
+        table = Table(show_header=True, header_style="bold cyan")
+{%- set cmd_table_cols = sparql_results | filter(attribute="tableColumn") | sort(attribute="columnOrder") %}
+{%- for col in cmd_table_cols %}
+        table.add_column("{{ col.tableColumn }}"{% if col.columnStyle %}, style="{{ col.columnStyle }}"{% endif %})
+{%- endfor %}
+
+{{ cmd_metadata.tablePopulation | indent(first=true, blank=false) }}
+
+        console.print(table)
+        console.print()
+{%- elif cmd_metadata.outputFormat == "panel" %}
+        # Panel output
+        console.print()
+        console.print(Panel(
+            {{ cmd_metadata.panelContent }},
+            title="{{ cmd_metadata.panelTitle }}",
+            border_style="{{ cmd_metadata.panelStyle | default(value="cyan") }}",
+        ))
+        console.print()
+{%- elif cmd_metadata.outputFormat == "text" %}
+        # Text output
+        console.print()
+{{ cmd_metadata.textOutput | indent(first=true, blank=false) }}
+        console.print()
+{%- else %}
+        # Format output with Rich
+        if result.success:
+            console.print()
+            colour("[green]✓[/green] {{ cmd_metadata.successMessage | default(value="Operation completed successfully") }}", "green")
+            console.print()
+{%- if cmd_metadata.successDetails %}
+{{ cmd_metadata.successDetails | indent(first=true, blank=false) }}
+{%- endif %}
+        else:
+            console.print()
+            colour("[red]✗ {{ cmd_metadata.errorMessage | default(value="Operation failed") }}[/red]", "red")
+            for error in result.errors:
+                console.print(f"  • {error}")
+            raise typer.Exit(1)
+{%- endif %}
+
+{%- if cmd_metadata.exceptionHandling %}
+{{ cmd_metadata.exceptionHandling | indent(first=true, blank=false) }}
+{%- else %}
+
+    except KeyboardInterrupt:
+        console.print()
+        colour("Operation cancelled.", "yellow")
+        raise typer.Exit(130)
+
+    except Exception as e:
+        console.print()
+        colour(f"[red]Error:[/red] {e}", "red")
+{%- if cmd_metadata.needsDebug == "true" or cmd_metadata.needsDebug == true %}
+        if debug:
+            import traceback
+            console.print()
+            console.print("[dim]Stack trace:[/dim]")
+            console.print(traceback.format_exc())
+{%- endif %}
+        raise typer.Exit(1)
+{%- endif %}
+{%- endif %}

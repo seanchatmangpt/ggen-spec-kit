@@ -72,8 +72,8 @@ docs/*.ttl                            # Guide specs
 # Validate RDF syntax
 uv run python -c "from rdflib import Graph; g = Graph(); g.parse('path/to/spec.ttl'); print(f'Valid: {len(g)} triples')"
 
-# Generate with ggen
-ggen sync --config docs/ggen.toml --spec feature-name
+# Generate with ggen (reads ggen.toml from CWD)
+cd docs/ && ggen sync
 ```
 
 ## Output Format
@@ -90,6 +90,7 @@ ggen sync --config docs/ggen.toml --spec feature-name
 
 ### Generation
 ```bash
-ggen sync --config docs/ggen.toml --spec feature-name
+# Run ggen sync from the directory containing ggen.toml
+cd docs/ && ggen sync
 ```
 ```

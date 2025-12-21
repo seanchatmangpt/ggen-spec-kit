@@ -8,7 +8,7 @@ NO HUMAN INTERVENTION POINTS.
 """
 
 from pathlib import Path
-from typing import Dict, Any, Optional
+from typing import Dict, Any
 from SpiffWorkflow.bpmn.workflow import BpmnWorkflow
 from SpiffWorkflow.bpmn.parser.BpmnParser import BpmnParser
 from SpiffWorkflow.task import TaskState
@@ -31,7 +31,7 @@ class SelfAutomatingSystem:
     If humans try to intervene, their changes are rejected.
     """
 
-    def __init__(self, workflows_dir: Path = None):
+    def __init__(self, workflows_dir: Path | None = None):
         self.workflows_dir = workflows_dir or Path(__file__).parent.parent.parent / "workflows"
         self.workflows = {}
         self._load_workflows()
@@ -204,7 +204,7 @@ class SelfAutomatingSystem:
 
         return results
 
-    def continuous_execution_loop(self, ontology_path: str, watch_interval: int = 60):
+    def continuous_execution_loop(self, ontology_path: str, watch_interval: int = 60) -> None:
         """
         Continuous self-automating execution loop.
 
@@ -279,7 +279,7 @@ def create_self_automating_cli():
     def run_pipeline(
         ontology: str = typer.Argument(..., help="RDF ontology file path"),
         config: str = typer.Option("ggen.toml", help="Configuration file")
-    ):
+    ) -> None:
         """Execute 3T transformation pipeline (μ) on RDF ontology."""
         system = SelfAutomatingSystem()
         console.print(f"[bold]Executing 3T Pipeline: docs = μ({ontology})[/bold]")
@@ -296,7 +296,7 @@ def create_self_automating_cli():
     @app.command("validate")
     def validate_request(
         request_file: str = typer.Argument(..., help="RDF change request file")
-    ):
+    ) -> None:
         """Validate change request via HDITC proficiency gate."""
         system = SelfAutomatingSystem()
 
@@ -319,7 +319,7 @@ def create_self_automating_cli():
     def watch_ontology(
         ontology: str = typer.Argument(..., help="RDF ontology file to watch"),
         interval: int = typer.Option(60, help="Check interval in seconds")
-    ):
+    ) -> None:
         """Continuously watch ontology and auto-execute pipeline on changes."""
         system = SelfAutomatingSystem()
         console.print("[bold]Starting continuous self-automating execution[/bold]")

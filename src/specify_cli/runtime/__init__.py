@@ -98,8 +98,6 @@ from .tools import (
 # ggen wrapper
 from .ggen import (
     GgenError,
-    compile_ontology,
-    generate_code,
     get_ggen_version,
     is_ggen_available,
     sync_specs,
@@ -140,8 +138,6 @@ __all__ = [
     # ggen
     "is_ggen_available",
     "get_ggen_version",
-    "compile_ontology",
     "sync_specs",
-    "generate_code",
     "GgenError",
 ]

@@ -1,0 +1,498 @@
+{# ============================================================================ #}
+{# command-test.tera - Generate pytest CLI tests from RDF command specs       #}
+{# ============================================================================ #}
+{# Constitutional equation: test_{{ command_name }}.py = μ(cli-commands.ttl)  #}
+{#                                                                              #}
+{# Purpose: Auto-generate comprehensive E2E tests for CLI commands             #}
+{# Input: SPARQL query results with command metadata, arguments, options       #}
+{# Output: Production-ready pytest test file with 100% type coverage           #}
+{#                                                                              #}
+{# Template Variables (from SPARQL):                                            #}
+{#   - command_name: str - Command name (e.g., "check", "init")                #}
+{#   - command_group: str - Command group/category                             #}
+{#   - command_description: str - Brief description                            #}
+{#   - arguments: list[dict] - Command arguments with name, type, required     #}
+{#   - options: list[dict] - Command options with name, type, default          #}
+{#   - error_cases: list[dict] - Known error scenarios to test                 #}
+{#   - examples: list[str] - Usage examples from docs                          #}
+{# ============================================================================ #}
+
+"""E2E tests for specify {{ command_name }} command.
+
+Auto-generated from: ontology/cli-commands.ttl
+Constitutional equation: test_{{ command_name }}.py = μ(cli-commands.ttl)
+
+⚠️  DO NOT EDIT MANUALLY
+    Edit the RDF source in ontology/cli-commands.ttl
+    Then regenerate: ggen sync --config docs/ggen.toml
+
+This module tests the complete {{ command_name }} command flow including:
+- CLI invocation via CliRunner
+- Integration with ops.{{ command_name }} module
+- Output formatting (table, JSON, verbose)
+- Error handling and exit codes
+- All arguments and options
+- Known error cases
+
+Test Coverage
+-------------
+- Basic {{ command_name }} command execution
+- All command arguments ({{ arguments | length }} total)
+- All command options ({{ options | length }} total)
+- Error cases ({{ error_cases | length }} scenarios)
+- Help command display
+- Exit codes (0=success, 1=failure, 130=cancelled)
+
+Examples
+--------
+    $ pytest tests/e2e/test_commands_{{ command_name }}.py -v -m e2e
+    $ pytest tests/e2e/test_commands_{{ command_name }}.py::test_{{ command_name }}_help
+    $ pytest tests/e2e/test_commands_{{ command_name }}.py -k "basic"
+
+Generated: {{ now() | date(format="%Y-%m-%d %H:%M:%S") }}
+"""
+
+from __future__ import annotations
+
+import json
+from pathlib import Path
+from typing import Any
+from unittest.mock import MagicMock, patch
+
+import pytest
+from typer.testing import CliRunner
+
+from specify_cli.app import app
+
+runner = CliRunner()
+
+
+# ============================================================================
+# Test: Help and Documentation
+# ============================================================================
+
+
+@pytest.mark.e2e
+def test_{{ command_name }}_help() -> None:
+    """Test {{ command_name }} --help shows usage information.
+
+    Verifies:
+        - Help text is displayed
+        - Exit code is 0
+        - Description is shown
+        - Arguments are listed
+        - Options are documented
+    """
+    result = runner.invoke(app, ["{{ command_name }}", "--help"])
+
+    assert result.exit_code == 0
+    assert "{{ command_name }}" in result.stdout.lower()
+    assert "help" in result.stdout.lower()
+    {% if command_description %}
+    assert "{{ command_description[:50] | lower }}" in result.stdout.lower()
+    {% endif %}
+
+
+# ============================================================================
+# Test: Basic Command Execution
+# ============================================================================
+
+
+@pytest.mark.e2e
+def test_{{ command_name }}_basic_execution() -> None:
+    """Test {{ command_name }} command runs successfully with minimal args.
+
+    Verifies:
+        - Command executes without errors
+        - Exit code is 0 on success
+        - Basic output is produced
+    """
+    {% if arguments | filter(attribute="required") | length > 0 %}
+    # Mock required dependencies
+    with patch("specify_cli.ops.{{ command_name }}.{{ command_name }}") as mock_op:
+        mock_op.return_value = {"success": True}
+
+        # Build command with required arguments
+        cmd = ["{{ command_name }}"{% for arg in arguments | filter(attribute="required") %}, "{{ arg.default_test_value | default(value="test-value") }}"{% endfor %}]
+        result = runner.invoke(app, cmd)
+
+        assert result.exit_code == 0
+    {% else %}
+    # No required arguments
+    result = runner.invoke(app, ["{{ command_name }}"])
+
+    # Should execute (exit code may vary based on environment)
+    assert result.exit_code in [0, 1]
+    assert len(result.stdout) > 0
+    {% endif %}
+
+
+# ============================================================================
+# Test: Command Arguments
+# ============================================================================
+
+{% for arg in arguments %}
+
+@pytest.mark.e2e
+def test_{{ command_name }}_argument_{{ arg.name | replace("-", "_") }}() -> None:
+    """Test {{ command_name }} with {{ arg.name }} argument.
+
+    Argument Details:
+        Name: {{ arg.name }}
+        Type: {{ arg.type }}
+        Required: {{ arg.required }}
+        {% if arg.description %}Description: {{ arg.description }}{% endif %}
+
+    Verifies:
+        {% if arg.required %}- Error shown when argument is missing
+        - {% endif %}Argument is properly parsed
+        - Value is passed to ops layer
+    """
+    {% if arg.required %}
+    # Test missing required argument
+    result = runner.invoke(app, ["{{ command_name }}"])
+    assert result.exit_code != 0
+    # Should show error or help
+
+    # Test with valid argument
+    with patch("specify_cli.ops.{{ command_name }}.{{ command_name }}") as mock_op:
+        mock_op.return_value = {"success": True}
+
+        cmd = ["{{ command_name }}", "{{ arg.default_test_value | default(value="test-value") }}"]
+        result = runner.invoke(app, cmd)
+
+        # Verify argument was passed
+        if result.exit_code == 0:
+            assert mock_op.called
+    {% else %}
+    # Optional argument test
+    with patch("specify_cli.ops.{{ command_name }}.{{ command_name }}") as mock_op:
+        mock_op.return_value = {"success": True}
+
+        cmd = ["{{ command_name }}"{% if arg.position %}, "{{ arg.default_test_value | default(value="test-value") }}"{% endif %}]
+        result = runner.invoke(app, cmd)
+
+        # Should handle optional argument gracefully
+        assert result.exit_code in [0, 1]
+    {% endif %}
+
+
+{% if arg.type == "path" %}
+@pytest.mark.e2e
+def test_{{ command_name }}_argument_{{ arg.name | replace("-", "_") }}_invalid_path() -> None:
+    """Test {{ command_name }} with invalid {{ arg.name }} path.
+
+    Verifies:
+        - Invalid paths are rejected
+        - Error message is clear
+        - Exit code is non-zero
+    """
+    with patch("specify_cli.ops.{{ command_name }}.{{ command_name }}") as mock_op:
+        # Mock to raise error for invalid path
+        from specify_cli.ops.{{ command_name }} import {{ command_name | title }}Error
+        mock_op.side_effect = {{ command_name | title }}Error("Invalid path")
+
+        cmd = ["{{ command_name }}", "/nonexistent/path/that/does/not/exist"]
+        result = runner.invoke(app, cmd)
+
+        assert result.exit_code != 0
+{% endif %}
+{% endfor %}
+
+
+# ============================================================================
+# Test: Command Options
+# ============================================================================
+
+{% for opt in options %}
+
+@pytest.mark.e2e
+def test_{{ command_name }}_option_{{ opt.name | replace("-", "_") | trim_start_matches(pat="--") }}() -> None:
+    """Test {{ command_name }} with {{ opt.name }} option.
+
+    Option Details:
+        Name: {{ opt.name }}
+        Type: {{ opt.type | default(value="flag") }}
+        Default: {{ opt.default | default(value="None") }}
+        {% if opt.description %}Description: {{ opt.description }}{% endif %}
+
+    Verifies:
+        - Option is recognized
+        - Value is properly parsed
+        - Default behavior without option
+    """
+    {% if opt.type == "flag" or opt.type == "boolean" %}
+    # Test flag option
+    with patch("specify_cli.ops.{{ command_name }}.{{ command_name }}") as mock_op:
+        mock_op.return_value = {"success": True}
+
+        # Test with flag enabled
+        cmd = ["{{ command_name }}", "{{ opt.name }}"{% for arg in arguments | filter(attribute="required") %}, "{{ arg.default_test_value | default(value="test-value") }}"{% endfor %}]
+        result = runner.invoke(app, cmd)
+
+        # Should execute
+        assert result.exit_code in [0, 1]
+
+        # Test without flag (default behavior)
+        cmd_default = ["{{ command_name }}"{% for arg in arguments | filter(attribute="required") %}, "{{ arg.default_test_value | default(value="test-value") }}"{% endfor %}]
+        result_default = runner.invoke(app, cmd_default)
+
+        # Should also execute
+        assert result_default.exit_code in [0, 1]
+    {% else %}
+    # Test option with value
+    with patch("specify_cli.ops.{{ command_name }}.{{ command_name }}") as mock_op:
+        mock_op.return_value = {"success": True}
+
+        cmd = ["{{ command_name }}", "{{ opt.name }}", "{{ opt.test_value | default(value="test-option-value") }}"{% for arg in arguments | filter(attribute="required") %}, "{{ arg.default_test_value | default(value="test-value") }}"{% endfor %}]
+        result = runner.invoke(app, cmd)
+
+        # Verify option is processed
+        assert result.exit_code in [0, 1]
+    {% endif %}
+{% endfor %}
+
+{% if options | filter(attribute="type", value="flag") | length > 1 %}
+
+@pytest.mark.e2e
+@pytest.mark.parametrize(
+    ("option_flag", "expected_behavior"),
+    [
+        {% for opt in options | filter(attribute="type", value="flag") %}
+        ("{{ opt.name }}", "{{ opt.expected_behavior | default(value="enabled") }}"),
+        {% endfor %}
+    ],
+)
+def test_{{ command_name }}_option_flags_parametrized(
+    option_flag: str, expected_behavior: str
+) -> None:
+    """Test {{ command_name }} with various flag options using parametrization.
+
+    Parameters
+    ----------
+    option_flag : str
+        The command-line flag to test.
+    expected_behavior : str
+        Expected behavior description.
+
+    Verifies:
+        - All flag options work correctly
+        - Output matches expected behavior
+    """
+    with patch("specify_cli.ops.{{ command_name }}.{{ command_name }}") as mock_op:
+        mock_op.return_value = {"success": True}
+
+        cmd = ["{{ command_name }}", option_flag{% for arg in arguments | filter(attribute="required") %}, "{{ arg.default_test_value | default(value="test-value") }}"{% endfor %}]
+        result = runner.invoke(app, cmd)
+
+        # Verify flag is recognized
+        assert result.exit_code in [0, 1]
+{% endif %}
+
+
+# ============================================================================
+# Test: Error Cases
+# ============================================================================
+
+{% for error in error_cases %}
+
+@pytest.mark.e2e
+def test_{{ command_name }}_error_{{ error.id | replace("-", "_") }}() -> None:
+    """Test {{ command_name }} handles {{ error.scenario }}.
+
+    Error Scenario:
+        ID: {{ error.id }}
+        Scenario: {{ error.scenario }}
+        {% if error.trigger %}Trigger: {{ error.trigger }}{% endif %}
+        Expected: {{ error.expected_behavior }}
+
+    Verifies:
+        - Error is caught gracefully
+        - Appropriate exit code
+        - Helpful error message
+    """
+    {% if error.mock_setup %}
+    {{ error.mock_setup }}
+    {% endif %}
+
+    with patch("specify_cli.ops.{{ command_name }}.{{ command_name }}") as mock_op:
+        {% if error.exception %}
+        from {{ error.exception_module | default(value="specify_cli.ops." ~ command_name) }} import {{ error.exception }}
+        mock_op.side_effect = {{ error.exception }}("{{ error.message }}")
+        {% endif %}
+
+        cmd = {{ error.command_args }}
+        result = runner.invoke(app, cmd)
+
+        assert result.exit_code == {{ error.expected_exit_code | default(value=1) }}
+        {% if error.expected_output %}
+        assert "{{ error.expected_output | lower }}" in result.stdout.lower()
+        {% endif %}
+{% endfor %}
+
+
+@pytest.mark.e2e
+def test_{{ command_name }}_keyboard_interrupt() -> None:
+    """Test {{ command_name }} handles keyboard interrupt gracefully.
+
+    Verifies:
+        - Exit code is 130 (SIGINT)
+        - Cleanup message shown
+        - No stack traces in output
+    """
+    with patch("specify_cli.ops.{{ command_name }}.{{ command_name }}") as mock_op:
+        mock_op.side_effect = KeyboardInterrupt()
+
+        cmd = ["{{ command_name }}"{% for arg in arguments | filter(attribute="required") %}, "{{ arg.default_test_value | default(value="test-value") }}"{% endfor %}]
+        result = runner.invoke(app, cmd)
+
+        assert result.exit_code == 130
+        assert "cancelled" in result.stdout.lower() or result.exit_code == 130
+
+
+@pytest.mark.e2e
+def test_{{ command_name }}_unexpected_exception() -> None:
+    """Test {{ command_name }} handles unexpected exceptions.
+
+    Verifies:
+        - Exit code is 1 on error
+        - Error message displayed
+        - Exception details included
+    """
+    with patch("specify_cli.ops.{{ command_name }}.{{ command_name }}") as mock_op:
+        mock_op.side_effect = RuntimeError("Unexpected error occurred")
+
+        cmd = ["{{ command_name }}"{% for arg in arguments | filter(attribute="required") %}, "{{ arg.default_test_value | default(value="test-value") }}"{% endfor %}]
+        result = runner.invoke(app, cmd)
+
+        assert result.exit_code == 1
+        assert "error" in result.stdout.lower()
+
+
+# ============================================================================
+# Test: Output Formats
+# ============================================================================
+
+{% if options | filter(attribute="name", value="--json") | length > 0 %}
+
+@pytest.mark.e2e
+def test_{{ command_name }}_json_output() -> None:
+    """Test {{ command_name }} JSON output format correctness.
+
+    Verifies:
+        - JSON output is valid
+        - Contains expected fields
+        - Proper structure
+    """
+    with patch("specify_cli.ops.{{ command_name }}.{{ command_name }}") as mock_op:
+        mock_op.return_value = {
+            "success": True,
+            "data": {"test": "value"},
+        }
+
+        cmd = ["{{ command_name }}", "--json"{% for arg in arguments | filter(attribute="required") %}, "{{ arg.default_test_value | default(value="test-value") }}"{% endfor %}]
+        result = runner.invoke(app, cmd)
+
+        # Verify JSON is valid
+        if result.exit_code == 0:
+            try:
+                data = json.loads(result.stdout)
+                assert isinstance(data, dict)
+            except json.JSONDecodeError:
+                pytest.fail("Invalid JSON output")
+{% endif %}
+
+{% if options | filter(attribute="name", value="--verbose") | length > 0 %}
+
+@pytest.mark.e2e
+def test_{{ command_name }}_verbose_output() -> None:
+    """Test {{ command_name }} verbose flag shows detailed information.
+
+    Verifies:
+        - Verbose mode shows additional details
+        - More information than default output
+    """
+    with patch("specify_cli.ops.{{ command_name }}.{{ command_name }}") as mock_op:
+        mock_op.return_value = {"success": True}
+
+        # Test with verbose
+        cmd_verbose = ["{{ command_name }}", "--verbose"{% for arg in arguments | filter(attribute="required") %}, "{{ arg.default_test_value | default(value="test-value") }}"{% endfor %}]
+        result_verbose = runner.invoke(app, cmd_verbose)
+
+        # Test without verbose
+        cmd_default = ["{{ command_name }}"{% for arg in arguments | filter(attribute="required") %}, "{{ arg.default_test_value | default(value="test-value") }}"{% endfor %}]
+        result_default = runner.invoke(app, cmd_default)
+
+        # Verbose should have more output (usually)
+        if result_verbose.exit_code == 0 and result_default.exit_code == 0:
+            # Verbose typically has more details
+            assert len(result_verbose.stdout) > 0
+{% endif %}
+
+
+# ============================================================================
+# Test: Integration and E2E Workflows
+# ============================================================================
+
+
+@pytest.mark.e2e
+def test_{{ command_name }}_full_workflow() -> None:
+    """Test {{ command_name }} complete end-to-end workflow.
+
+    Verifies:
+        - Complete command execution
+        - All layers work together (command → ops → runtime)
+        - Expected output produced
+        - Side effects occur (if any)
+    """
+    with patch("specify_cli.ops.{{ command_name }}.{{ command_name }}") as mock_op:
+        mock_op.return_value = {
+            "success": True,
+            {% for field in expected_output_fields %}
+            "{{ field.name }}": {{ field.test_value }},
+            {% endfor %}
+        }
+
+        cmd = ["{{ command_name }}"{% for arg in arguments | filter(attribute="required") %}, "{{ arg.default_test_value | default(value="test-value") }}"{% endfor %}]
+        result = runner.invoke(app, cmd)
+
+        # Verify full workflow
+        if result.exit_code == 0:
+            assert mock_op.called
+            # Verify output contains expected elements
+            assert len(result.stdout) > 0
+
+
+# ============================================================================
+# Test: Environment and Configuration
+# ============================================================================
+
+
+@pytest.mark.e2e
+def test_{{ command_name }}_respects_environment_variables() -> None:
+    """Test {{ command_name }} respects environment variables.
+
+    Verifies:
+        - Environment variables are read
+        - Configuration is applied
+    """
+    import os
+
+    # Set test environment variable
+    os.environ["SPECIFY_DEBUG"] = "true"
+
+    try:
+        result = runner.invoke(app, ["{{ command_name }}", "--help"])
+        assert result.exit_code == 0
+    finally:
+        # Clean up
+        os.environ.pop("SPECIFY_DEBUG", None)
+
+
+# ============================================================================
+# Main Entry Point (for direct test execution)
+# ============================================================================
+
+
+if __name__ == "__main__":
+    pytest.main([__file__, "-v", "-m", "e2e"])

@@ -147,10 +147,9 @@ uv run pytest --cov=src/specify_cli  # With coverage
 uv run ruff check src/               # Lint
 uv run mypy src/                     # Type check
 
-# ggen Operations
-ggen --version                       # Check ggen v5.0.2
-ggen sync --config docs/ggen.toml    # Transform RDF to Markdown
-ggen validate --config docs/ggen.toml # Validate RDF
+# ggen Operations (ggen v5.0.2 - sync only)
+ggen --version                    # Check ggen v5.0.2
+ggen sync                         # Transform RDF to Markdown (reads ggen.toml from CWD)
 
 # CLI
 specify --help                       # Show CLI help
@@ -158,38 +157,175 @@ specify check                        # Check tool availability
 specify init project-name            # Initialize project
 ```
 
-## RDF-First Development
+## 🧬 RDF-First Development: The Constitutional Equation
 
-### Constitutional Equation
+### CRITICAL: Spec-Driven Development Principles
 
-All specifications follow:
+**THE GOLDEN RULE:**
 ```
 spec.md = μ(feature.ttl)
 ```
 
-Where μ is the five-stage transformation:
+**What This Means:**
+1. **RDF is the source of truth** - NOT Python, NOT Markdown
+2. **Generated files are build artifacts** - NEVER edit them manually
+3. **CLI commands are generated from RDF** - Edit ontology/cli-commands.ttl, not src/specify_cli/commands/*.py
+4. **Documentation is generated from RDF** - Edit memory/*.ttl, not docs/*.md
+5. **Tests are generated from RDF** - Specifications drive test cases
+
+### The μ Transformation Pipeline
+
+```
+feature.ttl → μ₁ → μ₂ → μ₃ → μ₄ → μ₅ → spec.md + receipt.json
+               │     │     │     │     │
+               │     │     │     │     └─ RECEIPT (SHA256 proof)
+               │     │     │     └─ CANONICALIZE (format)
+               │     │     └─ EMIT (Tera template)
+               │     └─ EXTRACT (SPARQL query)
+               └─ NORMALIZE (SHACL validation)
+```
+
+**Five Stages:**
 1. **μ₁ Normalize**: Validate SHACL shapes
 2. **μ₂ Extract**: Execute SPARQL queries
 3. **μ₃ Emit**: Render Tera templates
 4. **μ₄ Canonicalize**: Format output
 5. **μ₅ Receipt**: SHA256 hash proof
 
-### Key Locations
+**See:** `/Users/sac/ggen-spec-kit/docs/CONSTITUTIONAL_EQUATION.md` for complete reference
+
+### Spec-Driven Workflow
+
+```bash
+# 1. Edit RDF specification (source of truth)
+vim ontology/cli-commands.ttl
+
+# 2. Validate RDF syntax and SHACL constraints
+specify ggen validate-rdf ontology/cli-commands.ttl
+
+# 3. Generate Python code, docs, tests from RDF
+ggen sync  # Reads ggen.toml from CWD
+
+# 4. Verify cryptographic receipts
+specify ggen verify
+
+# 5. Check idempotence (μ∘μ = μ)
+specify ggen check-idempotence
+
+# 6. Run generated tests
+uv run pytest tests/
+```
+
+### File Structure (RDF-First)
 
 ```
-ontology/                    # Ontology schemas
-├── spec-kit-schema.ttl
-└── spec-kit-docs-extension.ttl
+ontology/                    # Ontology schemas (SOURCE OF TRUTH)
+├── spec-kit-schema.ttl      # Core schema definitions
+├── spec-kit-docs-extension.ttl  # Documentation extensions
+└── cli-commands.ttl         # CLI command specifications → generates commands/*.py
 
-memory/                      # Specifications
-├── philosophy.ttl
-├── documentation.ttl
-└── changelog.ttl
+memory/                      # Specifications (SOURCE OF TRUTH)
+├── philosophy.ttl           # Philosophy docs → generates docs/spec-driven.md
+├── documentation.ttl        # General docs → generates README.md
+└── changelog.ttl            # Changelog → generates CHANGELOG.md
 
-sparql/                      # SPARQL queries
-templates/                   # Tera templates
-docs/ggen.toml              # ggen configuration
+sparql/                      # SPARQL query templates
+├── command-extract.rq       # Extract CLI command metadata
+├── docs-extract.rq          # Extract documentation
+└── changelog-extract.rq     # Extract changelog entries
+
+templates/                   # Tera code generation templates
+├── command.tera             # Python command template
+├── command-test.tera        # Pytest test template
+├── philosophy.tera          # Philosophy doc template
+└── changelog.tera           # Changelog template
+
+docs/ggen.toml              # ggen transformation configuration
+
+# GENERATED FILES (Do not edit manually!)
+src/specify_cli/commands/    # Generated from ontology/cli-commands.ttl
+tests/e2e/test_commands_*.py # Generated from ontology/cli-commands.ttl
+docs/*.md                    # Generated from memory/*.ttl
 ```
+
+### When to Edit RDF vs Python
+
+**✅ EDIT RDF (ontology/cli-commands.ttl) FOR:**
+- Adding new CLI commands
+- Changing command arguments/options
+- Updating command descriptions
+- Modifying command behavior specifications
+- Adding new features to be generated
+
+**✅ EDIT PYTHON (src/specify_cli/ops/*.py, runtime/*.py) FOR:**
+- Business logic implementation
+- Runtime operations
+- Integration with external tools
+- Core utilities and helpers
+
+**❌ NEVER EDIT THESE (they are generated):**
+- `src/specify_cli/commands/*.py` (except custom logic in ops/runtime)
+- `tests/e2e/test_commands_*.py`
+- `docs/*.md` (generated from memory/*.ttl)
+- `CHANGELOG.md` (generated from memory/changelog.ttl)
+
+### Example: Adding a New CLI Command
+
+**WRONG APPROACH:**
+```python
+# ❌ DON'T manually create src/specify_cli/commands/validate.py
+# This violates the constitutional equation!
+```
+
+**CORRECT APPROACH:**
+```turtle
+# ✅ Edit ontology/cli-commands.ttl
+sk:validate
+    a sk:Command ;
+    rdfs:label "validate" ;
+    sk:description "Validate RDF specifications" ;
+    sk:hasArgument [
+        a sk:Argument ;
+        sk:name "file" ;
+        sk:type "Path" ;
+        sk:required true
+    ] .
+```
+
+Then run:
+```bash
+ggen sync  # Generates Python code, tests, docs
+```
+
+### Verification Commands
+
+```bash
+# Check if generated files match RDF source
+specify ggen verify
+
+# Verify idempotence (running twice produces identical output)
+specify ggen check-idempotence
+
+# Validate RDF against SHACL shapes
+specify ggen validate-rdf ontology/cli-commands.ttl
+
+# Full verification pipeline
+specify ggen sync && specify ggen verify && uv run pytest tests/
+```
+
+### Constitutional Violations
+
+**The equation is violated when:**
+- Generated files are manually edited
+- RDF source and Python code diverge
+- Receipts don't match current files
+- Transformation is not idempotent (μ∘μ ≠ μ)
+
+**How to fix violations:**
+1. Edit the RDF source, not the generated file
+2. Run `ggen sync` to regenerate
+3. Run `specify ggen verify` to check consistency
+4. Commit both RDF source AND generated files together
 
 ## OpenTelemetry
 

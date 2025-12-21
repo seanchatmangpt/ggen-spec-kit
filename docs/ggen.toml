@@ -1,16 +1,21 @@
 # ============================================================================
-# Spec-Kit Documentation Transformation Configuration
+# Spec-Kit Transformation Configuration - SINGLE SOURCE OF TRUTH
 # ============================================================================
-# Configuration for ggen v5.0.2 transformations of documentation from RDF to Markdown
-# Implements the constitutional equation: documentation.md = μ(documentation.ttl)
+# Configuration for ggen v5.0.2 transformations from RDF to code and documentation
+# Implements the constitutional equation: output = μ(specification.ttl)
+#
+# This manifest proves ALL transformations:
+# - Documentation: spec.md = μ(documentation.ttl)
+# - Code: commands/*.py = μ(cli-commands.ttl)
+# - Tests: test_*.py = μ(cli-commands.ttl)
 #
 # Usage: ggen sync --config docs/ggen.toml
 # ============================================================================
 
 [metadata]
-name = "spec-kit-documentation"
-description = "RDF-to-Markdown transformations for Spec-Kit documentation"
-version = "1.0"
+name = "spec-kit-transformations"
+description = "RDF-to-Code and RDF-to-Documentation transformations for Spec-Kit"
+version = "2.0"
 schema_files = [
   "ontology/spec-kit-schema.ttl",
   "ontology/spec-kit-docs-extension.ttl"
@@ -164,6 +169,166 @@ schema_files = ["ontology/spec-kit-schema.ttl", "ontology/spec-kit-docs-extensio
 sparql_query = "sparql/guide-query.rq"
 template = "templates/guide.tera"
 output_file = "SUPPORT.md"
+deterministic = true
+
+# ============================================================================
+# TRANSFORMATIONS - Code Generation (CLI Commands)
+# ============================================================================
+# Implements: commands/*.py = μ(cli-commands.ttl)
+# Proves code generation follows the constitutional equation
+
+[[transformations.code]]
+name = "cli-init-command"
+description = "Generate init.py command from CLI ontology"
+input_files = ["ontology/cli-commands.ttl"]
+schema_files = ["ontology/spec-kit-schema.ttl", "ontology/cli-schema.ttl"]
+sparql_query = "sparql/command-query.rq"
+sparql_params = { command_name = "init" }
+template = "templates/command.tera"
+output_file = "src/specify_cli/commands/init.py"
+deterministic = true
+
+[[transformations.code]]
+name = "cli-init-tests"
+description = "Generate init command tests from CLI ontology"
+input_files = ["ontology/cli-commands.ttl"]
+schema_files = ["ontology/spec-kit-schema.ttl", "ontology/cli-schema.ttl"]
+sparql_query = "sparql/command-query.rq"
+sparql_params = { command_name = "init" }
+template = "templates/command-test.tera"
+output_file = "tests/e2e/test_commands_init.py"
+deterministic = true
+
+[[transformations.code]]
+name = "cli-check-command"
+description = "Generate check.py command from CLI ontology"
+input_files = ["ontology/cli-commands.ttl"]
+schema_files = ["ontology/spec-kit-schema.ttl", "ontology/cli-schema.ttl"]
+sparql_query = "sparql/command-query.rq"
+sparql_params = { command_name = "check" }
+template = "templates/command.tera"
+output_file = "src/specify_cli/commands/check.py"
+deterministic = true
+
+[[transformations.code]]
+name = "cli-check-tests"
+description = "Generate check command tests from CLI ontology"
+input_files = ["ontology/cli-commands.ttl"]
+schema_files = ["ontology/spec-kit-schema.ttl", "ontology/cli-schema.ttl"]
+sparql_query = "sparql/command-query.rq"
+sparql_params = { command_name = "check" }
+template = "templates/command-test.tera"
+output_file = "tests/e2e/test_commands_check.py"
+deterministic = true
+
+[[transformations.code]]
+name = "cli-version-command"
+description = "Generate version.py command from CLI ontology"
+input_files = ["ontology/cli-commands.ttl"]
+schema_files = ["ontology/spec-kit-schema.ttl", "ontology/cli-schema.ttl"]
+sparql_query = "sparql/command-query.rq"
+sparql_params = { command_name = "version" }
+template = "templates/command.tera"
+output_file = "src/specify_cli/commands/version.py"
+deterministic = true
+
+[[transformations.code]]
+name = "cli-version-tests"
+description = "Generate version command tests from CLI ontology"
+input_files = ["ontology/cli-commands.ttl"]
+schema_files = ["ontology/spec-kit-schema.ttl", "ontology/cli-schema.ttl"]
+sparql_query = "sparql/command-query.rq"
+sparql_params = { command_name = "version" }
+template = "templates/command-test.tera"
+output_file = "tests/e2e/test_commands_version.py"
+deterministic = true
+
+[[transformations.code]]
+name = "cli-ggen-command"
+description = "Generate ggen.py command from CLI ontology"
+input_files = ["ontology/cli-commands.ttl"]
+schema_files = ["ontology/spec-kit-schema.ttl", "ontology/cli-schema.ttl"]
+sparql_query = "sparql/command-query.rq"
+sparql_params = { command_name = "ggen" }
+template = "templates/command.tera"
+output_file = "src/specify_cli/commands/ggen.py"
+deterministic = true
+
+[[transformations.code]]
+name = "cli-ggen-tests"
+description = "Generate ggen command tests from CLI ontology"
+input_files = ["ontology/cli-commands.ttl"]
+schema_files = ["ontology/spec-kit-schema.ttl", "ontology/cli-schema.ttl"]
+sparql_query = "sparql/command-query.rq"
+sparql_params = { command_name = "ggen" }
+template = "templates/command-test.tera"
+output_file = "tests/e2e/test_commands_ggen.py"
+deterministic = true
+
+[[transformations.code]]
+name = "cli-pm-command"
+description = "Generate pm.py command from CLI ontology"
+input_files = ["ontology/cli-commands.ttl"]
+schema_files = ["ontology/spec-kit-schema.ttl", "ontology/cli-schema.ttl"]
+sparql_query = "sparql/command-query.rq"
+sparql_params = { command_name = "pm" }
+template = "templates/command.tera"
+output_file = "src/specify_cli/commands/pm.py"
+deterministic = true
+
+[[transformations.code]]
+name = "cli-pm-tests"
+description = "Generate pm command tests from CLI ontology"
+input_files = ["ontology/cli-commands.ttl"]
+schema_files = ["ontology/spec-kit-schema.ttl", "ontology/cli-schema.ttl"]
+sparql_query = "sparql/command-query.rq"
+sparql_params = { command_name = "pm" }
+template = "templates/command-test.tera"
+output_file = "tests/e2e/test_commands_pm.py"
+deterministic = true
+
+[[transformations.code]]
+name = "cli-dspy-command"
+description = "Generate dspy.py command from CLI ontology (partial - manual code required)"
+input_files = ["ontology/cli-commands.ttl"]
+schema_files = ["ontology/spec-kit-schema.ttl", "ontology/cli-schema.ttl"]
+sparql_query = "sparql/command-query.rq"
+sparql_params = { command_name = "dspy" }
+template = "templates/command.tera"
+output_file = "src/specify_cli/commands/dspy.py"
+deterministic = true
+
+[[transformations.code]]
+name = "cli-dspy-tests"
+description = "Generate dspy command tests from CLI ontology (partial - manual code required)"
+input_files = ["ontology/cli-commands.ttl"]
+schema_files = ["ontology/spec-kit-schema.ttl", "ontology/cli-schema.ttl"]
+sparql_query = "sparql/command-query.rq"
+sparql_params = { command_name = "dspy" }
+template = "templates/command-test.tera"
+output_file = "tests/e2e/test_commands_dspy.py"
+deterministic = true
+
+[[transformations.code]]
+name = "cli-spiff-command"
+description = "Generate spiff.py command from CLI ontology"
+input_files = ["ontology/cli-commands.ttl"]
+schema_files = ["ontology/spec-kit-schema.ttl", "ontology/cli-schema.ttl"]
+sparql_query = "sparql/command-query.rq"
+sparql_params = { command_name = "spiff" }
+template = "templates/command.tera"
+output_file = "src/specify_cli/commands/spiff.py"
+deterministic = true
+
+[[transformations.code]]
+name = "cli-spiff-tests"
+description = "Generate spiff command tests from CLI ontology"
+input_files = ["ontology/cli-commands.ttl"]
+schema_files = ["ontology/spec-kit-schema.ttl", "ontology/cli-schema.ttl"]
+sparql_query = "sparql/command-query.rq"
+sparql_params = { command_name = "spiff" }
+template = "templates/command-test.tera"
+output_file = "tests/e2e/test_commands_spiff.py"
 deterministic = true
 
 # ============================================================================

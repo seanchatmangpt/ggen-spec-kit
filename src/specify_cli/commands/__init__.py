@@ -40,13 +40,42 @@ See Also
 
 from __future__ import annotations
 
+from .check import app as check_app
+
 # Core commands
 from .init import app as init_app
-from .check import app as check_app
-from .version import app as version_app, version_callback
 
 # Workflow commands (SpiffWorkflow)
 from .spiff import app as spiff_app
+from .version import app as version_app
+from .version import version_callback
+
+# ggen commands (RDF-first code generation, optional)
+try:
+    from .ggen import app as ggen_app
+
+    GGEN_COMMANDS_AVAILABLE = True
+except ImportError:
+    GGEN_COMMANDS_AVAILABLE = False
+    ggen_app = None
+
+# Process mining commands (pm4py, optional)
+try:
+    from .pm import app as pm_app
+
+    PM_COMMANDS_AVAILABLE = True
+except ImportError:
+    PM_COMMANDS_AVAILABLE = False
+    pm_app = None
+
+# DSPy commands (optional)
+try:
+    from ..dspy_commands import get_dspy_app
+
+    DSPY_COMMANDS_AVAILABLE = True
+except ImportError:
+    DSPY_COMMANDS_AVAILABLE = False
+    get_dspy_app = None
 
 __all__ = [
     # Core commands
@@ -56,4 +85,13 @@ __all__ = [
     "version_callback",
     # Workflow commands
     "spiff_app",
+    # ggen commands
+    "ggen_app",
+    "GGEN_COMMANDS_AVAILABLE",
+    # Process mining commands
+    "pm_app",
+    "PM_COMMANDS_AVAILABLE",
+    # DSPy commands
+    "get_dspy_app",
+    "DSPY_COMMANDS_AVAILABLE",
 ]

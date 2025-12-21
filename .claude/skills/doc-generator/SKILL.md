@@ -61,7 +61,8 @@ output = "docs/guide.md"
 
 ### 5. Generate
 ```bash
-ggen sync --config docs/ggen.toml --spec guide
+# ggen sync reads ggen.toml from current directory
+ggen sync
 ```
 
 ## Template Patterns

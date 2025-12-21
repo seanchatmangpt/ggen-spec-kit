@@ -1,6 +1,6 @@
 ---
 name: ggen-operator
-description: Execute ggen sync/compile operations and manage RDF-to-Markdown transformations. Use when running ggen commands, validating configurations, or debugging transformation failures.
+description: Execute ggen sync operations and manage RDF-to-Markdown transformations. Use when running ggen sync commands, validating configurations, or debugging transformation failures.
 allowed-tools: Read, Write, Edit, Glob, Grep, Bash
 ---
 
@@ -15,24 +15,26 @@ Execute ggen transformations and manage the RDF-to-Markdown pipeline.
 3. Debug transformation failures
 4. Verify idempotence (μ∘μ = μ)
 
-## ggen v5.0.2 Commands
+## ggen v5.0.2 - Only sync Command
 
 ```bash
 # Version check
 ggen --version
 
-# Sync all transformations
-ggen sync --config docs/ggen.toml
+# Run sync (reads ggen.toml from current directory)
+ggen sync
 
-# Sync specific spec
-ggen sync --config docs/ggen.toml --spec specification-name
+# With watch mode (auto-regenerate on file changes)
+ggen sync --watch
+
+# Verbose output
+ggen sync --verbose
 
 # Dry run
-ggen sync --config docs/ggen.toml --dry-run
-
-# Validate
-ggen validate --config docs/ggen.toml
+ggen sync --dry-run
 ```
+
+**Note**: ggen v5.0.2 only has the `sync` command. All configuration is done through `ggen.toml`.
 
 ## Configuration (ggen.toml)
 
