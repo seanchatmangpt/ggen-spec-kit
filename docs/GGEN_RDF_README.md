@@ -297,7 +297,11 @@ diff spec.md generated/spec.md
 **Solution**: Install ggen CLI:
 ```bash
 # Install from crates.io (when published)
-cargo install ggen
+# Homebrew (recommended)
+brew install seanchatmangpt/ggen/ggen
+
+# Or via Cargo
+cargo install ggen-cli-lib
 
 # Or install from source
 git clone https://github.com/seanchatmangpt/ggen.git

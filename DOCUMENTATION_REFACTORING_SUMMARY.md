@@ -28,7 +28,7 @@ documentation.md = μ(documentation.ttl)
   - 8 documentation categories
   - 13 guide definitions with metadata
 
-#### 1.3 ggen v6 Configuration
+#### 1.3 ggen v5.0.2 Configuration
 - **Created**: `docs/ggen.toml`
   - 13 RDF-to-Markdown transformation specifications
   - SPARQL query bindings
@@ -137,7 +137,7 @@ Generated Markdown Files (Artifacts)
 | `ontology/spec-kit-docs-extension.ttl` | 600+ | Documentation ontology with classes, properties, SHACL shapes |
 | `memory/documentation.ttl` | 200+ | Documentation metadata container and taxonomy |
 | `memory/philosophy.ttl` | 250+ | Constitutional principles as RDF instances |
-| `docs/ggen.toml` | 200+ | ggen v6 transformation configuration |
+| `docs/ggen.toml` | 200+ | ggen v5.0.2 transformation configuration |
 | `sparql/guide-query.rq` | 25 | Extract guide documentation |
 | `sparql/principle-query.rq` | 20 | Extract principles |
 | `sparql/changelog-query.rq` | 25 | Extract releases |

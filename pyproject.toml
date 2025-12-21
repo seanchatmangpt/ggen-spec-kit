@@ -1,88 +1,241 @@
 [project]
 name = "specify-cli"
-version = "0.0.24"
-description = "Specify CLI: RDF-first Spec-Driven Development toolkit. Modular architecture with separation of concerns: CLI layer, operations layer (business logic), and core utilities. Process mining support via pm4py. Integration reference: uvmgr."
+version = "0.0.25"
+description = "Specify CLI: RDF-first Spec-Driven Development toolkit with three-tier architecture (commands/ops/runtime). Full OpenTelemetry instrumentation. Optional pm4py and SpiffWorkflow support."
 requires-python = ">=3.11"
+readme = "README.md"
+license = {text = "MIT"}
+authors = [
+    {name = "Sean Chatman", email = "info@chatmangpt.com"},
+]
+keywords = ["cli", "rdf", "spec-driven", "development", "typer", "opentelemetry"]
+classifiers = [
+    "Development Status :: 4 - Beta",
+    "Environment :: Console",
+    "Intended Audience :: Developers",
+    "License :: OSI Approved :: MIT License",
+    "Operating System :: OS Independent",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Topic :: Software Development :: Code Generators",
+    "Topic :: Software Development :: Libraries :: Application Frameworks",
+    "Typing :: Typed",
+]
+
+# LEAN CORE: Only essential dependencies for CLI operation
+# Optional heavy dependencies (pm4py, SpiffWorkflow) moved to dependency-groups
 dependencies = [
-    "typer>=0.9.0",
+    "typer>=0.15.1",
     "rich>=13.0.0",
-    "httpx[socks]>=0.24.0",
-    "platformdirs>=3.0.0",
+    "httpx>=0.27.0",
+    "platformdirs>=4.0.0",
     "readchar>=4.0.0",
-    "truststore>=0.10.4",
-    "dspy>=2.5.0",
-    "pm4py>=2.7.0",
-    "pandas>=2.0.0",
-    "SpiffWorkflow>=2.0.0",
+    "truststore>=0.10.0",
+    # OTEL from day one (graceful degradation if not configured)
+    "opentelemetry-sdk>=1.20.0",
+    "opentelemetry-exporter-otlp>=0.41b0",
 ]
 
 # External system dependencies (must be installed separately):
-# - ggen v6: RDF-first code generation engine
-#   Install via: cargo install ggen
-#   Or from source: https://github.com/seanchatmangpt/ggen
+# - ggen v5.0.2: RDF-first code generation engine
+#   Install via: brew install seanchatmangpt/ggen/ggen
+#   Or: cargo install ggen-cli-lib
+#   Or: docker pull seanchatman/ggen:5.0.2
+#   Source: https://github.com/seanchatmangpt/ggen
 
 [project.optional-dependencies]
+# Testing dependencies
 test = [
     "pytest>=8.0.0",
     "pytest-cov>=4.1.0",
+    "pytest-mock>=3.14.0",
+    "pytest-asyncio>=0.24.0",
     "testcontainers>=4.0.0",
     "rdflib>=7.0.0",
-]
-# Optional observability stack (following uvmgr patterns)
-otel = [
-    "opentelemetry-sdk>=1.20.0",
-    "opentelemetry-exporter-otlp>=0.41b0",
-    "opentelemetry-instrumentation>=0.41b0",
-]
-# SPIFF Workflow engine for BPMN execution
-spiff = [
-    "spiffworkflow>=0.1.0",
-]
-# Development: code quality and linting
-dev = [
-    "ruff>=0.1.0",
-    "mypy>=1.7.0",
-    "black>=23.0.0",
-    "pytest-watch>=4.2.0",
 ]
 
 [project.scripts]
 specify = "specify_cli:main"
 
+[project.urls]
+Homepage = "https://github.com/github/spec-kit"
+Documentation = "https://github.com/github/spec-kit#readme"
+Repository = "https://github.com/github/spec-kit"
+Changelog = "https://github.com/github/spec-kit/releases"
+
+# ============================================================================
+# UV Dependency Groups (uv sync --group <name>)
+# ============================================================================
+
+[dependency-groups]
+# Development: code quality, linting, testing
+dev = [
+    "ruff>=0.8.0",
+    "mypy>=1.15.0",
+    "pytest>=8.0.0",
+    "pytest-cov>=4.1.0",
+    "pytest-mock>=3.14.0",
+    "pytest-asyncio>=0.24.0",
+    "coverage>=7.0.0",
+]
+
+# Process mining (heavy, optional: uv sync --group pm)
+pm = [
+    "pm4py>=2.7.0",
+    "pandas>=2.0.0",
+]
+
+# Workflow automation (optional: uv sync --group wf)
+wf = [
+    "SpiffWorkflow>=2.0.0",
+]
+
+# All optional features
+all = [
+    "pm4py>=2.7.0",
+    "pandas>=2.0.0",
+    "SpiffWorkflow>=2.0.0",
+    "dspy>=2.5.0",
+]
+
 [build-system]
-requires = ["hatchling"]
+requires = ["hatchling>=1.27.0"]
 build-backend = "hatchling.build"
 
 [tool.hatch.build.targets.wheel]
 packages = ["src/specify_cli"]
 
-# Ruff linter configuration
+# ============================================================================
+# Ruff - Linting and Formatting (replaces black, isort, flake8)
+# ============================================================================
+
 [tool.ruff]
 line-length = 100
 target-version = "py311"
-select = ["E", "F", "W", "I"]
-ignore = ["E501"]  # Line length handled by formatter
+src = ["src", "tests"]
 
-[tool.ruff.isort]
+[tool.ruff.lint]
+select = [
+    "E",    # pycodestyle errors
+    "F",    # pyflakes
+    "W",    # pycodestyle warnings
+    "I",    # isort
+    "N",    # pep8-naming
+    "UP",   # pyupgrade
+    "B",    # flake8-bugbear
+    "A",    # flake8-builtins
+    "C4",   # flake8-comprehensions
+    "DTZ",  # flake8-datetimez
+    "T10",  # flake8-debugger
+    "FA",   # flake8-future-annotations
+    "ISC",  # flake8-implicit-str-concat
+    "G",    # flake8-logging-format
+    "PIE",  # flake8-pie
+    "T20",  # flake8-print
+    "PT",   # flake8-pytest-style
+    "Q",    # flake8-quotes
+    "RSE",  # flake8-raise
+    "RET",  # flake8-return
+    "SLF",  # flake8-self
+    "SIM",  # flake8-simplify
+    "TID",  # flake8-tidy-imports
+    "TCH",  # flake8-type-checking
+    "ARG",  # flake8-unused-arguments
+    "PTH",  # flake8-use-pathlib
+    "ERA",  # eradicate (commented code)
+    "PL",   # pylint
+    "TRY",  # tryceratops
+    "RUF",  # ruff-specific
+]
+ignore = [
+    "E501",   # Line length (handled by formatter)
+    "PLR0913", # Too many arguments
+    "TRY003", # Long exception messages
+    "PLR2004", # Magic value used in comparison
+]
+
+[tool.ruff.lint.isort]
 known-first-party = ["specify_cli"]
 
-# Black formatter configuration
-[tool.black]
-line-length = 100
-target-version = ["py311"]
-include = '\.pyi?$'
+[tool.ruff.lint.per-file-ignores]
+"tests/**/*.py" = ["ARG001", "S101", "PLR2004"]
 
-# MyPy type checking configuration
+[tool.ruff.format]
+quote-style = "double"
+indent-style = "space"
+skip-magic-trailing-comma = false
+line-ending = "auto"
+
+# ============================================================================
+# MyPy - Type Checking
+# ============================================================================
+
 [tool.mypy]
 python_version = "3.11"
+strict = false  # Enable gradually
 warn_return_any = true
 warn_unused_configs = true
-disallow_untyped_defs = false
-disallow_incomplete_defs = false
+warn_unused_ignores = true
+show_error_codes = true
+pretty = true
 
-# Pytest configuration
+# Strict mode settings (enable gradually)
+disallow_untyped_defs = false
+disallow_incomplete_defs = true
+check_untyped_defs = true
+
+[[tool.mypy.overrides]]
+module = [
+    "pm4py.*",
+    "SpiffWorkflow.*",
+    "dspy.*",
+    "truststore.*",
+    "testcontainers.*",
+]
+ignore_missing_imports = true
+
+# ============================================================================
+# Pytest - Testing
+# ============================================================================
+
 [tool.pytest.ini_options]
 testpaths = ["tests"]
 python_files = ["test_*.py"]
-addopts = "--cov=src/specify_cli --cov-report=term-missing"
+python_classes = ["Test*"]
+python_functions = ["test_*"]
+addopts = [
+    "--cov=src/specify_cli",
+    "--cov-report=term-missing",
+    "--cov-report=html:reports/coverage",
+    "-v",
+    "--tb=short",
+]
+markers = [
+    "unit: Unit tests (fast, no I/O)",
+    "integration: Integration tests (may have I/O)",
+    "e2e: End-to-end tests (full system)",
+    "slow: Slow running tests",
+]
+filterwarnings = [
+    "ignore::DeprecationWarning",
+]
+
+[tool.coverage.run]
+source = ["src/specify_cli"]
+branch = true
+omit = [
+    "*/tests/*",
+    "*/__pycache__/*",
+]
+
+[tool.coverage.report]
+exclude_lines = [
+    "pragma: no cover",
+    "def __repr__",
+    "raise NotImplementedError",
+    "if TYPE_CHECKING:",
+    "if __name__ == .__main__.:",
+]
+fail_under = 50  # Start low, increase as coverage improves
 

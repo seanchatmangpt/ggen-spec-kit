@@ -326,7 +326,7 @@ Our research and experimentation focus on:
 - [Python 3.11+](https://www.python.org/downloads/)
 - [Git](https://git-scm.com/downloads)
 - **[Rust and cargo](https://rustup.rs/)** - Required for ontology-driven code generation
-- **[ggen](https://crates.io/crates/ggen)** - Transform RDF ontologies into typed code (`cargo install ggen`)
+- **[ggen v5.0.2](https://github.com/seanchatmangpt/ggen)** - Transform RDF ontologies into typed code (`brew install seanchatmangpt/ggen/ggen` or `cargo install ggen-cli-lib`)
 
 If you encounter issues with an agent, please open an issue so we can refine the integration.
 
@@ -356,9 +356,16 @@ Software systems are defined in RDF ontologies and compiled into executable code
    curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh
    ```
 
-2. Install ggen:
+2. Install ggen v5.0.2:
    ```bash
-   cargo install ggen
+   # Homebrew (recommended for macOS/Linux)
+   brew install seanchatmangpt/ggen/ggen
+
+   # Or via Cargo
+   cargo install ggen-cli-lib
+
+   # Or via Docker
+   docker pull seanchatman/ggen:5.0.2
    ```
 
 3. Initialize ggen in your project:

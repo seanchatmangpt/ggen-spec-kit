@@ -1,7 +1,7 @@
 # ============================================================================
 # Spec-Kit Documentation Transformation Configuration
 # ============================================================================
-# Configuration for ggen v6 transformations of documentation from RDF to Markdown
+# Configuration for ggen v5.0.2 transformations of documentation from RDF to Markdown
 # Implements the constitutional equation: documentation.md = μ(documentation.ttl)
 #
 # Usage: ggen sync --config docs/ggen.toml

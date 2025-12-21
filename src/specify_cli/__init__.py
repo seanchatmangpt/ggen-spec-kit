@@ -468,10 +468,13 @@ pm_app = typer.Typer(
 )
 app.add_typer(pm_app, name="pm")
 
-# Add SpiffWorkflow self-automation commands
-from specify_cli.spiff_automation import create_self_automating_cli
-automate_app = create_self_automating_cli()
-app.add_typer(automate_app, name="automate")
+# Add SpiffWorkflow self-automation commands (optional)
+try:
+    from specify_cli.spiff_automation import create_self_automating_cli
+    automate_app = create_self_automating_cli()
+    app.add_typer(automate_app, name="automate")
+except ImportError:
+    pass  # SpiffWorkflow not installed
 
 
 def _load_event_log(file_path: Path, case_id: str = "case:concept:name", activity: str = "concept:name", timestamp: str = "time:timestamp"):
@@ -1660,8 +1663,9 @@ def pm_execute(
 
     if not ggen_ok and cargo_ok:
         console.print("[yellow]⚠ ggen is required for compiling ontologies[/yellow]")
-        console.print("[dim]  Install: cargo install ggen[/dim]")
-        console.print("[dim]  Visit: https://crates.io/crates/ggen[/dim]")
+        console.print("[dim]  Install: brew install seanchatmangpt/ggen/ggen[/dim]")
+        console.print("[dim]  Or: cargo install ggen-cli-lib[/dim]")
+        console.print("[dim]  Visit: https://github.com/seanchatmangpt/ggen[/dim]")
 
     if not ggen_ok and not cargo_ok:
         console.print("[yellow]⚠ Spec-driven development requires ontology compilation[/yellow]")

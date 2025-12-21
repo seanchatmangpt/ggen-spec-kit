@@ -6,7 +6,7 @@
 
 ## Executive Summary
 
-All integration promises for ggen v6 RDF-first architecture have been validated and verified. The spec-kit repository is fully integrated with ggen sync workflow, includes comprehensive testcontainer validation, and maintains consistency across all documentation and code.
+All integration promises for ggen v5.0.2 RDF-first architecture have been validated and verified. The spec-kit repository is fully integrated with ggen sync workflow, includes comprehensive testcontainer validation, and maintains consistency across all documentation and code.
 
 ## Validation Results
 
@@ -178,7 +178,7 @@ Version is consistently set across the project.
 **Location**: `pyproject.toml`
 
 **Changelog**:
-- v0.0.22 → v0.0.23: Added ggen v6 integration and test dependencies
+- v0.0.22 → v0.0.23: Added ggen v5.0.2 integration and test dependencies
 
 ---
 
@@ -303,9 +303,9 @@ test = [
 ```
 
 ### External Dependencies
-- **ggen v6**: RDF-first code generation engine
-  - Install: `cargo install ggen`
-  - Or from source: https://github.com/seanchatmangpt/ggen
+- **ggen v5.0.2**: RDF-first code generation engine
+  - Install: `brew install seanchatmangpt/ggen/ggen` or `cargo install ggen-cli-lib`
+  - Source: https://github.com/seanchatmangpt/ggen
 
 ---
 
@@ -322,7 +322,7 @@ uv --version
 # Docker (for tests)
 docker --version
 
-# ggen v6
+# ggen v5.0.2
 ggen --version
 ```
 
@@ -378,7 +378,7 @@ jobs:
 
 ✅ **All 10 promises validated and verified**
 
-The spec-kit repository successfully integrates ggen v6 RDF-first architecture with:
+The spec-kit repository successfully integrates ggen v5.0.2 RDF-first architecture with:
 - Complete migration from `ggen render` to `ggen sync`
 - Comprehensive testcontainer-based validation
 - Valid RDF fixtures and TOML configurations

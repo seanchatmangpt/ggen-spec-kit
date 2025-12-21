@@ -64,7 +64,7 @@ specs/NNN-feature-name/
 └── .gitignore                   # Git ignore rules
 ```
 
-### The Five-Stage Pipeline (ggen v6)
+### The Five-Stage Pipeline (ggen v5.0.2)
 
 ```
 μ₁ (Normalization)   → Canonicalize RDF + SHACL validation
@@ -84,7 +84,7 @@ specs/NNN-feature-name/
 
 ### Required Tools
 
-- **ggen v6**: `cargo install ggen` (or from workspace)
+- **ggen v5.0.2**: `brew install seanchatmangpt/ggen/ggen` or `cargo install ggen-cli-lib`
 - **Git**: For branch management
 - **Text editor**: With Turtle/RDF syntax support (VS Code + RDF extension recommended)
 
@@ -95,7 +95,7 @@ specs/NNN-feature-name/
 which ggen  # Should show path to ggen binary
 
 # Check ggen version
-ggen --version  # Should be v6.x.x or higher
+ggen --version  # Should be v5.0.2 or higher
 
 # Ensure you're in the ggen repository root
 cd /path/to/ggen
@@ -234,7 +234,7 @@ ggen sync
 ```markdown
 ---
 
-**Generated with**: [ggen v6](https://github.com/seanchatmangpt/ggen) ontology-driven specification system
+**Generated with**: [ggen v5.0.2](https://github.com/seanchatmangpt/ggen) ontology-driven specification system
 **Constitutional Equation**: `spec.md = μ(feature-content.ttl)`
 ```
 
@@ -874,5 +874,5 @@ After completing the RDF-first workflow for specifications:
 
 ---
 
-**Generated with**: [ggen v6](https://github.com/seanchatmangpt/ggen) RDF-first specification system
+**Generated with**: [ggen v5.0.2](https://github.com/seanchatmangpt/ggen) RDF-first specification system
 **Constitutional Equation**: `documentation.md = μ(workflow-knowledge)`

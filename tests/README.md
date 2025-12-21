@@ -1,6 +1,6 @@
 # Spec-Kit Testcontainer Validation
 
-This directory contains testcontainer-based integration tests that validate the ggen v6 RDF-first workflow.
+This directory contains testcontainer-based integration tests that validate the ggen v5.0.2 RDF-first workflow.
 
 ## What is Tested
 

@@ -10,7 +10,7 @@ documentation.md = μ(documentation.ttl)
 
 ## Philosophy
 
-The Spec-Kit project treats documentation as a first-class semantic artifact. Rather than maintaining Markdown files as the source of truth, we now use Turtle RDF files as the authoritative source. Markdown documentation is generated from RDF using deterministic transformations via ggen v6.
+The Spec-Kit project treats documentation as a first-class semantic artifact. Rather than maintaining Markdown files as the source of truth, we now use Turtle RDF files as the authoritative source. Markdown documentation is generated from RDF using deterministic transformations via ggen v5.0.2.
 
 **Benefits:**
 - **Machine-Readable**: Documentation is structured data that can be validated and queried

@@ -325,7 +325,7 @@ Our research and experimentation focus on:
 - [uv](https://docs.astral.sh/uv/) for package management
 - [Python 3.11+](https://www.python.org/downloads/)
 - [Git](https://git-scm.com/downloads)
-- **[ggen v6](https://github.com/seanchatmangpt/ggen)** - RDF-first code generation engine
+- **[ggen v5.0.2](https://github.com/seanchatmangpt/ggen)** - RDF-first code generation engine
 
 ### Installing ggen
 
@@ -333,7 +333,11 @@ ggen is required for RDF-first specification workflows. Install via cargo:
 
 ```bash
 # Install from crates.io (when published)
-cargo install ggen
+# Homebrew (recommended)
+brew install seanchatmangpt/ggen/ggen
+
+# Or via Cargo
+cargo install ggen-cli-lib
 
 # Or install from source
 git clone https://github.com/seanchatmangpt/ggen.git
@@ -341,10 +345,10 @@ cd ggen
 cargo install --path crates/ggen-cli
 
 # Verify installation
-ggen --version  # Should show v6.x.x or higher
+ggen --version  # Should show v5.0.2 or higher
 ```
 
-**What is ggen?** ggen v6 is an ontology-driven code generation engine that transforms RDF/Turtle specifications into markdown artifacts via deterministic transformations (`spec.md = μ(feature.ttl)`). It uses SHACL validation, SPARQL queries, and Tera templates configured in `ggen.toml` files.
+**What is ggen?** ggen v5.0.2 is an ontology-driven code generation engine that transforms RDF/Turtle specifications into markdown artifacts via deterministic transformations (`spec.md = μ(feature.ttl)`). It uses SHACL validation, SPARQL queries, and Tera templates configured in `ggen.toml` files.
 
 ## 🧪 Testing & Validation
 
