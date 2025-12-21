@@ -1,0 +1,87 @@
+"""
+uvmgr.ops.{{ command_name }}
+{{ "-" | repeat(count=command_name | length + 15) }}
+
+Pure business logic for {{ description | lower }}.
+
+This module contains the operations layer (no side effects, no I/O).
+All subprocess execution and I/O happens in the runtime layer.
+
+Functions
+---------
+{% for subcommand in subcommands %}
+- {{ subcommand.name | replace(old="-", new="_") }} : {{ subcommand.description }}
+{% endfor %}
+
+All functions use OpenTelemetry instrumentation for observability.
+
+See Also
+--------
+- :mod:`uvmgr.runtime.{{ command_name }}` : Runtime I/O layer
+- :mod:`uvmgr.commands.{{ command_name }}` : CLI command layer
+"""
+
+from __future__ import annotations
+
+from typing import Any
+
+from uvmgr.core.telemetry import span, timed
+
+
+__all__ = [
+{%- for subcommand in subcommands %}
+    "{{ subcommand.name | replace(old="-", new="_") }}",
+{%- endfor %}
+]
+
+
+# --------------------------------------------------------------------------- #
+# Operations
+# --------------------------------------------------------------------------- #
+{% for subcommand in subcommands %}
+
+@timed
+def {{ subcommand.name | replace(old="-", new="_") }}(
+{%- for param in subcommand.parameters %}
+    {{ param.name }}: {{ param.python_type }},
+{%- endfor %}
+{%- for option in subcommand.options %}
+    {{ option.name }}: {{ option.python_type }} = {{ option.python_default }},
+{%- endfor %}
+) -> dict[str, Any]:
+    """
+    {{ subcommand.description }}
+
+    Parameters
+    ----------
+{%- for param in subcommand.parameters %}
+    {{ param.name }} : {{ param.python_type }}
+        {{ param.description }}
+{%- endfor %}
+{%- for option in subcommand.options %}
+    {{ option.name }} : {{ option.python_type }}, optional
+        {{ option.description }}. Default is {{ option.python_default }}.
+{%- endfor %}
+
+    Returns
+    -------
+    dict[str, Any]
+        Operation result with status and data.
+
+    Notes
+    -----
+    This is pure business logic with no side effects.
+    All I/O operations are delegated to the runtime layer.
+    """
+    with span("{{ command_name }}.{{ subcommand.name | replace(old="-", new="_") }}"):
+        # TODO: Implement business logic
+        # This is a placeholder for the actual operation implementation
+
+        return {
+            "success": True,
+            "command": "{{ command_name }}",
+            "subcommand": "{{ subcommand.name }}",
+            "message": "{{ subcommand.description }} completed successfully",
+        }
+
+{% endfor %}

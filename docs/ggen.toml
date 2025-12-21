@@ -368,6 +368,189 @@ hash_algorithm = "sha256"
 write_manifest = true
 
 # ============================================================================
+# TRANSFORMATIONS - uvmgr Command Generation
+# ============================================================================
+# Implements: uvmgr commands/*.py = μ(cli-commands-uvmgr.ttl)
+# Generates three-tier CLI architecture from RDF specifications
+# 13 core commands: deps, build, tests, cache, lint, otel, guides, worktree, infodesign, mermaid, dod, docs, terraform
+
+[[transformations.code]]
+name = "uvmgr-deps-command"
+description = "Generate deps command from CLI ontology"
+input_files = ["ontology/cli-commands-uvmgr.ttl"]
+schema_files = ["ontology/spec-kit-schema.ttl"]
+sparql_query = "sparql/extract-commands.rq"
+sparql_params = { command_name = "deps" }
+template = "templates/cli-command.tera"
+output_file = "src/specify_cli/commands/deps.py"
+deterministic = true
+
+[[transformations.code]]
+name = "uvmgr-deps-ops"
+description = "Generate deps operations layer from CLI ontology"
+input_files = ["ontology/cli-commands-uvmgr.ttl"]
+schema_files = ["ontology/spec-kit-schema.ttl"]
+sparql_query = "sparql/extract-commands.rq"
+sparql_params = { command_name = "deps" }
+template = "templates/ops-command.tera"
+output_file = "src/specify_cli/ops/deps.py"
+deterministic = true
+
+[[transformations.code]]
+name = "uvmgr-build-command"
+description = "Generate build command from CLI ontology"
+input_files = ["ontology/cli-commands-uvmgr.ttl"]
+schema_files = ["ontology/spec-kit-schema.ttl"]
+sparql_query = "sparql/extract-commands.rq"
+sparql_params = { command_name = "build" }
+template = "templates/cli-command.tera"
+output_file = "src/specify_cli/commands/build.py"
+deterministic = true
+
+[[transformations.code]]
+name = "uvmgr-build-ops"
+description = "Generate build operations layer from CLI ontology"
+input_files = ["ontology/cli-commands-uvmgr.ttl"]
+schema_files = ["ontology/spec-kit-schema.ttl"]
+sparql_query = "sparql/extract-commands.rq"
+sparql_params = { command_name = "build" }
+template = "templates/ops-command.tera"
+output_file = "src/specify_cli/ops/build.py"
+deterministic = true
+
+[[transformations.code]]
+name = "uvmgr-tests-command"
+description = "Generate tests command from CLI ontology"
+input_files = ["ontology/cli-commands-uvmgr.ttl"]
+schema_files = ["ontology/spec-kit-schema.ttl"]
+sparql_query = "sparql/extract-commands.rq"
+sparql_params = { command_name = "tests" }
+template = "templates/cli-command.tera"
+output_file = "src/specify_cli/commands/tests.py"
+deterministic = true
+
+[[transformations.code]]
+name = "uvmgr-tests-ops"
+description = "Generate tests operations layer from CLI ontology"
+input_files = ["ontology/cli-commands-uvmgr.ttl"]
+schema_files = ["ontology/spec-kit-schema.ttl"]
+sparql_query = "sparql/extract-commands.rq"
+sparql_params = { command_name = "tests" }
+template = "templates/ops-command.tera"
+output_file = "src/specify_cli/ops/tests.py"
+deterministic = true
+
+[[transformations.code]]
+name = "uvmgr-cache-command"
+description = "Generate cache command from CLI ontology"
+input_files = ["ontology/cli-commands-uvmgr.ttl"]
+schema_files = ["ontology/spec-kit-schema.ttl"]
+sparql_query = "sparql/extract-commands.rq"
+sparql_params = { command_name = "cache" }
+template = "templates/cli-command.tera"
+output_file = "src/specify_cli/commands/cache.py"
+deterministic = true
+
+[[transformations.code]]
+name = "uvmgr-lint-command"
+description = "Generate lint command from CLI ontology"
+input_files = ["ontology/cli-commands-uvmgr.ttl"]
+schema_files = ["ontology/spec-kit-schema.ttl"]
+sparql_query = "sparql/extract-commands.rq"
+sparql_params = { command_name = "lint" }
+template = "templates/cli-command.tera"
+output_file = "src/specify_cli/commands/lint.py"
+deterministic = true
+
+[[transformations.code]]
+name = "uvmgr-otel-command"
+description = "Generate otel command from CLI ontology"
+input_files = ["ontology/cli-commands-uvmgr.ttl"]
+schema_files = ["ontology/spec-kit-schema.ttl"]
+sparql_query = "sparql/extract-commands.rq"
+sparql_params = { command_name = "otel" }
+template = "templates/cli-command.tera"
+output_file = "src/specify_cli/commands/otel.py"
+deterministic = true
+
+[[transformations.code]]
+name = "uvmgr-guides-command"
+description = "Generate guides command from CLI ontology"
+input_files = ["ontology/cli-commands-uvmgr.ttl"]
+schema_files = ["ontology/spec-kit-schema.ttl"]
+sparql_query = "sparql/extract-commands.rq"
+sparql_params = { command_name = "guides" }
+template = "templates/cli-command.tera"
+output_file = "src/specify_cli/commands/guides.py"
+deterministic = true
+
+[[transformations.code]]
+name = "uvmgr-worktree-command"
+description = "Generate worktree command from CLI ontology"
+input_files = ["ontology/cli-commands-uvmgr.ttl"]
+schema_files = ["ontology/spec-kit-schema.ttl"]
+sparql_query = "sparql/extract-commands.rq"
+sparql_params = { command_name = "worktree" }
+template = "templates/cli-command.tera"
+output_file = "src/specify_cli/commands/worktree.py"
+deterministic = true
+
+[[transformations.code]]
+name = "uvmgr-infodesign-command"
+description = "Generate infodesign command from CLI ontology"
+input_files = ["ontology/cli-commands-uvmgr.ttl"]
+schema_files = ["ontology/spec-kit-schema.ttl"]
+sparql_query = "sparql/extract-commands.rq"
+sparql_params = { command_name = "infodesign" }
+template = "templates/cli-command.tera"
+output_file = "src/specify_cli/commands/infodesign.py"
+deterministic = true
+
+[[transformations.code]]
+name = "uvmgr-mermaid-command"
+description = "Generate mermaid command from CLI ontology"
+input_files = ["ontology/cli-commands-uvmgr.ttl"]
+schema_files = ["ontology/spec-kit-schema.ttl"]
+sparql_query = "sparql/extract-commands.rq"
+sparql_params = { command_name = "mermaid" }
+template = "templates/cli-command.tera"
+output_file = "src/specify_cli/commands/mermaid.py"
+deterministic = true
+
+[[transformations.code]]
+name = "uvmgr-dod-command"
+description = "Generate dod command from CLI ontology"
+input_files = ["ontology/cli-commands-uvmgr.ttl"]
+schema_files = ["ontology/spec-kit-schema.ttl"]
+sparql_query = "sparql/extract-commands.rq"
+sparql_params = { command_name = "dod" }
+template = "templates/cli-command.tera"
+output_file = "src/specify_cli/commands/dod.py"
+deterministic = true
+
+[[transformations.code]]
+name = "uvmgr-docs-command"
+description = "Generate docs command from CLI ontology"
+input_files = ["ontology/cli-commands-uvmgr.ttl"]
+schema_files = ["ontology/spec-kit-schema.ttl"]
+sparql_query = "sparql/extract-commands.rq"
+sparql_params = { command_name = "docs" }
+template = "templates/cli-command.tera"
+output_file = "src/specify_cli/commands/docs.py"
+deterministic = true
+
+[[transformations.code]]
+name = "uvmgr-terraform-command"
+description = "Generate terraform command from CLI ontology"
+input_files = ["ontology/cli-commands-uvmgr.ttl"]
+schema_files = ["ontology/spec-kit-schema.ttl"]
+sparql_query = "sparql/extract-commands.rq"
+sparql_params = { command_name = "terraform" }
+template = "templates/cli-command.tera"
+output_file = "src/specify_cli/commands/terraform.py"
+deterministic = true
+
+# ============================================================================
 # OPTIONS
 # ============================================================================
 

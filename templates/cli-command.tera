@@ -1,0 +1,138 @@
+"""
+uvmgr.commands.{{ command_name }}
+{{ "-" | repeat(count=command_name | length + 21) }}
+
+{{ description }}
+
+This module provides CLI commands for {{ description | lower }}.
+
+Commands
+--------
+{% for subcommand in subcommands %}
+- {{ subcommand.name }} : {{ subcommand.description }}
+{% endfor %}
+
+All commands automatically instrument with telemetry and provide both human-readable
+and JSON output formats.
+
+Example
+-------
+{% for subcommand in subcommands | first(n=3) %}
+    $ uvmgr {{ command_name }} {{ subcommand.name }}
+{% endfor %}
+
+See Also
+--------
+- :mod:`uvmgr.ops.{{ command_name }}` : Core {{ command_name }} operations
+- :mod:`uvmgr.core.instrumentation` : Telemetry instrumentation
+"""
+
+from __future__ import annotations
+
+import typer
+from rich.console import Console
+
+from uvmgr.core.instrumentation import add_span_attributes, add_span_event, instrument_command
+from uvmgr.core.shell import dump_json
+from uvmgr.ops import {{ command_name }} as {{ command_name }}_ops
+
+app = typer.Typer(help="{{ description }}")
+
+console = Console()
+
+
+# --------------------------------------------------------------------------- #
+# Shared util
+# --------------------------------------------------------------------------- #
+def _maybe_json(ctx: typer.Context, payload):
+    if ctx.meta.get("json"):
+        dump_json(payload)
+        raise typer.Exit()
+
+
+# --------------------------------------------------------------------------- #
+# Commands
+# --------------------------------------------------------------------------- #
+{% for subcommand in subcommands %}
+
+@app.command("{{ subcommand.name }}")
+@instrument_command("{{ telemetry_name }}_{{ subcommand.name }}", track_args=True)
+def {{ subcommand.name | replace(old="-", new="_") }}(
+    ctx: typer.Context,
+{%- for param in subcommand.parameters %}
+    {{ param.name }}: {{ param.python_type }} = typer.Argument({{ param.help_text }}),
+{%- endfor %}
+{%- for option in subcommand.options %}
+    {{ option.name }}: {{ option.python_type }} = typer.Option({{ option.typer_default }}, {{ option.typer_options }}),
+{%- endfor %}
+):
+    """
+    {{ subcommand.description }}
+
+    This command {{ subcommand.description | lower }}.
+
+    Parameters
+    ----------
+{%- for param in subcommand.parameters %}
+    {{ param.name }} : {{ param.python_type }}
+        {{ param.description }}
+{%- endfor %}
+{%- for option in subcommand.options %}
+    {{ option.name }} : {{ option.python_type }}, optional
+        {{ option.description }}
+{%- endfor %}
+
+    Notes
+    -----
+    The command automatically:
+    - Records telemetry for the operation
+    - Provides JSON output support
+    - Handles errors gracefully
+
+    Example
+    -------
+    >>> uvmgr {{ command_name }} {{ subcommand.name }}
+    """
+    # Track operation
+    add_span_attributes(
+        **{
+            "command": "{{ command_name }}",
+            "subcommand": "{{ subcommand.name }}",
+{%- for param in subcommand.parameters %}
+            "{{ param.name }}": {{ param.name }},
+{%- endfor %}
+{%- for option in subcommand.options %}
+            "{{ option.name }}": {{ option.name }},
+{%- endfor %}
+        }
+    )
+    add_span_event(
+        "{{ command_name }}.{{ subcommand.name }}.started",
+        {
+{%- for param in subcommand.parameters %}
+            "{{ param.name }}": str({{ param.name }}),
+{%- endfor %}
+        }
+    )
+
+    try:
+        # Call operations layer
+        result = {{ command_name }}_ops.{{ subcommand.name | replace(old="-", new="_") }}(
+{%- for param in subcommand.parameters %}
+            {{ param.name }}={{ param.name }},
+{%- endfor %}
+{%- for option in subcommand.options %}
+            {{ option.name }}={{ option.name }},
+{%- endfor %}
+        )
+
+        _maybe_json(ctx, result)
+        console.print(f"✔ {{ subcommand.name }} completed successfully")
+        add_span_event("{{ command_name }}.{{ subcommand.name }}.completed", {"success": True})
+
+    except Exception as e:
+        console.print(f"❌ {{ subcommand.name }} failed: {e}", style="red")
+        add_span_event("{{ command_name }}.{{ subcommand.name }}.failed", {"error": str(e)})
+        raise typer.Exit(1)
+
+{% endfor %}
