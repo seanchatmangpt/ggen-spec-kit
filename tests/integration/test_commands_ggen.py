@@ -2,24 +2,27 @@
 Integration tests for ggen CLI commands.
 
 Tests the ggen command group for RDF-to-Markdown transformations.
-Covers sync, validate-rdf, and verify commands.
+Only covers the sync command (the only valid command in ggen v5.0.2).
 
 Test Structure:
-    - 15+ integration tests covering ggen operations
+    - Integration tests for ggen sync operations
     - Use fixtures from docs/ggen-examples/
     - Test config file parsing, output generation
-    - 90%+ coverage target for ggen commands
+    - 90%+ coverage target for ggen sync command
 
 Examples:
     pytest tests/integration/test_commands_ggen.py -v --cov
+
+Note: Only 'ggen sync' is valid in ggen v5.0.2.
+The following commands do NOT exist and tests have been removed:
+  - validate-rdf (use SHACL validation in ggen.toml instead)
+  - verify (validation is integrated into sync)
 """
 
 from __future__ import annotations
 
-import json
 from pathlib import Path
-from typing import Any
-from unittest.mock import MagicMock, Mock, patch
+from unittest.mock import MagicMock, patch
 
 import pytest
 from typer.testing import CliRunner
@@ -360,188 +363,8 @@ def test_ggen_sync_missing_config(cli_runner: CliRunner, tmp_path: Path) -> None
     assert result.exit_code != 0 or "not found" in result.stdout.lower()
 
 
-# ============================================================================
-# Test: ggen validate-rdf
-# ============================================================================
-
-
-@pytest.mark.integration
-def test_ggen_validate_rdf_valid_file(
-    cli_runner: CliRunner,
-    sample_ttl_file: Path,
-) -> None:
-    """
-    Test RDF validation with valid TTL file.
-
-    Verifies:
-        - Validation passes
-        - Success message is displayed
-    """
-    with patch("specify_cli.runtime.ggen.run_logged") as mock_run:
-        mock_result = MagicMock()
-        mock_result.returncode = 0
-        mock_result.stdout = "RDF validation successful"
-        mock_result.stderr = ""
-        mock_run.return_value = mock_result
-
-        result = cli_runner.invoke(
-            app,
-            ["ggen", "validate-rdf", str(sample_ttl_file)],
-            catch_exceptions=False,
-        )
-
-        if "ggen" not in str(result.stdout):
-            pytest.skip("ggen commands not yet implemented")
-
-
-@pytest.mark.integration
-def test_ggen_validate_rdf_invalid_syntax(
-    cli_runner: CliRunner,
-    tmp_path: Path,
-) -> None:
-    """
-    Test RDF validation with invalid TTL syntax.
-
-    Verifies:
-        - Validation fails
-        - Error is reported
-    """
-    invalid_ttl = tmp_path / "invalid.ttl"
-    invalid_ttl.write_text("""
-@prefix : <http://example.com#> .
-
-:Thing a :Class
-    # Missing semicolon - syntax error
-    :property "value" .
-""")
-
-    with patch("specify_cli.runtime.ggen.run_logged") as mock_run:
-        mock_result = MagicMock()
-        mock_result.returncode = 1
-        mock_result.stdout = ""
-        mock_result.stderr = "Parse error: unexpected token"
-        mock_run.return_value = mock_result
-
-        result = cli_runner.invoke(
-            app,
-            ["ggen", "validate-rdf", str(invalid_ttl)],
-            catch_exceptions=False,
-        )
-
-        if "ggen" not in str(result.stdout):
-            pytest.skip("ggen commands not yet implemented")
-
-        assert result.exit_code != 0 or "error" in result.stdout.lower()
-
-
-@pytest.mark.integration
-def test_ggen_validate_rdf_multiple_files(
-    cli_runner: CliRunner,
-    sample_ttl_file: Path,
-    tmp_path: Path,
-) -> None:
-    """
-    Test RDF validation with multiple files.
-
-    Verifies:
-        - All files are validated
-        - Summary is displayed
-    """
-    # Create additional TTL file
-    ttl_file2 = tmp_path / "feature2.ttl"
-    ttl_file2.write_text("""
-@prefix : <http://spec-kit.io/ontology#> .
-
-:Feature002 a :Feature ;
-    :featureName "Authorization" ;
-    :priority "P1" .
-""")
-
-    with patch("specify_cli.runtime.ggen.run_logged") as mock_run:
-        mock_result = MagicMock()
-        mock_result.returncode = 0
-        mock_result.stdout = "Validated 2 files successfully"
-        mock_result.stderr = ""
-        mock_run.return_value = mock_result
-
-        result = cli_runner.invoke(
-            app,
-            ["ggen", "validate-rdf", str(sample_ttl_file), str(ttl_file2)],
-            catch_exceptions=False,
-        )
-
-        if "ggen" not in str(result.stdout):
-            pytest.skip("ggen commands not yet implemented")
-
-
-# ============================================================================
-# Test: ggen verify
-# ============================================================================
-
-
-@pytest.mark.integration
-def test_ggen_verify_constitutional_equation(
-    cli_runner: CliRunner,
-    ggen_workspace: Path,
-) -> None:
-    """
-    Test verification of constitutional equation: spec.md = μ(feature.ttl).
-
-    Verifies:
-        - Hash verification works
-        - Idempotence is checked
-    """
-    with patch("specify_cli.runtime.ggen.run_logged") as mock_run:
-        mock_result = MagicMock()
-        mock_result.returncode = 0
-        mock_result.stdout = """
-✓ Constitutional equation verified
-  TTL hash: 1a2b3c4d...
-  MD hash:  5e6f7g8h...
-  spec.md = μ(feature.ttl) ✓
-"""
-        mock_result.stderr = ""
-        mock_run.return_value = mock_result
-
-        config_file = ggen_workspace / "ggen.toml"
-        result = cli_runner.invoke(
-            app,
-            ["ggen", "verify", "--config", str(config_file)],
-            catch_exceptions=False,
-        )
-
-        if "ggen" not in str(result.stdout):
-            pytest.skip("ggen commands not yet implemented")
-
-
-@pytest.mark.integration
-def test_ggen_verify_idempotence(
-    cli_runner: CliRunner,
-    ggen_workspace: Path,
-) -> None:
-    """
-    Test verification of idempotence: μ∘μ = μ.
-
-    Verifies:
-        - Running sync twice produces same output
-        - Hash remains identical
-    """
-    with patch("specify_cli.runtime.ggen.run_logged") as mock_run:
-        mock_result = MagicMock()
-        mock_result.returncode = 0
-        mock_result.stdout = "✓ μ∘μ = μ - Idempotence verified"
-        mock_result.stderr = ""
-        mock_run.return_value = mock_result
-
-        config_file = ggen_workspace / "ggen.toml"
-        result = cli_runner.invoke(
-            app,
-            ["ggen", "verify", "--config", str(config_file), "--check-idempotence"],
-            catch_exceptions=False,
-        )
-
-        if "ggen" not in str(result.stdout):
-            pytest.skip("ggen commands not yet implemented")
+# NOTE: validate-rdf and verify commands removed (not in ggen v5.0.2)
+# Use SHACL validation in ggen.toml and idempotence testing via ggen sync instead
 
 
 # ============================================================================

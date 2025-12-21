@@ -127,10 +127,10 @@ class TestGgenSyncCommand:
         expected_options = [
             "--from",  # Source ontology directory
             "--to",  # Target output directory
-            "--mode",  # Sync mode: full, incremental, verify
             "--dry-run",  # Preview changes without writing
             "--force",  # Override conflicts
             "--verbose",  # Verbose output
+            "--watch",  # Watch for file changes
         ]
 
         for option in expected_options:
