@@ -1,0 +1,44 @@
+[metadata]
+name = "feature-spec"
+description = "Feature specification transformation"
+version = "1.0"
+
+[validation]
+shacl_shapes = ["ontology/spec-kit-schema.ttl"]
+fail_on_warning = true
+
+[[transformations.specs]]
+name = "feature-spec"
+description = "Generate feature specification from RDF"
+input_files = ["docs/ggen-examples/feature.ttl"]
+schema_files = ["ontology/spec-kit-schema.ttl"]
+sparql_query = "docs/ggen-examples/feature-query.rq"
+template = "docs/ggen-examples/feature.tera"
+output_file = "docs/ggen-examples/FEATURE_SPEC.md"
+deterministic = true
+
+[pipeline]
+stages = ["normalize", "extract", "emit", "canonicalize", "receipt"]
+
+[pipeline.normalize]
+enabled = true
+fail_on_validation_error = true
+
+[pipeline.extract]
+enabled = true
+timeout_seconds = 30
+
+[pipeline.emit]
+enabled = true
+template_engine = "tera"
+
+[pipeline.canonicalize]
+enabled = true
+line_ending = "lf"
+trim_trailing_whitespace = true
+ensure_final_newline = true
+
+[pipeline.receipt]
+enabled = true
+hash_algorithm = "sha256"
+write_manifest = true

@@ -1,0 +1,47 @@
+# Feature Specification
+
+{% for feature in features %}
+## {{ feature.name }}
+
+**Priority**: {{ feature.priority }}
+**Status**: {{ feature.status }}
+**Due Date**: {{ feature.dueDate }}
+
+### Description
+
+{{ feature.description }}
+
+### Requirements
+
+{% if feature.requirements %}
+{% for req in feature.requirements | split(pat="\n") %}
+{% if req != "" %}
+- {{ req }}
+{% endif %}
+{% endfor %}
+{% else %}
+No requirements specified.
+{% endif %}
+
+---
+
+{% endfor %}
+
+## Constitutional Verification
+
+This document was generated via:
+
+```
+spec.md = μ(feature.ttl)
+```
+
+Where μ is the five-stage transformation:
+- **μ₁ NORMALIZE**: Validate RDF against SHACL shapes
+- **μ₂ EXTRACT**: Execute SPARQL queries
+- **μ₃ EMIT**: Render Tera templates
+- **μ₄ CANONICALIZE**: Normalize markdown output
+- **μ₅ RECEIPT**: Generate SHA256 proof
+
+**Verification**: Run `specify verify` to check receipt integrity.
+
+**Generated**: {{ "now" | date(format="%Y-%m-%d %H:%M:%S UTC") }}
