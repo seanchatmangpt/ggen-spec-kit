@@ -1,0 +1,105 @@
+{# Job-Focused Documentation Template
+   Generates user-centric documentation explaining features through jobs and outcomes
+
+   Expected SPARQL result variables:
+   - featureName: Name of the feature
+   - featureDescription: Technical description
+   - jobTitle: The job this feature helps accomplish
+   - personaName: Who this is for
+   - outcome: Outcome improvement
+   - outcomeMetric: How to measure
+   - successCriteria: Success definition
+   - targetValue: Performance target
+   - painpoint: Problem solved
+   - usageExample: Code/CLI example
+   - relatedFeatures: Other features for same job (pipe-separated)
+   - prerequisites: What's needed before use
+#}
+# {{ featureName }} - Job-Focused Documentation
+
+## Why This Feature Exists
+
+Every feature exists to help you accomplish a specific job. Here's what {{ featureName }} does for you:
+
+### The Job
+
+**As a {{ personaName }}**, you need to {{ jobTitle }}.
+
+### The Problem
+
+Currently, you experience: **{{ painpoint }}**
+
+### The Solution
+
+{{ featureName }} helps you {{ outcome }}.
+
+**Measurable Impact**: {{ outcomeMetric }} - {{ successCriteria }} {{ targetValue }}
+
+## Who This Is For
+
+**Primary Persona**: {{ personaName }}
+
+**When to Use This**: When you need to {{ jobTitle | lower }} and want to {{ outcome | lower }}.
+
+## How It Improves Your Outcomes
+
+Using {{ featureName }}, you will:
+
+1. **Stop experiencing**: {{ painpoint }}
+2. **Start achieving**: {{ outcome }}
+3. **Measure success by**: {{ successCriteria }} (target: {{ targetValue }})
+
+## Usage
+
+{% if prerequisites %}
+### Prerequisites
+
+{{ prerequisites }}
+
+{% endif %}
+### Example
+
+```
+{{ usageExample | default(value="# Usage example coming soon") }}
+```
+
+### What Happens
+
+{{ featureDescription }}
+
+## Success Metrics to Track
+
+Monitor these metrics to ensure {{ featureName }} delivers value:
+
+| Metric | Target | How to Measure |
+|--------|--------|----------------|
+| {{ outcomeMetric }} | {{ targetValue }} | {{ successCriteria }} |
+
+## Related Features
+
+{% if relatedFeatures %}
+Other features that help with "{{ jobTitle }}":
+
+{% set features = relatedFeatures | split(pat="|") %}
+{% for feature in features %}
+- **{{ feature }}**: Addresses the same job from a different angle
+{% endfor %}
+
+Consider using these together for maximum impact.
+{% else %}
+{{ featureName }} is the primary feature for this job.
+{% endif %}
+
+## Getting Help
+
+If {{ featureName }} doesn't help you {{ outcome | lower }}, or you still experience {{ painpoint }}:
+
+1. Check the [troubleshooting guide](troubleshooting.md)
+2. Review success metrics above
+3. File an issue describing what outcome you need
+
+Remember: Features exist to deliver outcomes. If this feature doesn't deliver your outcome, that's a product gap we want to fix.
+
+---
+
+*Documentation focused on jobs and outcomes | {{ now() | date(format="%Y-%m-%d") }}*

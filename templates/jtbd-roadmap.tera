@@ -1,0 +1,185 @@
+{# JTBD Feature Roadmap Template
+   Generates product roadmap prioritized by job frequency and importance
+
+   Expected SPARQL result variables:
+   - quarter: Release quarter (e.g., "Q1 2025")
+   - releaseName: Release name/theme
+   - featureName: Feature in this release
+   - jobTitle: Job this feature addresses
+   - jobFrequency: How often job occurs (High, Medium, Low)
+   - jobImportance: How critical job is (Critical, High, Medium, Low)
+   - outcome: Expected outcome
+   - personaName: Target persona
+   - riskLevel: Implementation risk (High, Medium, Low)
+   - mitigation: Risk mitigation strategy
+   - dependencies: Dependencies (pipe-separated)
+   - estimatedEffort: Effort estimate (Small, Medium, Large)
+#}
+# JTBD-Driven Feature Roadmap
+
+> **Philosophy**: Prioritize features by job frequency × importance, not features by complexity
+
+**Generated**: {{ now() | date(format="%Y-%m-%d") }}
+
+---
+
+## Roadmap Overview
+
+{% set quarters = results | map(attribute="quarter") | unique | sort %}
+{% set total_features = results | length %}
+
+**Timeline**: {{ quarters | first }} - {{ quarters | last }}
+
+**Total Features Planned**: {{ total_features }}
+
+---
+
+{% set current_quarter = "" %}
+{% for row in results | sort(attribute="quarter") %}
+{% if row.quarter != current_quarter %}
+{% if current_quarter != "" %}
+
+---
+
+{% endif %}
+{% set current_quarter = row.quarter %}
+{% set quarter_features = results | filter(attribute="quarter", value=current_quarter) %}
+
+## {{ row.quarter }}: {{ row.releaseName }}
+
+**Theme**: {{ row.releaseDescription | default(value="Job-focused feature delivery") }}
+
+**Features in Release**: {{ quarter_features | length }}
+
+### Priority Matrix
+
+| Job Frequency | Job Importance | Feature Count |
+|---------------|----------------|---------------|
+| High | Critical | {{ quarter_features | filter(attribute="jobFrequency", value="High") | filter(attribute="jobImportance", value="Critical") | length }} |
+| High | High | {{ quarter_features | filter(attribute="jobFrequency", value="High") | filter(attribute="jobImportance", value="High") | length }} |
+| Medium | High | {{ quarter_features | filter(attribute="jobFrequency", value="Medium") | filter(attribute="jobImportance", value="High") | length }} |
+
+### Features
+
+{% endif %}
+#### {{ row.featureName }}
+
+**Job**: {{ row.jobTitle }}
+**Persona**: {{ row.personaName }}
+**Outcome**: {{ row.outcome }}
+
+**Priority Factors**:
+- Job Frequency: {{ row.jobFrequency }}
+- Job Importance: {{ row.jobImportance }}
+- Estimated Effort: {{ row.estimatedEffort | default(value="Medium") }}
+
+{% if row.dependencies %}
+**Dependencies**:
+{% set deps = row.dependencies | split(pat="|") %}
+{% for dep in deps %}
+- {{ dep }}
+{% endfor %}
+{% endif %}
+
+**Risk Assessment**:
+- Risk Level: {{ row.riskLevel | default(value="Medium") }}
+{% if row.mitigation %}- Mitigation: {{ row.mitigation }}{% endif %}
+
+---
+
+{% endfor %}
+
+---
+
+## Jobs and Outcomes by Quarter
+
+{% for quarter in quarters %}
+### {{ quarter }}
+
+{% set quarter_features = results | filter(attribute="quarter", value=quarter) %}
+{% set jobs = quarter_features | map(attribute="jobTitle") | unique %}
+
+**Jobs Addressed**:
+{% for job in jobs %}
+- {{ job }}
+  - Outcomes: {{ quarter_features | filter(attribute="jobTitle", value=job) | map(attribute="outcome") | join(sep=", ") }}
+{% endfor %}
+
+{% endfor %}
+
+---
+
+## Risk and Mitigation Summary
+
+### High-Risk Features
+
+{% set high_risk = results | filter(attribute="riskLevel", value="High") %}
+{% if high_risk | length > 0 %}
+| Quarter | Feature | Risk | Mitigation |
+|---------|---------|------|------------|
+{% for feature in high_risk %}
+| {{ feature.quarter }} | {{ feature.featureName }} | {{ feature.riskLevel }} | {{ feature.mitigation | default(value="TBD") }} |
+{% endfor %}
+{% else %}
+*No high-risk features identified.*
+{% endif %}
+
+---
+
+## Dependency Timeline
+
+Critical path analysis based on feature dependencies:
+
+{% set features_with_deps = results | filter(attribute="dependencies") %}
+{% if features_with_deps | length > 0 %}
+
+| Feature | Quarter | Depends On | Blocks |
+|---------|---------|------------|--------|
+{% for feature in features_with_deps %}
+| {{ feature.featureName }} | {{ feature.quarter }} | {{ feature.dependencies | replace(from="|", to=", ") }} | {% set blocked = results | filter(attribute="dependencies", value=feature.featureName) %}{{ blocked | length }} feature(s) |
+{% endfor %}
+
+{% else %}
+*No dependencies defined - verify this is accurate.*
+{% endif %}
+
+---
+
+## Persona Coverage
+
+{% set personas = results | map(attribute="personaName") | unique %}
+
+Features by persona across all quarters:
+
+| Persona | Total Features | Q1 | Q2 | Q3 | Q4 |
+|---------|----------------|----|----|----|----|
+{% for persona in personas %}
+{% set persona_features = results | filter(attribute="personaName", value=persona) %}
+| {{ persona }} | {{ persona_features | length }} | {{ persona_features | filter(attribute="quarter", value="Q1 2025") | length }} | {{ persona_features | filter(attribute="quarter", value="Q2 2025") | length }} | {{ persona_features | filter(attribute="quarter", value="Q3 2025") | length }} | {{ persona_features | filter(attribute="quarter", value="Q4 2025") | length }} |
+{% endfor %}
+
+---
+
+## Success Criteria
+
+This roadmap succeeds when:
+
+1. **Job Coverage**: All High-Frequency × Critical-Importance jobs have features
+2. **Balanced Delivery**: Each quarter addresses 3+ distinct jobs
+3. **Risk Management**: High-risk features have documented mitigation
+4. **Dependency Flow**: No circular dependencies, clear critical path
+5. **Persona Balance**: Each persona receives features every quarter
+
+---
+
+## How to Use This Roadmap
+
+1. **Prioritization**: Focus on High Frequency × Critical Importance first
+2. **Dependencies**: Start features with dependencies early in quarter
+3. **Risk**: Allocate extra time for high-risk features
+4. **Outcomes**: Track whether features deliver promised outcomes
+5. **Adjustment**: Re-prioritize based on job frequency changes
+
+---
+
+*Roadmap driven by Jobs to be Done framework | Update quarterly based on job analysis*

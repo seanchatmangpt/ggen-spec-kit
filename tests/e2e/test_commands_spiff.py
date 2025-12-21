@@ -38,6 +38,19 @@ from specify_cli.app import app
 
 runner = CliRunner()
 
+# Check if SpiffWorkflow is available
+try:
+    import SpiffWorkflow  # noqa: F401
+    SPIFF_AVAILABLE = True
+except ImportError:
+    SPIFF_AVAILABLE = False
+
+# Skip all tests in this module if SpiffWorkflow is not installed
+pytestmark = pytest.mark.skipif(
+    not SPIFF_AVAILABLE,
+    reason="SpiffWorkflow is optional and not installed - install with 'uv sync --group wf'"
+)
+
 
 @pytest.mark.e2e
 def test_wf_validate_basic(tmp_path: Path) -> None:

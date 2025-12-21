@@ -1,0 +1,63 @@
+{# Feature Card with Outcomes Template
+   Generates outcome-driven feature documentation from JTBD specifications
+
+   Expected SPARQL result variables:
+   - featureName: Name of the feature (e.g., "deps-add")
+   - featureDescription: Brief description
+   - jobTitle: The job to be done
+   - personaName: Target persona (e.g., "RDF Designer", "CLI Developer")
+   - outcome: Specific outcome delivered
+   - outcomeMetric: Quantifiable success metric
+   - successCriteria: How to measure success
+   - targetValue: Target performance value
+   - painpoint: Pain point this resolves
+   - emotionalBenefit: Emotional benefit delivered
+#}
+# {{ featureName }} Feature
+
+## Jobs & Outcomes
+
+**{{ personaName }} Job**: {{ jobTitle }}
+
+**Delivered Outcome**: {{ outcome }}
+
+**Success Metric**: {{ successCriteria }} {{ targetValue }}
+
+{% if painpoint %}
+**Pain Point Resolved**: {{ painpoint }}
+{% endif %}
+
+{% if emotionalBenefit %}
+**Emotional Benefit**: {{ emotionalBenefit }}
+{% endif %}
+
+## Feature Details
+
+{{ featureDescription }}
+
+### Why This Feature Exists
+
+This feature helps **{{ personaName }}** accomplish their goal of {{ jobTitle | lower }}.
+
+By using this feature, users can {{ outcome | lower }}, measured by {{ outcomeMetric | lower }}.
+
+### Success Criteria
+
+We know this feature is successful when:
+- {{ successCriteria }}: **{{ targetValue }}**
+- Users report {{ emotionalBenefit | lower }}
+{% if painpoint %}- {{ painpoint }} is eliminated{% endif %}
+
+### Related Features
+
+{% if relatedFeatures %}
+Features addressing the same job:
+{% set features = relatedFeatures | split(pat="|") %}
+{% for feature in features %}
+- [{{ feature }}](#{{ feature | replace(from=" ", to="-") | lowercase }})
+{% endfor %}
+{% endif %}
+
+---
+
+*Generated from JTBD specification | Last updated: {{ now() | date(format="%Y-%m-%d") }}*

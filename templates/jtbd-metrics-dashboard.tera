@@ -1,0 +1,139 @@
+{# Outcome Metrics Dashboard Template
+   Generates HTML/Markdown dashboard showing feature-to-outcome mappings
+
+   Expected SPARQL result variables:
+   - outcome: Specific outcome category
+   - outcomeDescription: What this outcome means
+   - featureName: Feature delivering this outcome
+   - personaName: Target persona
+   - successCriteria: How to measure
+   - targetValue: Performance target
+   - currentValue: Current measured performance (optional)
+   - featureStatus: Status (Planned, In Progress, Released)
+   - priority: Outcome priority
+#}
+# Feature Outcome Metrics Dashboard
+
+> **Purpose**: Track which features deliver which outcomes and measure their impact
+
+**Last Updated**: {{ now() | date(format="%Y-%m-%d") }}
+
+---
+
+## Executive Summary
+
+{% set total_outcomes = results | map(attribute="outcome") | unique | length %}
+{% set total_features = results | map(attribute="featureName") | unique | length %}
+{% set released_features = results | filter(attribute="featureStatus", value="Released") | length %}
+
+- **Total Outcomes Tracked**: {{ total_outcomes }}
+- **Total Features**: {{ total_features }}
+- **Released Features**: {{ released_features }}
+- **Coverage Rate**: {{ (released_features / total_features * 100) | round(precision=1) }}%
+
+---
+
+## Outcomes by Category
+
+{% set current_outcome = "" %}
+{% for row in results | sort(attribute="outcome") %}
+{% if row.outcome != current_outcome %}
+{% if current_outcome != "" %}
+
+{% endif %}
+{% set current_outcome = row.outcome %}
+
+### {{ row.outcome }}
+
+**Description**: {{ row.outcomeDescription }}
+
+**Priority**: {{ row.priority | default(value="Medium") }}
+
+#### Features Delivering This Outcome
+
+| Feature | Persona | Success Criteria | Target | Current | Status |
+|---------|---------|------------------|--------|---------|--------|
+{% endif %}
+| {{ row.featureName }} | {{ row.personaName }} | {{ row.successCriteria }} | {{ row.targetValue }} | {{ row.currentValue | default(value="N/A") }} | {{ row.featureStatus }} |
+{% endfor %}
+
+---
+
+## Coverage Analysis
+
+### Outcomes by Feature Count
+
+{% set outcomes_grouped = results | group_by(attribute="outcome") %}
+{% for outcome_group in outcomes_grouped %}
+- **{{ outcome_group.grouper }}**: {{ outcome_group.list | length }} feature(s)
+{% endfor %}
+
+### Features by Persona
+
+{% set personas = results | map(attribute="personaName") | unique %}
+{% for persona in personas %}
+#### {{ persona }}
+
+{% set persona_features = results | filter(attribute="personaName", value=persona) %}
+- Total features: {{ persona_features | length }}
+- Released: {{ persona_features | filter(attribute="featureStatus", value="Released") | length }}
+- In Progress: {{ persona_features | filter(attribute="featureStatus", value="In Progress") | length }}
+- Planned: {{ persona_features | filter(attribute="featureStatus", value="Planned") | length }}
+
+{% endfor %}
+
+---
+
+## Impact Metrics
+
+### Performance Against Targets
+
+{% set features_with_current = results | filter(attribute="currentValue") %}
+{% if features_with_current | length > 0 %}
+
+| Feature | Outcome | Target | Current | Gap | Status |
+|---------|---------|--------|---------|-----|--------|
+{% for feature in features_with_current %}
+| {{ feature.featureName }} | {{ feature.outcome }} | {{ feature.targetValue }} | {{ feature.currentValue }} | {{ feature.targetValue | int - feature.currentValue | int }} | {% if feature.currentValue >= feature.targetValue %}✅{% else %}⚠️{% endif %} |
+{% endfor %}
+
+{% else %}
+*No current performance data available. Add measurements to track progress.*
+{% endif %}
+
+---
+
+## ROI Visualization
+
+### Features by Status
+
+```
+Released:     {{ results | filter(attribute="featureStatus", value="Released") | length }} ████████████████
+In Progress:  {{ results | filter(attribute="featureStatus", value="In Progress") | length }} ████████
+Planned:      {{ results | filter(attribute="featureStatus", value="Planned") | length }} ████
+```
+
+### Priority Distribution
+
+{% set high_priority = results | filter(attribute="priority", value="High") | length %}
+{% set medium_priority = results | filter(attribute="priority", value="Medium") | length %}
+{% set low_priority = results | filter(attribute="priority", value="Low") | length %}
+
+```
+High:    {{ high_priority }} ({{ (high_priority / results | length * 100) | round }}%)
+Medium:  {{ medium_priority }} ({{ (medium_priority / results | length * 100) | round }}%)
+Low:     {{ low_priority }} ({{ (low_priority / results | length * 100) | round }}%)
+```
+
+---
+
+## Recommended Actions
+
+1. **Coverage Gaps**: Review outcomes with < 2 features
+2. **Underperforming Features**: Investigate features not meeting targets
+3. **Persona Balance**: Ensure each persona has adequate feature support
+4. **Measurement**: Add `currentValue` data for all released features
+
+---
+
+*Generated from JTBD outcome mappings | Refresh this dashboard weekly*

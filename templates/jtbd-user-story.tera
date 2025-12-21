@@ -1,0 +1,74 @@
+{# User Story from Outcome Template
+   Generates JTBD-formatted user stories from customer segment data
+
+   Expected SPARQL result variables:
+   - storyId: Unique identifier for the story
+   - personaName: Customer segment/persona
+   - jobContext: Situation/context when job arises
+   - desiredOutcome: What the user wants to achieve
+   - featureName: Feature that enables the outcome
+   - emotionalBenefit: Feeling/state achieved
+   - painpoint: Current frustration/obstacle
+   - acceptanceCriteria: Conditions for story completion (pipe-separated)
+   - priority: Story priority (High, Medium, Low)
+   - estimatedValue: Business/user value score
+#}
+{% for story in results %}
+## User Story: {{ story.storyId }}
+
+**Priority**: {{ story.priority | default(value="Medium") }} | **Value**: {{ story.estimatedValue | default(value="TBD") }}
+
+### Story
+
+**As a** {{ story.personaName }} trying to {{ story.desiredOutcome }},
+
+**I need** {{ story.featureName }}
+
+**So I can** {{ story.emotionalBenefit }} and stop experiencing {{ story.painpoint }}.
+
+### Context
+
+{{ story.jobContext }}
+
+### Acceptance Criteria
+
+{% if story.acceptanceCriteria %}
+{% set criteria = story.acceptanceCriteria | split(pat="|") %}
+{% for criterion in criteria %}
+- [ ] {{ criterion }}
+{% endfor %}
+{% else %}
+- [ ] Feature delivers {{ story.desiredOutcome }}
+- [ ] {{ story.painpoint }} is resolved
+- [ ] User reports {{ story.emotionalBenefit }}
+{% endif %}
+
+### Job to be Done
+
+**When**: {{ story.jobContext }}
+
+**I want to**: {{ story.desiredOutcome }}
+
+**So I can**: {{ story.emotionalBenefit }}
+
+**Currently**: {{ story.painpoint }}
+
+---
+
+{% endfor %}
+
+## Story Summary
+
+Total stories: {{ results | length }}
+
+{% set high_priority = results | filter(attribute="priority", value="High") %}
+{% set medium_priority = results | filter(attribute="priority", value="Medium") %}
+{% set low_priority = results | filter(attribute="priority", value="Low") %}
+
+- High Priority: {{ high_priority | length }}
+- Medium Priority: {{ medium_priority | length }}
+- Low Priority: {{ low_priority | length }}
+
+---
+
+*Generated from JTBD specifications | {{ now() | date(format="%Y-%m-%d") }}*
