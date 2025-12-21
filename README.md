@@ -1,18 +1,18 @@
 <div align="center">
-    <img src="./media/logo_large.webp" alt="Spec Kit Logo" width="200" height="200"/>
-    <h1>🌱 Spec Kit</h1>
-    <h3><em>Build high-quality software faster.</em></h3>
+    <img src="./media/logo_large.webp" alt="ggen Spec Kit Logo" width="200" height="200"/>
+    <h1>🧬 ggen Spec Kit</h1>
+    <h3><em>RDF-first specification-driven development with ontology-as-code.</em></h3>
 </div>
 
 <p align="center">
-    <strong>An open source toolkit that allows you to focus on product scenarios and predictable outcomes instead of vibe coding every piece from scratch.</strong>
+    <strong>An open source toolkit that combines Spec-Driven Development with RDF ontology-first design, enabling specifications to compile into type-safe implementations across any language.</strong>
 </p>
 
 <p align="center">
-    <a href="https://github.com/github/spec-kit/actions/workflows/release.yml"><img src="https://github.com/github/spec-kit/actions/workflows/release.yml/badge.svg" alt="Release"/></a>
-    <a href="https://github.com/github/spec-kit/stargazers"><img src="https://img.shields.io/github/stars/github/spec-kit?style=social" alt="GitHub stars"/></a>
-    <a href="https://github.com/github/spec-kit/blob/main/LICENSE"><img src="https://img.shields.io/github/license/github/spec-kit" alt="License"/></a>
-    <a href="https://github.github.io/spec-kit/"><img src="https://img.shields.io/badge/docs-GitHub_Pages-blue" alt="Documentation"/></a>
+    <a href="https://github.com/seanchatmangpt/ggen-spec-kit/actions"><img src="https://img.shields.io/badge/build-passing-brightgreen" alt="Build"/></a>
+    <a href="https://github.com/seanchatmangpt/ggen-spec-kit/stargazers"><img src="https://img.shields.io/github/stars/seanchatmangpt/ggen-spec-kit?style=social" alt="GitHub stars"/></a>
+    <a href="https://github.com/seanchatmangpt/ggen-spec-kit/blob/main/LICENSE"><img src="https://img.shields.io/github/license/seanchatmangpt/ggen-spec-kit" alt="License"/></a>
+    <a href="https://github.com/seanchatmangpt/ggen"><img src="https://img.shields.io/badge/powered_by-ggen-blue" alt="Powered by ggen"/></a>
 </p>
 
 ---
@@ -37,13 +37,20 @@
 - [🙏 Acknowledgements](#-acknowledgements)
 - [📄 License](#-license)
 
-## 🤔 What is Spec-Driven Development?
+## 🤔 What is RDF-First Spec-Driven Development?
 
-Spec-Driven Development **flips the script** on traditional software development. For decades, code has been king — specifications were just scaffolding we built and discarded once the "real work" of coding began. Spec-Driven Development changes this: **specifications become executable**, directly generating working implementations rather than just guiding them.
+ggen Spec Kit **flips the script** on traditional software development by making **ontology the source code**. Rather than writing specifications that describe implementations, you define your domain in RDF, which serves as the single source of truth for all downstream code generation.
+
+**The Constitutional Equation:**
+```
+spec.md = μ(feature.ttl)
+```
+
+Your RDF specifications compile into type-safe implementations across Python, TypeScript, Rust, Java, C#, and Go. Specifications become executable—directly generating working code rather than just guiding development.
 
 ## ⚡ Get Started
 
-### 1. Install Specify CLI
+### 1. Install ggen Spec Kit CLI
 
 Choose your preferred installation method:
 
@@ -52,7 +59,7 @@ Choose your preferred installation method:
 Install once and use everywhere:
 
 ```bash
-uv tool install specify-cli --from git+https://github.com/github/spec-kit.git
+uv tool install specify-cli --from git+https://github.com/seanchatmangpt/ggen-spec-kit.git
 ```
 
 Then use the tool directly:
@@ -68,12 +75,17 @@ specify init --here --ai claude
 
 # Check installed tools
 specify check
+
+# Workflow and validation commands
+specify wf validate          # Full OTEL validation
+specify wf discover-projects # Find projects in directory
+specify wf batch-validate    # Validate multiple projects
 ```
 
-To upgrade Specify, see the [Upgrade Guide](./docs/upgrade.md) for detailed instructions. Quick upgrade:
+To upgrade Specify, run:
 
 ```bash
-uv tool install specify-cli --force --from git+https://github.com/github/spec-kit.git
+uv tool install specify-cli --force --from git+https://github.com/seanchatmangpt/ggen-spec-kit.git
 ```
 
 #### Option 2: One-time Usage
@@ -81,13 +93,13 @@ uv tool install specify-cli --force --from git+https://github.com/github/spec-ki
 Run directly without installing:
 
 ```bash
-uvx --from git+https://github.com/github/spec-kit.git specify init <PROJECT_NAME>
+uvx --from git+https://github.com/seanchatmangpt/ggen-spec-kit.git specify init <PROJECT_NAME>
 ```
 
 **Benefits of persistent installation:**
 
 - Tool stays installed and available in PATH
-- No need to create shell aliases
+- Full access to `specify` commands and workflow automation
 - Better tool management with `uv tool list`, `uv tool upgrade`, `uv tool uninstall`
 - Cleaner shell configuration
 
@@ -172,8 +184,10 @@ The `specify` command supports the following options:
 
 | Command | Description                                                                                                                                             |
 | ------- | ------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `init`  | Initialize a new Specify project from the latest template                                                                                               |
-| `check` | Check for installed tools (`git`, `claude`, `gemini`, `code`/`code-insiders`, `cursor-agent`, `windsurf`, `qwen`, `opencode`, `codex`, `shai`, `qoder`) |
+| `init`  | Initialize a new Specify project from the latest template with RDF ontology scaffolding                                                                 |
+| `check` | Check for installed tools (`git`, `ggen`, `claude`, `gemini`, `cursor`, `windsurf`, `uv`)                                                              |
+| `version` | Show version and build information                                                                                                                      |
+| `wf` (Workflow) | SPIFF BPMN workflow management, validation, and project discovery                                                                                       |
 
 ### `specify init` Arguments & Options
 
@@ -269,6 +283,19 @@ Additional commands for enhanced quality and validation:
 | `/speckit.analyze`   | Cross-artifact consistency & coverage analysis (run after `/speckit.tasks`, before `/speckit.implement`)                             |
 | `/speckit.checklist` | Generate custom quality checklists that validate requirements completeness, clarity, and consistency (like "unit tests for English") |
 
+### Workflow Commands (`specify wf`)
+
+| Command | Options | Description |
+| ------- | ------- | ----------- |
+| `validate` | `-i/--iterations`, `-v/--verbose`, `--export-json` | Execute full OTEL validation workflow |
+| `validate-quick` | `--export-json` | Quick 80/20 OTEL validation (critical path only) |
+| `create-workflow` | `-o/--output`, `-t/--test` | Create custom BPMN validation workflow |
+| `run-workflow` | `WORKFLOW_FILE`, `--export-json` | Execute a BPMN workflow file |
+| `discover-projects` | `-p/--path`, `-d/--depth`, `-c/--confidence` | Discover Python projects in directory |
+| `validate-external` | `PROJECT_PATH`, `--export-json` | Validate an external project with spec-kit |
+| `batch-validate` | `-p/--path`, `--parallel/--no-parallel`, `-w/--workers`, `--export-json` | Validate multiple projects in batch |
+| `validate-8020` | `-p/--path`, `-d/--depth`, `-t/--type`, `--export-json` | Quick 80/20 validation of critical projects |
+
 ### Environment Variables
 
 | Variable          | Description                                                                                                                                                                                                                                                                                            |
@@ -277,10 +304,13 @@ Additional commands for enhanced quality and validation:
 
 ## 📚 Core Philosophy
 
-Spec-Driven Development is a structured process that emphasizes:
+ggen Spec-Driven Development is a structured process that emphasizes:
 
+- **Ontology as source code** - Your RDF specifications are the single source of truth
+- **Deterministic code generation** - Same ontology always produces identical code
+- **Multi-language support** - One RDF definition compiles to Python, TypeScript, Rust, Java, C#, Go
 - **Intent-driven development** where specifications define the "*what*" before the "*how*"
-- **Rich specification creation** using guardrails and organizational principles
+- **Rich specification creation** using semantic RDF and SHACL validation
 - **Multi-step refinement** rather than one-shot code generation from prompts
 - **Heavy reliance** on advanced AI model capabilities for specification interpretation
 
@@ -288,35 +318,37 @@ Spec-Driven Development is a structured process that emphasizes:
 
 | Phase                                    | Focus                    | Key Activities                                                                                                                                                     |
 | ---------------------------------------- | ------------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
-| **0-to-1 Development** ("Greenfield")    | Generate from scratch    | <ul><li>Start with high-level requirements</li><li>Generate specifications</li><li>Plan implementation steps</li><li>Build production-ready applications</li></ul> |
-| **Creative Exploration**                 | Parallel implementations | <ul><li>Explore diverse solutions</li><li>Support multiple technology stacks & architectures</li><li>Experiment with UX patterns</li></ul>                         |
-| **Iterative Enhancement** ("Brownfield") | Brownfield modernization | <ul><li>Add features iteratively</li><li>Modernize legacy systems</li><li>Adapt processes</li></ul>                                                                |
+| **0-to-1 Development** ("Greenfield")    | RDF-first generation     | <ul><li>Define domain ontology in RDF</li><li>Create functional specifications</li><li>Compile with ggen to generated types</li><li>Implement business logic</li></ul> |
+| **Creative Exploration**                 | Multi-language compilation | <ul><li>Explore diverse implementations</li><li>Support multiple technology stacks via ggen targets</li><li>Maintain single ontology source</li></ul>                         |
+| **Iterative Enhancement** ("Brownfield") | Ontology evolution       | <ul><li>Evolve RDF ontology incrementally</li><li>Recompile to update types across all languages</li><li>Modernize legacy systems with semantic modeling</li></ul>                                                                |
 
 ## 🎯 Experimental Goals
 
 Our research and experimentation focus on:
 
+### Ontology-first development
+
+- Prove that RDF as source code enables deterministic, reproducible code generation
+- Validate that single ontologies can compile to production-ready code across multiple languages
+- Demonstrate semantic reasoning reduces specification ambiguity
+
 ### Technology independence
 
-- Create applications using diverse technology stacks
-- Validate the hypothesis that Spec-Driven Development is a process not tied to specific technologies, programming languages, or frameworks
+- Support any programming language through ggen targets (Python, TypeScript, Rust, Java, C#, Go)
+- Show that Spec-Driven Development works with diverse technology stacks
+- Enable organizations to standardize on RDF while using heterogeneous implementations
 
 ### Enterprise constraints
 
-- Demonstrate mission-critical application development
-- Incorporate organizational constraints (cloud providers, tech stacks, engineering practices)
-- Support enterprise design systems and compliance requirements
-
-### User-centric development
-
-- Build applications for different user cohorts and preferences
-- Support various development approaches (from vibe-coding to AI-native development)
+- Demonstrate mission-critical application development from RDF specifications
+- Incorporate organizational constraints (cloud providers, tech stacks, governance)
+- Validate enterprise design systems through semantic ontology modeling
 
 ### Creative & iterative processes
 
-- Validate the concept of parallel implementation exploration
-- Provide robust iterative feature development workflows
-- Extend processes to handle upgrades and modernization tasks
+- Validate that evolving ontologies eliminates rework in brownfield modernization
+- Provide robust iterative feature development through incremental ontology changes
+- Extend processes to handle multi-language parallel implementation
 
 ## 🔧 Prerequisites
 
