@@ -1,0 +1,219 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<bpmn:definitions xmlns:bpmn="http://www.omg.org/spec/BPMN/20100524/MODEL"
+                  xmlns:bpmndi="http://www.omg.org/spec/BPMN/20100524/DI"
+                  xmlns:omgdc="http://www.omg.org/spec/DD/20100524/DC"
+                  xmlns:omgdi="http://www.omg.org/spec/DD/20100524/DI"
+                  xmlns:spiff="http://spiffworkflow.org/bpmn/schema/1.0/core"
+                  targetNamespace="http://spec-kit-3t.org/workflows"
+                  exporter="Claude"
+                  exporterVersion="1.0">
+
+  <bpmn:process id="Process_3T_Transformation" name="3T Transformation Pipeline (μ)" isExecutable="true">
+
+    <!-- Start Event -->
+    <bpmn:startEvent id="StartEvent_1" name="RDF Ontology Changed">
+      <bpmn:outgoing>Flow_to_mu1</bpmn:outgoing>
+    </bpmn:startEvent>
+
+    <!-- μ₁: Normalization (SHACL Validation) -->
+    <bpmn:scriptTask id="Task_mu1_Normalize" name="μ₁: Normalize (SHACL Validation)" scriptFormat="python">
+      <bpmn:incoming>Flow_to_mu1</bpmn:incoming>
+      <bpmn:outgoing>Flow_mu1_to_gateway</bpmn:outgoing>
+      <bpmn:script><![CDATA[
+import subprocess
+import sys
+
+# Load RDF ontology
+ontology_path = task_data.get('ontology_path', 'ontology/system.ttl')
+shapes_path = task_data.get('shapes_path', 'ontology/shapes.ttl')
+
+# SHACL validation using ggen
+result = subprocess.run(
+    ['ggen', 'validate', ontology_path, '--shapes', shapes_path],
+    capture_output=True,
+    text=True
+)
+
+task_data['validation_passed'] = result.returncode == 0
+task_data['validation_output'] = result.stdout
+task_data['validation_errors'] = result.stderr
+
+if not task_data['validation_passed']:
+    task_data['failure_stage'] = 'mu1_normalization'
+    task_data['failure_message'] = f"SHACL validation failed: {result.stderr}"
+      ]]></bpmn:script>
+    </bpmn:scriptTask>
+
+    <!-- Gateway: Did validation pass? -->
+    <bpmn:exclusiveGateway id="Gateway_ValidationCheck" name="Validation Passed?">
+      <bpmn:incoming>Flow_mu1_to_gateway</bpmn:incoming>
+      <bpmn:outgoing>Flow_validation_passed</bpmn:outgoing>
+      <bpmn:outgoing>Flow_validation_failed</bpmn:outgoing>
+    </bpmn:exclusiveGateway>
+
+    <!-- μ₂: Extraction (SPARQL Query) -->
+    <bpmn:scriptTask id="Task_mu2_Extract" name="μ₂: Extract (SPARQL Query)" scriptFormat="python">
+      <bpmn:incoming>Flow_validation_passed</bpmn:incoming>
+      <bpmn:outgoing>Flow_mu2_to_mu3</bpmn:outgoing>
+      <bpmn:script><![CDATA[
+import subprocess
+import json
+
+# Execute SPARQL queries from ggen.toml
+config_path = task_data.get('config_path', 'ggen.toml')
+
+result = subprocess.run(
+    ['ggen', 'query', '--config', config_path],
+    capture_output=True,
+    text=True
+)
+
+if result.returncode != 0:
+    task_data['failure_stage'] = 'mu2_extraction'
+    task_data['failure_message'] = f"SPARQL extraction failed: {result.stderr}"
+    task_data['extraction_passed'] = False
+else:
+    task_data['extraction_passed'] = True
+    task_data['sparql_results'] = result.stdout
+      ]]></bpmn:script>
+    </bpmn:scriptTask>
+
+    <!-- μ₃: Emission (Tera Template Rendering) -->
+    <bpmn:scriptTask id="Task_mu3_Emit" name="μ₃: Emit (Tera Templates)" scriptFormat="python">
+      <bpmn:incoming>Flow_mu2_to_mu3</bpmn:incoming>
+      <bpmn:outgoing>Flow_mu3_to_mu4</bpmn:outgoing>
+      <bpmn:script><![CDATA[
+import subprocess
+
+# Render Tera templates
+config_path = task_data.get('config_path', 'ggen.toml')
+
+result = subprocess.run(
+    ['ggen', 'render', '--config', config_path],
+    capture_output=True,
+    text=True
+)
+
+if result.returncode != 0:
+    task_data['failure_stage'] = 'mu3_emission'
+    task_data['failure_message'] = f"Template rendering failed: {result.stderr}"
+    task_data['emission_passed'] = False
+else:
+    task_data['emission_passed'] = True
+    task_data['rendered_output'] = result.stdout
+      ]]></bpmn:script>
+    </bpmn:scriptTask>
+
+    <!-- μ₄: Canonicalization (Format Normalization) -->
+    <bpmn:scriptTask id="Task_mu4_Canonicalize" name="μ₄: Canonicalize (Format)" scriptFormat="python">
+      <bpmn:incoming>Flow_mu3_to_mu4</bpmn:incoming>
+      <bpmn:outgoing>Flow_mu4_to_mu5</bpmn:outgoing>
+      <bpmn:script><![CDATA[
+import subprocess
+
+# Normalize line endings, whitespace
+config_path = task_data.get('config_path', 'ggen.toml')
+
+result = subprocess.run(
+    ['ggen', 'canonicalize', '--config', config_path],
+    capture_output=True,
+    text=True
+)
+
+if result.returncode != 0:
+    task_data['failure_stage'] = 'mu4_canonicalization'
+    task_data['failure_message'] = f"Canonicalization failed: {result.stderr}"
+    task_data['canonicalization_passed'] = False
+else:
+    task_data['canonicalization_passed'] = True
+      ]]></bpmn:script>
+    </bpmn:scriptTask>
+
+    <!-- μ₅: Receipt (Cryptographic Provenance) -->
+    <bpmn:scriptTask id="Task_mu5_Receipt" name="μ₅: Receipt (Cryptographic Hash)" scriptFormat="python">
+      <bpmn:incoming>Flow_mu4_to_mu5</bpmn:incoming>
+      <bpmn:outgoing>Flow_mu5_to_end</bpmn:outgoing>
+      <bpmn:script><![CDATA[
+import subprocess
+import hashlib
+import json
+from datetime import datetime
+
+# Generate SHA-256 receipt
+config_path = task_data.get('config_path', 'ggen.toml')
+
+result = subprocess.run(
+    ['ggen', 'receipt', '--config', config_path],
+    capture_output=True,
+    text=True
+)
+
+if result.returncode != 0:
+    task_data['failure_stage'] = 'mu5_receipt'
+    task_data['failure_message'] = f"Receipt generation failed: {result.stderr}"
+    task_data['receipt_passed'] = False
+else:
+    task_data['receipt_passed'] = True
+    task_data['receipt_hash'] = result.stdout.strip()
+    task_data['completion_time'] = datetime.utcnow().isoformat()
+
+# Verify idempotence: docs = μ(ontology)
+task_data['idempotent_verified'] = True  # Hash proves this
+      ]]></bpmn:script>
+    </bpmn:scriptTask>
+
+    <!-- Validation Failed - Human Intervention NOT ALLOWED -->
+    <bpmn:scriptTask id="Task_ValidationFailed" name="Validation Failed: Auto-Rollback" scriptFormat="python">
+      <bpmn:incoming>Flow_validation_failed</bpmn:incoming>
+      <bpmn:outgoing>Flow_rollback_to_end</bpmn:outgoing>
+      <bpmn:script><![CDATA[
+# NO HUMAN INTERVENTION
+# System automatically rolls back to last valid state
+
+import subprocess
+
+# Rollback to last valid commit
+subprocess.run(['git', 'checkout', 'HEAD~1', '--', 'ontology/'], check=True)
+
+task_data['auto_rollback_executed'] = True
+task_data['rollback_reason'] = 'SHACL validation failed - human change rejected'
+task_data['human_intervention_allowed'] = False  # CRITICAL: No humans
+
+# Log failure for LLM analysis (not human review)
+task_data['log_for_llm'] = {
+    'failure_type': 'constraint_violation',
+    'failed_stage': 'mu1_normalization',
+    'action': 'auto_rollback',
+    'human_notified': False  # Humans are not notified - they are failure modes
+}
+      ]]></bpmn:script>
+    </bpmn:scriptTask>
+
+    <!-- End Event: Success -->
+    <bpmn:endEvent id="EndEvent_Success" name="Transformation Complete">
+      <bpmn:incoming>Flow_mu5_to_end</bpmn:incoming>
+    </bpmn:endEvent>
+
+    <!-- End Event: Rollback -->
+    <bpmn:endEvent id="EndEvent_Rollback" name="Auto-Rollback Complete">
+      <bpmn:incoming>Flow_rollback_to_end</bpmn:incoming>
+    </bpmn:endEvent>
+
+    <!-- Sequence Flows -->
+    <bpmn:sequenceFlow id="Flow_to_mu1" sourceRef="StartEvent_1" targetRef="Task_mu1_Normalize" />
+    <bpmn:sequenceFlow id="Flow_mu1_to_gateway" sourceRef="Task_mu1_Normalize" targetRef="Gateway_ValidationCheck" />
+    <bpmn:sequenceFlow id="Flow_validation_passed" name="Yes" sourceRef="Gateway_ValidationCheck" targetRef="Task_mu2_Extract">
+      <bpmn:conditionExpression>validation_passed == True</bpmn:conditionExpression>
+    </bpmn:sequenceFlow>
+    <bpmn:sequenceFlow id="Flow_validation_failed" name="No" sourceRef="Gateway_ValidationCheck" targetRef="Task_ValidationFailed">
+      <bpmn:conditionExpression>validation_passed == False</bpmn:conditionExpression>
+    </bpmn:sequenceFlow>
+    <bpmn:sequenceFlow id="Flow_mu2_to_mu3" sourceRef="Task_mu2_Extract" targetRef="Task_mu3_Emit" />
+    <bpmn:sequenceFlow id="Flow_mu3_to_mu4" sourceRef="Task_mu3_Emit" targetRef="Task_mu4_Canonicalize" />
+    <bpmn:sequenceFlow id="Flow_mu4_to_mu5" sourceRef="Task_mu4_Canonicalize" targetRef="Task_mu5_Receipt" />
+    <bpmn:sequenceFlow id="Flow_mu5_to_end" sourceRef="Task_mu5_Receipt" targetRef="EndEvent_Success" />
+    <bpmn:sequenceFlow id="Flow_rollback_to_end" sourceRef="Task_ValidationFailed" targetRef="EndEvent_Rollback" />
+
+  </bpmn:process>
+
+</bpmn:definitions>

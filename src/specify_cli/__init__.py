@@ -1294,6 +1294,11 @@ pm_app = typer.Typer(
 
 app.add_typer(pm_app, name="pm")
 
+# Add SpiffWorkflow self-automation commands
+from specify_cli.spiff_automation import create_self_automating_cli
+automate_app = create_self_automating_cli()
+app.add_typer(automate_app, name="automate")
+
 
 def _load_event_log(file_path: Path, case_id: str = "case:concept:name", activity: str = "concept:name", timestamp: str = "time:timestamp"):
     """Load an event log from file (XES or CSV)."""
