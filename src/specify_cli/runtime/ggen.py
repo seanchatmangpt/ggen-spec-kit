@@ -246,6 +246,7 @@ def run_transform(config: TransformConfig) -> TransformResult:
 
 def _run_normalize(config: TransformConfig) -> StageResult:
     """μ₁ NORMALIZE: Load RDF and validate SHACL."""
+    stage_start = time.time()
     with span("ggen.normalize"):
         errors = []
 
@@ -277,6 +278,11 @@ def _run_normalize(config: TransformConfig) -> StageResult:
         input_hash = sha256_string(rdf_content)
         output_hash = input_hash  # Normalize is identity for valid RDF
 
+        # Record stage duration histogram
+        stage_duration = time.time() - stage_start
+        metric_histogram("ggen.stage.normalize.duration")(stage_duration)
+        add_span_event("ggen.normalize.completed", {"duration_ms": stage_duration * 1000})
+
         return StageResult(
             stage="normalize",
             success=len(errors) == 0,
@@ -289,6 +295,7 @@ def _run_normalize(config: TransformConfig) -> StageResult:
 
 def _run_extract(config: TransformConfig, rdf_content: str) -> StageResult:
     """μ₂ EXTRACT: Execute SPARQL query."""
+    stage_start = time.time()
     with span("ggen.extract"):
         query_path = Path(config.sparql_query)
         if not query_path.exists():
@@ -308,6 +315,11 @@ def _run_extract(config: TransformConfig, rdf_content: str) -> StageResult:
 
         output_hash = sha256_string(json.dumps(result))
 
+        # Record stage duration histogram
+        stage_duration = time.time() - stage_start
+        metric_histogram("ggen.stage.extract.duration")(stage_duration)
+        add_span_event("ggen.extract.completed", {"duration_ms": stage_duration * 1000})
+
         return StageResult(
             stage="extract",
             success=True,
@@ -320,6 +332,7 @@ def _run_extract(config: TransformConfig, rdf_content: str) -> StageResult:
 
 def _run_emit(config: TransformConfig, extracted_data: Any) -> StageResult:
     """μ₃ EMIT: Render Tera template."""
+    stage_start = time.time()
     with span("ggen.emit"):
         template_path = Path(config.template)
         if not template_path.exists():
@@ -336,6 +349,11 @@ def _run_emit(config: TransformConfig, extracted_data: Any) -> StageResult:
 
         # Render Tera template via ggen or local engine
         rendered = _render_tera(template, extracted_data)
+
+        # Record stage duration histogram
+        stage_duration = time.time() - stage_start
+        metric_histogram("ggen.stage.emit.duration")(stage_duration)
+        add_span_event("ggen.emit.completed", {"duration_ms": stage_duration * 1000})
 
         return StageResult(
             stage="emit",
@@ -554,8 +572,184 @@ def _rdf_term_to_python(term: Any) -> Any:
     return str(term)
 
 
-def _render_tera(_template: str, _data: Any) -> str:
-    """Render Tera template with data."""
-    # Use ggen sync or local Tera engine
-    # For now, return template with basic substitution
-    return _template
+def _render_tera(template: str, data: Any) -> str:
+    """Render Tera template with data using Jinja2 (Tera-compatible).
+
+    Tera templates use syntax very similar to Jinja2:
+    - {{ variable }} for variable substitution
+    - {% for item in list %}...{% endfor %} for loops
+    - {% if condition %}...{% endif %} for conditionals
+    - Filters: | filter_name(args...)
+
+    This implements μ₃ EMIT stage of the constitutional equation.
+
+    Parameters
+    ----------
+    template : str
+        Tera template content
+    data : Any
+        Data to render (typically dict with 'results' or 'sparql_results' key)
+
+    Returns
+    -------
+    str
+        Rendered template output
+
+    Raises
+    ------
+    ValueError
+        If template rendering fails
+    """
+    with span("ggen.render_tera"):
+        try:
+            from datetime import datetime
+
+            from jinja2 import Environment, StrictUndefined, select_autoescape
+
+            # Create Jinja2 environment with Tera-compatible settings
+            env = Environment(
+                autoescape=select_autoescape(default=False),
+                undefined=StrictUndefined,
+                trim_blocks=True,
+                lstrip_blocks=True,
+            )
+
+            # Add Tera-compatible filters
+            def tera_replace(value: str, from_str: str = "", to: str = "") -> str:
+                """Tera replace filter: | replace(from="x", to="y")"""
+                return str(value).replace(from_str, to)
+
+            def tera_default(value: Any, value_: Any = "") -> Any:
+                """Tera default filter: | default(value="x")"""
+                return value if value is not None and value != "" else value_
+
+            def tera_first(value: list) -> Any:
+                """Tera first filter: | first"""
+                if isinstance(value, (list, tuple)) and len(value) > 0:
+                    return value[0]
+                return None
+
+            def tera_unique(value: list, attribute: str | None = None) -> list:
+                """Tera unique filter: | unique(attribute="x")"""
+                if not isinstance(value, (list, tuple)):
+                    return []
+                if attribute:
+                    seen = set()
+                    result = []
+                    for item in value:
+                        key = (
+                            item.get(attribute)
+                            if isinstance(item, dict)
+                            else getattr(item, attribute, None)
+                        )
+                        if key not in seen:
+                            seen.add(key)
+                            result.append(item)
+                    return result
+                return list(dict.fromkeys(value))
+
+            def tera_filter(value: list, attribute: str | None = None, value_: Any = None) -> list:
+                """Tera filter filter: | filter(attribute="x", value="y") or | filter(attribute="x")"""
+                if not isinstance(value, (list, tuple)):
+                    return []
+                result = []
+                for item in value:
+                    if isinstance(item, dict):
+                        if attribute:
+                            item_val = item.get(attribute)
+                            if value_ is not None:
+                                if item_val == value_:
+                                    result.append(item)
+                            elif item_val:  # Just check attribute exists and is truthy
+                                result.append(item)
+                        else:
+                            result.append(item)
+                    else:
+                        result.append(item)
+                return result
+
+            def tera_sort(value: list, attribute: str | None = None) -> list:
+                """Tera sort filter: | sort(attribute="x")"""
+                if not isinstance(value, (list, tuple)):
+                    return []
+                if attribute:
+                    return sorted(
+                        value,
+                        key=lambda x: x.get(attribute, "")
+                        if isinstance(x, dict)
+                        else getattr(x, attribute, ""),
+                    )
+                return sorted(value)
+
+            def tera_repeat(value: str, count: int = 1) -> str:
+                """Tera repeat filter: | repeat(count=N)"""
+                return str(value) * count
+
+            def tera_indent(
+                value: str, first: bool = False, blank: bool = False, prefix: str = "    "
+            ) -> str:
+                """Tera indent filter: | indent(first=true, blank=false)"""
+                lines = str(value).split("\n")
+                result = []
+                for i, line in enumerate(lines):
+                    if (i == 0 and not first) or (not line.strip() and not blank):
+                        result.append(line)
+                    else:
+                        result.append(prefix + line)
+                return "\n".join(result)
+
+            def tera_date(value: datetime, format_str: str = "%Y-%m-%d") -> str:
+                """Tera date filter: | date(format="%Y-%m-%d")"""
+                if isinstance(value, datetime):
+                    return value.strftime(format_str)
+                return str(value)
+
+            # Register filters with Tera-compatible names
+            env.filters["replace"] = tera_replace
+            env.filters["default"] = tera_default
+            env.filters["first"] = tera_first
+            env.filters["unique"] = tera_unique
+            env.filters["filter"] = tera_filter
+            env.filters["sort"] = tera_sort
+            env.filters["repeat"] = tera_repeat
+            env.filters["indent"] = tera_indent
+            env.filters["date"] = tera_date
+
+            # Add Tera-compatible functions
+            env.globals["now"] = datetime.now
+
+            # Prepare data context
+            context: dict[str, Any] = {}
+            if isinstance(data, dict):
+                context = data.copy()
+                # Tera templates often use 'results' or 'sparql_results'
+                if "results" not in context and "sparql_results" not in context:
+                    context["results"] = data
+            elif isinstance(data, (list, tuple)):
+                context["results"] = data
+                context["sparql_results"] = data
+            else:
+                context["data"] = data
+
+            # Compile and render template
+            jinja_template = env.from_string(template)
+            rendered = jinja_template.render(**context)
+
+            metric_counter("ggen.tera_render.success")(1)
+            add_span_event(
+                "tera.rendered",
+                {
+                    "template_length": len(template),
+                    "output_length": len(rendered),
+                },
+            )
+
+            return rendered
+
+        except ImportError as e:
+            metric_counter("ggen.tera_render.import_error")(1)
+            raise ValueError(f"Jinja2 not installed for Tera rendering: {e}") from e
+        except Exception as e:
+            metric_counter("ggen.tera_render.error")(1)
+            add_span_event("tera.render_error", {"error": str(e)})
+            raise ValueError(f"Tera template rendering failed: {e}") from e

@@ -12,12 +12,18 @@ The μ transformation consists of 5 stages:
 - μ₅ RECEIPT: Generate SHA256 proof
 
 This module contains PURE FUNCTIONS - all I/O is in the runtime layer.
+
+OpenTelemetry instrumentation is included for observability of the
+constitutional transformation pipeline.
 """
 
 from __future__ import annotations
 
 from dataclasses import dataclass, field
 from typing import Any
+
+from specify_cli.core.instrumentation import add_span_event
+from specify_cli.core.telemetry import metric_counter, span
 
 
 @dataclass
