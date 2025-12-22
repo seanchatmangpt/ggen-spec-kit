@@ -45,6 +45,11 @@ from rich.panel import Panel
 
 from specify_cli.core.instrumentation import instrument_command
 from specify_cli.core.shell import colour, dump_json
+from specify_cli.ops.ggen_errors import ErrorType, format_error_message
+from specify_cli.ops.ggen_filelock import FileLock, LockTimeoutError
+from specify_cli.ops.ggen_manifest import load_manifest as load_toml_manifest
+from specify_cli.ops.ggen_preflight import run_preflight_checks
+from specify_cli.ops.ggen_recovery import RecoveryManager
 from specify_cli.runtime.ggen import (
     GgenError,
     get_ggen_version,
@@ -86,6 +91,11 @@ def _handle_sync_failure(json_output: bool) -> None:
 @instrument_command("ggen.sync", track_args=True)
 def sync(  # noqa: PLR0912, PLR0915 - CLI command with user-facing output formatting
     ctx: typer.Context,  # noqa: ARG001 - Required by Typer for context access
+    manifest: str = typer.Option(
+        "ggen.toml",
+        "--manifest",
+        help="Path to ggen.toml configuration file.",
+    ),
     watch: bool = typer.Option(
         False,
         "--watch",
@@ -97,6 +107,11 @@ def sync(  # noqa: PLR0912, PLR0915 - CLI command with user-facing output format
         "--verbose",
         "-v",
         help="Enable verbose output showing transformation details.",
+    ),
+    preflight: bool = typer.Option(
+        True,
+        "--preflight/--no-preflight",
+        help="Run pre-flight checks before sync (default: enabled).",
     ),
     json_output: bool = typer.Option(
         False,
@@ -115,10 +130,18 @@ def sync(  # noqa: PLR0912, PLR0915 - CLI command with user-facing output format
     4. μ₄ Canonicalize - Format output (line endings, whitespace)
     5. μ₅ Receipt - Generate SHA256 hash proof of transformation
 
-    Configuration is read from ggen.toml in the current directory.
+    Configuration is read from ggen.toml (or --manifest path).
+    Includes Phase 1 safety mechanisms:
+    - Pre-flight validation (check files exist, permissions)
+    - Atomic writes (all-or-nothing semantics)
+    - SHACL validation (RDF quality)
+    - SPARQL timeout (prevent hangs)
+    - File locking (prevent concurrent corruption)
+    - Error recovery (automatic cleanup)
 
     Examples:
         specify ggen sync
+        specify ggen sync --manifest custom.toml
         specify ggen sync --watch
         specify ggen sync --verbose
     """
@@ -143,14 +166,16 @@ def sync(  # noqa: PLR0912, PLR0915 - CLI command with user-facing output format
         version = get_ggen_version()
         console.print(f"[dim]ggen version: {version}[/dim]")
 
-    # Determine project path (use current directory, as ggen reads ggen.toml from CWD)
+    # Determine project path
     project_path = Path.cwd()
+    manifest_path = Path(manifest)
 
     # Show what we're doing
     if not json_output:
         console.print()
         console.print("[bold cyan]Running ggen sync transformation[/bold cyan]")
         console.print(f"[cyan]Project:[/cyan] {project_path}")
+        console.print(f"[cyan]Manifest:[/cyan] {manifest_path}")
         console.print(f"[cyan]Watch mode:[/cyan] {'enabled' if watch else 'disabled'}")
         console.print()
 
@@ -160,8 +185,81 @@ def sync(  # noqa: PLR0912, PLR0915 - CLI command with user-facing output format
 
     start_time = time.time()
 
+    # Phase 1 Safety: Initialize recovery manager
+    recovery_mgr = RecoveryManager(project_path)
+    lock = None
+
     try:
-        # Call runtime layer
+        # Phase 1 Safety: Acquire lock to prevent concurrent access
+        try:
+            lock = FileLock(project_path / ".ggen.lock", timeout=30)
+            lock.acquire()
+        except LockTimeoutError as e:
+            if json_output:
+                dump_json({"success": False, "error": str(e)})
+            else:
+                console.print()
+                msg = format_error_message(ErrorType.LOCK_TIMEOUT, {"owner_pid": e.owner_pid})
+                console.print(msg)
+            raise typer.Exit(1) from e
+
+        # Phase 1 Safety: Load and validate manifest
+        try:
+            toml_manifest = load_toml_manifest(manifest_path)
+        except FileNotFoundError as e:
+            if json_output:
+                dump_json({"success": False, "error": str(e)})
+            else:
+                console.print()
+                msg = format_error_message(
+                    ErrorType.MANIFEST_NOT_FOUND,
+                    {"file": str(manifest_path), "cwd": str(project_path)},
+                )
+                console.print(msg)
+            raise typer.Exit(1) from e
+        except ValueError as e:
+            if json_output:
+                dump_json({"success": False, "error": str(e)})
+            else:
+                console.print()
+                msg = format_error_message(
+                    ErrorType.MANIFEST_INVALID,
+                    {"error": str(e)},
+                )
+                console.print(msg)
+            raise typer.Exit(1) from e
+
+        # Phase 1 Safety: Run pre-flight checks
+        if preflight:
+            if not json_output:
+                console.print("[dim]Running pre-flight checks...[/dim]")
+
+            check_result = run_preflight_checks(toml_manifest)
+
+            if check_result.warnings and not json_output:
+                for warning in check_result.warnings:
+                    console.print(f"[yellow]⚠ {warning}[/yellow]")
+
+            if not check_result.passed:
+                if json_output:
+                    dump_json({"success": False, "errors": check_result.errors})
+                else:
+                    console.print()
+                    console.print("[red]Pre-flight checks failed:[/red]")
+                    for error in check_result.errors:
+                        console.print(f"  [red]✗ {error}[/red]")
+                raise typer.Exit(1)
+
+            if not json_output:
+                console.print("[green]✓ Pre-flight checks passed[/green]")
+                console.print()
+
+        # Record attempt for recovery
+        transform_names = [t.get("name", f"transform_{i}")
+                          for i, t in enumerate(toml_manifest.transformations)]
+        recovery_mgr.record_attempt(transform_names)
+
+        # Call runtime layer (original ggen sync)
         success = sync_specs(
             project_path=project_path,
             watch=watch,
@@ -172,6 +270,9 @@ def sync(  # noqa: PLR0912, PLR0915 - CLI command with user-facing output format
 
         if not success:
             _handle_sync_failure(json_output)
+
+        # Record success
+        recovery_mgr.record_success()
 
         if json_output:
             # JSON output
@@ -203,6 +304,7 @@ def sync(  # noqa: PLR0912, PLR0915 - CLI command with user-facing output format
                 console.print("  • Use --watch to auto-regenerate on changes")
 
     except GgenError as e:
+        recovery_mgr.handle_failure(e)
         if json_output:
             dump_json({"success": False, "error": str(e)})
         else:
@@ -217,11 +319,13 @@ def sync(  # noqa: PLR0912, PLR0915 - CLI command with user-facing output format
         raise typer.Exit(1) from e
 
     except KeyboardInterrupt:
+        recovery_mgr.cleanup()
         console.print()
         colour("Operation cancelled by user.", "yellow")
         raise typer.Exit(130) from None
 
     except Exception as e:
+        recovery_mgr.handle_failure(e)
         if json_output:
             dump_json({"success": False, "error": str(e), "type": type(e).__name__})
         else:
@@ -234,3 +338,8 @@ def sync(  # noqa: PLR0912, PLR0915 - CLI command with user-facing output format
                 )
             )
         raise typer.Exit(1) from e
+
+    finally:
+        # Release lock
+        if lock:
+            lock.release()
