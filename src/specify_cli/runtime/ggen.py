@@ -39,8 +39,9 @@ from __future__ import annotations
 
 import json
 import time
+from datetime import datetime
 from pathlib import Path
-from typing import Any
+from typing import Any, cast
 
 from specify_cli.core.instrumentation import add_span_event
 from specify_cli.core.process import run, run_logged
@@ -229,14 +230,26 @@ def run_transform(config: TransformConfig) -> TransformResult:
             return compose_transform(config, stage_results)
 
         # μ₄ CANONICALIZE: Format output
-        stage_results["canonicalize"] = canonicalize_output(
-            stage_results["emit"].output,
-        )
+        emit_output = stage_results["emit"].output
+        if not isinstance(emit_output, str):
+            stage_results["canonicalize"] = StageResult(
+                stage="canonicalize",
+                success=False,
+                input_hash="",
+                output_hash="",
+                output=None,
+                errors=["Emit stage produced no output"],
+            )
+            return compose_transform(config, stage_results)
+
+        stage_results["canonicalize"] = canonicalize_output(emit_output)
 
         # Write output file
         output_path = Path(config.output_file)
         output_path.parent.mkdir(parents=True, exist_ok=True)
-        output_path.write_text(stage_results["canonicalize"].output)
+        canonical_output = stage_results["canonicalize"].output
+        if canonical_output is not None:
+            output_path.write_text(canonical_output)
 
         # μ₅ RECEIPT: Generate proof
         stage_results["receipt"] = _run_receipt(config, stage_results)
@@ -320,12 +333,14 @@ def _run_extract(config: TransformConfig, rdf_content: str) -> StageResult:
         metric_histogram("ggen.stage.extract.duration")(stage_duration)
         add_span_event("ggen.extract.completed", {"duration_ms": stage_duration * 1000})
 
+        # Convert result dict to JSON string for output
+        result_json = json.dumps(result)
         return StageResult(
             stage="extract",
             success=True,
             input_hash=sha256_string(rdf_content),
             output_hash=output_hash,
-            output=result,
+            output=result_json,
             errors=[],
         )
 
@@ -519,20 +534,33 @@ def _execute_sparql(rdf_content: str, query: str) -> dict[str, Any]:
 
             # Convert results to list of dicts
             results = []
+            vars_list: list[str] = []
+            if query_results.vars:
+                vars_list = [str(v) for v in query_results.vars]
+
             for row in query_results:
-                result_dict = {}
-                for var_name in query_results.vars:
-                    value = row[var_name]
+                result_dict: dict[str, Any] = {}
+                for var_name in query_results.vars or []:
+                    var_str = str(var_name)
+                    # Access by position since row is a tuple-like object
+                    if isinstance(query_results.vars, list):
+                        idx = query_results.vars.index(var_name)
+                        row_tuple = cast("tuple[Any, ...]", row)
+                        value = row_tuple[idx]
+                    else:
+                        # Fallback if vars is not a list
+                        continue
+
                     # Convert RDF terms to Python types
                     if value is not None:
-                        result_dict[str(var_name)] = _rdf_term_to_python(value)
+                        result_dict[var_str] = _rdf_term_to_python(value)
                     else:
-                        result_dict[str(var_name)] = None
+                        result_dict[var_str] = None
                 results.append(result_dict)
 
             add_span_event(
                 "ggen.sparql_executed",
-                {"results_count": len(results), "variables": [str(v) for v in query_results.vars]},
+                {"results_count": len(results), "variables": vars_list},
             )
             metric_counter("ggen.sparql.queries")(1)
             metric_histogram("ggen.sparql.result_count")(float(len(results)))
@@ -572,7 +600,7 @@ def _rdf_term_to_python(term: Any) -> Any:
     return str(term)
 
 
-def _render_tera(template: str, data: Any) -> str:
+def _render_tera(template: str, data: Any) -> str:  # noqa: PLR0915
     """Render Tera template with data using Jinja2 (Tera-compatible).
 
     Tera templates use syntax very similar to Jinja2:
@@ -602,14 +630,17 @@ def _render_tera(template: str, data: Any) -> str:
     """
     with span("ggen.render_tera"):
         try:
-            from datetime import datetime
+            # Import jinja2 here to provide better error handling for missing dependency
+            import jinja2  # noqa: PLC0415
 
-            from jinja2 import Environment, StrictUndefined, select_autoescape
+            environment_class = jinja2.Environment
+            strict_undefined = jinja2.StrictUndefined
+            select_autoescape_func = jinja2.select_autoescape
 
             # Create Jinja2 environment with Tera-compatible settings
-            env = Environment(
-                autoescape=select_autoescape(default=False),
-                undefined=StrictUndefined,
+            env = environment_class(
+                autoescape=select_autoescape_func(default=False),
+                undefined=strict_undefined,
                 trim_blocks=True,
                 lstrip_blocks=True,
             )
@@ -743,9 +774,6 @@ def _render_tera(template: str, data: Any) -> str:
                     "output_length": len(rendered),
                 },
             )
-
-            return rendered
-
         except ImportError as e:
             metric_counter("ggen.tera_render.import_error")(1)
             raise ValueError(f"Jinja2 not installed for Tera rendering: {e}") from e
@@ -753,3 +781,137 @@ def _render_tera(template: str, data: Any) -> str:
             metric_counter("ggen.tera_render.error")(1)
             add_span_event("tera.render_error", {"error": str(e)})
             raise ValueError(f"Tera template rendering failed: {e}") from e
+        else:
+            return rendered
+
+
+def write_file_atomic(
+    path: Path | str,
+    content: str,
+    create_backup: bool = True,
+) -> dict[str, Any]:
+    """Write file atomically with backup before overwrite.
+
+    Implements atomic write pattern:
+    1. Create staging file in same directory
+    2. Write content to staging file
+    3. Create backup of existing file (if exists and create_backup=True)
+    4. Move staging file to target (atomic)
+    5. Clean up on rollback
+
+    This ensures no partial writes or data loss if operation is interrupted.
+
+    Parameters
+    ----------
+    path : Path | str
+        Target file path to write
+    content : str
+        Content to write
+    create_backup : bool, optional
+        Whether to create backup before overwriting. Default is True.
+
+    Returns
+    -------
+    dict[str, Any]
+        Result dict with:
+        - success: bool - Whether write succeeded
+        - path: str - Target file path
+        - backup_path: str | None - Path to backup file (if created)
+        - file_size: int - Size of written file
+        - duration_ms: float - Write duration in milliseconds
+        - error: str | None - Error message if failed
+
+    Raises
+    ------
+    IOError
+        If write operation fails after backup creation
+    """
+    with span("ggen.write_file_atomic", {"path": str(path), "create_backup": create_backup}):
+        start_time = time.time()
+        path = Path(path)
+        backup_path = None
+
+        try:
+            # Ensure parent directory exists
+            path.parent.mkdir(parents=True, exist_ok=True)
+
+            # Create staging file in same directory
+            staging_path = path.parent / f".{path.name}.tmp.{int(time.time() * 1000)}"
+
+            # Write to staging file
+            staging_path.write_text(content, encoding="utf-8")
+            metric_counter("ggen.write_atomic.staging_created")(1)
+
+            # Create backup if file exists and requested
+            if create_backup and path.exists():
+                backup_name = f"{path.name}.bak.{sha256_string(content)[:8]}"
+                backup_path = path.parent / backup_name
+                path.rename(backup_path)
+                backup_path.chmod(0o600)  # Secure backup permissions
+                metric_counter("ggen.write_atomic.backup_created")(1)
+                add_span_event(
+                    "atomic_write.backup_created",
+                    {
+                        "backup_path": str(backup_path),
+                        "original_size": backup_path.stat().st_size,
+                    },
+                )
+
+            # Move staging to target (atomic on POSIX)
+            staging_path.replace(path)
+            path.chmod(0o644)  # Readable but not world-writable
+            metric_counter("ggen.write_atomic.success")(1)
+
+            # Record metrics
+            duration = (time.time() - start_time) * 1000
+            file_size = path.stat().st_size
+            metric_histogram("ggen.write_atomic.duration")(duration / 1000)
+
+            add_span_event(
+                "atomic_write.completed",
+                {
+                    "path": str(path),
+                    "file_size": file_size,
+                    "duration_ms": duration,
+                    "backup": str(backup_path) if backup_path else None,
+                },
+            )
+
+            return {
+                "success": True,
+                "path": str(path),
+                "backup_path": str(backup_path) if backup_path else None,
+                "file_size": file_size,
+                "duration_ms": duration,
+                "error": None,
+            }
+
+        except Exception as e:
+            # Rollback: remove staging file if it exists
+            if staging_path.exists():
+                try:
+                    staging_path.unlink()
+                    metric_counter("ggen.write_atomic.rollback_staging")(1)
+                except Exception:
+                    pass
+
+            # Attempt to restore backup if write failed
+            if backup_path and backup_path.exists():
+                try:
+                    backup_path.rename(path)
+                    metric_counter("ggen.write_atomic.rollback_restore_backup")(1)
+                    add_span_event("atomic_write.rollback", {"restored_backup": True})
+                except Exception:
+                    pass
+
+            metric_counter("ggen.write_atomic.failed")(1)
+            add_span_event("atomic_write.failed", {"error": str(e)})
+
+            return {
+                "success": False,
+                "path": str(path),
+                "backup_path": str(backup_path) if backup_path else None,
+                "file_size": 0,
+                "duration_ms": (time.time() - start_time) * 1000,
+                "error": str(e),
+            }

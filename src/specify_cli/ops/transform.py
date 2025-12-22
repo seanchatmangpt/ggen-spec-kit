@@ -20,6 +20,7 @@ constitutional transformation pipeline.
 from __future__ import annotations
 
 from dataclasses import dataclass, field
+from hashlib import sha256
 from typing import Any
 
 from specify_cli.core.instrumentation import add_span_event
@@ -179,29 +180,42 @@ def normalize_rdf(rdf_content: str, shacl_shapes: str | None = None) -> StageRes
     StageResult
         Validation result with any constraint violations
     """
-    errors = []
+    with span("ops.normalize_rdf", {"has_shacl": shacl_shapes is not None}):
+        errors = []
 
-    # Basic validation (runtime does actual RDF parsing)
-    if not rdf_content.strip():
-        errors.append("Empty RDF content")
+        # Basic validation (runtime does actual RDF parsing)
+        if not rdf_content.strip():
+            errors.append("Empty RDF content")
+            metric_counter("ops.normalize_rdf.empty_content")(1)
 
-    # Check for basic Turtle syntax markers
-    if "@prefix" not in rdf_content and "@base" not in rdf_content:
-        if not rdf_content.strip().startswith("<"):
+        # Check for basic Turtle syntax markers
+        if (
+            "@prefix" not in rdf_content
+            and "@base" not in rdf_content
+            and not rdf_content.strip().startswith("<")
+        ):
             errors.append("No @prefix or @base declarations found")
+            metric_counter("ops.normalize_rdf.no_prefix")(1)
 
-    return StageResult(
-        stage="normalize",
-        success=len(errors) == 0,
-        input_hash="",  # Set by runtime
-        output_hash="",  # Set by runtime
-        output=rdf_content,  # Normalized RDF
-        errors=errors,
-    )
+        if errors:
+            metric_counter("ops.normalize_rdf.validation_failed")(1)
+            add_span_event("normalize_rdf.failed", {"error_count": len(errors)})
+        else:
+            metric_counter("ops.normalize_rdf.validation_passed")(1)
+            add_span_event("normalize_rdf.passed", {"content_length": len(rdf_content)})
+
+        return StageResult(
+            stage="normalize",
+            success=len(errors) == 0,
+            input_hash="",  # Set by runtime
+            output_hash="",  # Set by runtime
+            output=rdf_content,  # Normalized RDF
+            errors=errors,
+        )
 
 
 def extract_data(
-    normalized_rdf: str,
+    _normalized_rdf: str,
     sparql_query: str,
 ) -> StageResult:
     """μ₂ EXTRACT: Execute SPARQL query against RDF.
@@ -210,8 +224,8 @@ def extract_data(
 
     Parameters
     ----------
-    normalized_rdf : str
-        Normalized RDF from μ₁
+    _normalized_rdf : str
+        Normalized RDF from μ₁ (runtime layer executes actual query)
     sparql_query : str
         SPARQL query to execute
 
@@ -220,29 +234,37 @@ def extract_data(
     StageResult
         Query results metadata (JSON results set by runtime)
     """
-    errors = []
+    with span("ops.extract_data"):
+        errors = []
 
-    # Basic validation
-    if not sparql_query.strip():
-        errors.append("Empty SPARQL query")
+        # Basic validation
+        if not sparql_query.strip():
+            errors.append("Empty SPARQL query")
+            metric_counter("ops.extract_data.empty_query")(1)
 
-    # Check for SELECT/CONSTRUCT/ASK
-    query_upper = sparql_query.upper()
-    if not any(kw in query_upper for kw in ["SELECT", "CONSTRUCT", "ASK", "DESCRIBE"]):
-        errors.append("Invalid SPARQL query: missing SELECT/CONSTRUCT/ASK/DESCRIBE")
+        # Check for SELECT/CONSTRUCT/ASK
+        query_upper = sparql_query.upper()
+        if not any(kw in query_upper for kw in ["SELECT", "CONSTRUCT", "ASK", "DESCRIBE"]):
+            errors.append("Invalid SPARQL query: missing SELECT/CONSTRUCT/ASK/DESCRIBE")
+            metric_counter("ops.extract_data.invalid_query")(1)
 
-    return StageResult(
-        stage="extract",
-        success=len(errors) == 0,
-        input_hash="",
-        output_hash="",
-        output=None,  # JSON results set by runtime
-        errors=errors,
-    )
+        if errors:
+            add_span_event("extract_data.failed", {"error_count": len(errors)})
+        else:
+            add_span_event("extract_data.validated", {"query_length": len(sparql_query)})
+
+        return StageResult(
+            stage="extract",
+            success=len(errors) == 0,
+            input_hash="",
+            output_hash="",
+            output=None,  # JSON results set by runtime
+            errors=errors,
+        )
 
 
 def emit_template(
-    extracted_data: dict[str, Any],
+    _extracted_data: dict[str, Any],
     template: str,
 ) -> StageResult:
     """μ₃ EMIT: Render Tera template with extracted data.
@@ -251,8 +273,8 @@ def emit_template(
 
     Parameters
     ----------
-    extracted_data : dict[str, Any]
-        JSON data from μ₂
+    _extracted_data : dict[str, Any]
+        JSON data from μ₂ (runtime layer does actual rendering)
     template : str
         Tera template content
 
@@ -261,24 +283,32 @@ def emit_template(
     StageResult
         Rendering metadata (content set by runtime)
     """
-    errors = []
+    with span("ops.emit_template"):
+        errors = []
 
-    # Basic validation
-    if not template.strip():
-        errors.append("Empty template")
+        # Basic validation
+        if not template.strip():
+            errors.append("Empty template")
+            metric_counter("ops.emit_template.empty_template")(1)
 
-    # Check for basic Tera syntax
-    if "{{" not in template and "{%" not in template:
-        errors.append("Template appears to have no Tera syntax")
+        # Check for basic Tera syntax
+        if "{{" not in template and "{%" not in template:
+            errors.append("Template appears to have no Tera syntax")
+            metric_counter("ops.emit_template.no_tera_syntax")(1)
 
-    return StageResult(
-        stage="emit",
-        success=len(errors) == 0,
-        input_hash="",
-        output_hash="",
-        output=None,  # Rendered content set by runtime
-        errors=errors,
-    )
+        if errors:
+            add_span_event("emit_template.failed", {"error_count": len(errors)})
+        else:
+            add_span_event("emit_template.validated", {"template_length": len(template)})
+
+        return StageResult(
+            stage="emit",
+            success=len(errors) == 0,
+            input_hash="",
+            output_hash="",
+            output=None,  # Rendered content set by runtime
+            errors=errors,
+        )
 
 
 def canonicalize_output(content: str) -> StageResult:
@@ -298,24 +328,36 @@ def canonicalize_output(content: str) -> StageResult:
     StageResult
         Canonicalized content
     """
-    # Normalize line endings
-    normalized = content.replace("\r\n", "\n").replace("\r", "\n")
+    with span("ops.canonicalize_output"):
+        original_length = len(content)
 
-    # Trim trailing whitespace per line
-    lines = [line.rstrip() for line in normalized.split("\n")]
-    trimmed = "\n".join(lines)
+        # Normalize line endings
+        normalized = content.replace("\r\n", "\n").replace("\r", "\n")
 
-    # Ensure exactly one final newline
-    canonical = trimmed.rstrip() + "\n" if trimmed else ""
+        # Trim trailing whitespace per line
+        lines = [line.rstrip() for line in normalized.split("\n")]
+        trimmed = "\n".join(lines)
 
-    return StageResult(
-        stage="canonicalize",
-        success=True,
-        input_hash="",
-        output_hash="",
-        output=canonical,
-        errors=[],
-    )
+        # Ensure exactly one final newline
+        canonical = trimmed.rstrip() + "\n" if trimmed else ""
+
+        add_span_event(
+            "canonicalize.completed",
+            {
+                "original_length": original_length,
+                "canonical_length": len(canonical),
+                "line_count": len(lines),
+            },
+        )
+
+        return StageResult(
+            stage="canonicalize",
+            success=True,
+            input_hash="",
+            output_hash="",
+            output=canonical,
+            errors=[],
+        )
 
 
 def generate_receipt(content: str, input_hash: str) -> StageResult:
@@ -335,18 +377,27 @@ def generate_receipt(content: str, input_hash: str) -> StageResult:
     StageResult
         Receipt with output hash
     """
-    import hashlib
+    with span("ops.generate_receipt"):
+        output_hash = sha256(content.encode("utf-8")).hexdigest()
 
-    output_hash = hashlib.sha256(content.encode("utf-8")).hexdigest()
+        add_span_event(
+            "receipt.generated",
+            {
+                "input_hash": input_hash[:16] + "...",
+                "output_hash": output_hash[:16] + "...",
+                "content_length": len(content),
+            },
+        )
+        metric_counter("ops.generate_receipt.success")(1)
 
-    return StageResult(
-        stage="receipt",
-        success=True,
-        input_hash=input_hash,
-        output_hash=output_hash,
-        output=content,
-        errors=[],
-    )
+        return StageResult(
+            stage="receipt",
+            success=True,
+            input_hash=input_hash,
+            output_hash=output_hash,
+            output=content,
+            errors=[],
+        )
 
 
 def compose_transform(
@@ -369,28 +420,44 @@ def compose_transform(
     TransformResult
         Complete transformation result
     """
-    all_success = all(r.success for r in stage_results.values())
-    all_errors = []
-    for r in stage_results.values():
-        all_errors.extend(r.errors)
+    with span("ops.compose_transform", {"name": config.name}):
+        all_success = all(r.success for r in stage_results.values())
+        all_errors = []
+        for r in stage_results.values():
+            all_errors.extend(r.errors)
 
-    # Get hashes from first and last stages
-    first_stage = stage_results.get("normalize", StageResult("", False, "", "", None, []))
-    last_stage = stage_results.get(
-        "receipt",
-        stage_results.get("canonicalize", StageResult("", False, "", "", None, [])),
-    )
+        # Get hashes from first and last stages
+        first_stage = stage_results.get("normalize", StageResult("", False, "", "", None, []))
+        last_stage = stage_results.get(
+            "receipt",
+            stage_results.get("canonicalize", StageResult("", False, "", "", None, [])),
+        )
 
-    return TransformResult(
-        success=all_success,
-        input_file=config.input_files[0] if config.input_files else "",
-        output_file=config.output_file,
-        input_hash=first_stage.input_hash,
-        output_hash=last_stage.output_hash,
-        stage_results=stage_results,
-        errors=all_errors,
-        warnings=[],
-    )
+        # Record metrics
+        if all_success:
+            metric_counter("ops.compose_transform.success")(1)
+        else:
+            metric_counter("ops.compose_transform.failed")(1)
+
+        add_span_event(
+            "compose_transform.completed",
+            {
+                "success": all_success,
+                "stages_count": len(stage_results),
+                "error_count": len(all_errors),
+            },
+        )
+
+        return TransformResult(
+            success=all_success,
+            input_file=config.input_files[0] if config.input_files else "",
+            output_file=config.output_file,
+            input_hash=first_stage.input_hash,
+            output_hash=last_stage.output_hash,
+            stage_results=stage_results,
+            errors=all_errors,
+            warnings=[],
+        )
 
 
 def validate_stage_sequence(stages: list[str]) -> list[str]:
@@ -423,3 +490,67 @@ def validate_stage_sequence(stages: list[str]) -> list[str]:
             errors.append(f"Stages out of order: {stages[i]} must come before {stages[i + 1]}")
 
     return errors
+
+
+def verify_idempotence(
+    first_result: TransformResult,
+    second_result: TransformResult,
+) -> dict[str, Any]:
+    """Verify idempotence property: μ∘μ = μ
+
+    The constitutional equation requires that applying the transformation
+    twice produces the same output as applying it once. This function
+    verifies this property by comparing two transformation results.
+
+    Parameters
+    ----------
+    first_result : TransformResult
+        Result of first μ transformation
+    second_result : TransformResult
+        Result of second μ transformation on same input
+
+    Returns
+    -------
+    dict[str, Any]
+        Verification result with:
+        - idempotent: bool - True if μ∘μ = μ holds
+        - first_hash: str - Output hash from first transformation
+        - second_hash: str - Output hash from second transformation
+        - violations: list[str] - Any violations detected
+    """
+    with span("ops.verify_idempotence"):
+        violations = []
+
+        # Check output hashes match
+        first_hash = first_result.output_hash
+        second_hash = second_result.output_hash
+
+        if first_hash != second_hash:
+            violations.append(
+                f"Output hash mismatch: first={first_hash[:16]}... vs second={second_hash[:16]}..."
+            )
+            metric_counter("ops.verify_idempotence.hash_mismatch")(1)
+
+        # Check all stage hashes match
+        for stage_name in ["normalize", "extract", "emit", "canonicalize", "receipt"]:
+            first_stage = first_result.stage_results.get(stage_name)
+            second_stage = second_result.stage_results.get(stage_name)
+
+            if first_stage and second_stage and first_stage.output_hash != second_stage.output_hash:
+                violations.append(f"Stage '{stage_name}' output hash mismatch")
+
+        is_idempotent = len(violations) == 0
+
+        if is_idempotent:
+            metric_counter("ops.verify_idempotence.passed")(1)
+            add_span_event("idempotence.verified", {"output_hash": first_hash[:16]})
+        else:
+            metric_counter("ops.verify_idempotence.failed")(1)
+            add_span_event("idempotence.violated", {"violation_count": len(violations)})
+
+        return {
+            "idempotent": is_idempotent,
+            "first_hash": first_hash,
+            "second_hash": second_hash,
+            "violations": violations,
+        }
