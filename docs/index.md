@@ -1,19 +1,42 @@
-# Spec Kit
+# ggen Spec Kit Documentation
 
 *Build high-quality software faster.*
 
 **An effort to allow organizations to focus on product scenarios rather than writing undifferentiated code with the help of Spec-Driven Development.**
 
+---
+
+## 🎯 Choose Your Learning Path
+
+### 👨‍🎓 **New to Spec Kit?**
+→ Start with **[Tutorials](./tutorials/)** for step-by-step learning (100 minutes)
+
+### 🚀 **Ready to Build?**
+→ Go to **[How-to Guides](./guides/)** for task-oriented instructions
+
+### 💻 **Need Technical Details?**
+→ Check **[Reference Documentation](./reference/)** for facts and specifications
+
+### 🧠 **Want to Understand Concepts?**
+→ Read **[Explanations](./explanation/)** for deep understanding
+
+---
+
 ## What is Spec-Driven Development?
 
 Spec-Driven Development **flips the script** on traditional software development. For decades, code has been king — specifications were just scaffolding we built and discarded once the "real work" of coding began. Spec-Driven Development changes this: **specifications become executable**, directly generating working implementations rather than just guiding them.
 
-## Getting Started
+## Quick Start (5 Minutes)
 
-- [Installation Guide](installation.md)
-- [Quick Start Guide](quickstart.md)
-- [Upgrade Guide](upgrade.md)
-- [Local Development](local-development.md)
+1. **Install:** `uv tool install specify-cli --from git+https://github.com/seanchatmangpt/ggen-spec-kit.git`
+2. **Create:** `specify init my-first-app`
+3. **Learn:** [Tutorial 1: Getting Started](./tutorials/01-getting-started.md)
+
+Or explore documentation by role:
+- **[For Developers](./tutorials/)** - Learn RDF-first development
+- **[For Architects](./explanation/three-tier-architecture.md)** - Understand system design
+- **[For DevOps](./guides/deployment/setup-ci-cd.md)** - Automate workflows
+- **[For Product](./explanation/why-jtbd-framework.md)** - Prioritize with JTBD
 
 ## Core Philosophy
 
