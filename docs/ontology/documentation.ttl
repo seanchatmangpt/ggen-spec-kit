@@ -1,0 +1,455 @@
+@prefix doc: <http://ggen-spec-kit.org/documentation#> .
+@prefix spec: <http://ggen-spec-kit.org/spec#> .
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
+@prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
+@prefix sh: <http://www.w3.org/ns/shacl#> .
+
+# ============================================================================
+# DOCUMENTATION ONTOLOGY
+# Self-describing specification for Spec Kit documentation
+# ============================================================================
+
+# Classes
+doc:Documentation a rdfs:Class ;
+    rdfs:label "Documentation" ;
+    rdfs:comment "Any documentation artifact" .
+
+doc:Tutorial rdfs:subClassOf doc:Documentation ;
+    rdfs:label "Tutorial" ;
+    rdfs:comment "Learning-oriented, hands-on guide for beginners" .
+
+doc:HowToGuide rdfs:subClassOf doc:Documentation ;
+    rdfs:label "How-To Guide" ;
+    rdfs:comment "Task-oriented, goal-focused procedural guide" .
+
+doc:Reference rdfs:subClassOf doc:Documentation ;
+    rdfs:label "Reference" ;
+    rdfs:comment "Information-oriented, lookup-based technical specification" .
+
+doc:Explanation rdfs:subClassOf doc:Documentation ;
+    rdfs:label "Explanation" ;
+    rdfs:comment "Understanding-oriented, conceptual deep-dive" .
+
+doc:ConceptualMap a rdfs:Class ;
+    rdfs:label "Conceptual Map" ;
+    rdfs:comment "Relationship graph between concepts" .
+
+doc:Pattern a rdfs:Class ;
+    rdfs:label "Pattern" ;
+    rdfs:comment "Reusable pattern (few-shot example)" .
+
+doc:CodeExample a rdfs:Class ;
+    rdfs:label "Code Example" ;
+    rdfs:comment "Working code example demonstrating a pattern" .
+
+# Core Properties
+doc:title a rdf:Property ;
+    rdfs:domain doc:Documentation ;
+    rdfs:range rdfs:Literal ;
+    rdfs:label "Title" .
+
+doc:summary a rdf:Property ;
+    rdfs:domain doc:Documentation ;
+    rdfs:range rdfs:Literal ;
+    rdfs:label "Summary" ;
+    rdfs:comment "Brief summary (< 200 words)" .
+
+doc:content a rdf:Property ;
+    rdfs:domain doc:Documentation ;
+    rdfs:range rdfs:Literal ;
+    rdfs:label "Content" .
+
+doc:learningTime a rdf:Property ;
+    rdfs:domain doc:Documentation ;
+    rdfs:range xsd:duration ;
+    rdfs:label "Learning Time" ;
+    rdfs:comment "ISO 8601 duration (e.g., PT10M for 10 minutes)" .
+
+doc:difficulty a rdf:Property ;
+    rdfs:domain doc:Documentation ;
+    rdfs:range [ rdf:type rdfs:Class ] ;
+    rdfs:label "Difficulty Level" ;
+    rdfs:comment "One of: Beginner, Intermediate, Advanced" .
+
+doc:prerequisites a rdf:Property ;
+    rdfs:domain doc:Documentation ;
+    rdfs:range doc:Documentation ;
+    rdfs:label "Prerequisites" ;
+    rdfs:comment "What must be understood first" .
+
+doc:relatedTo a rdf:Property ;
+    rdfs:domain doc:Documentation ;
+    rdfs:range doc:Documentation ;
+    rdfs:label "Related To" ;
+    rdfs:comment "Related documentation (non-hierarchical)" .
+
+doc:linkedFrom a rdf:Property ;
+    rdfs:domain doc:Documentation ;
+    rdfs:range doc:Documentation ;
+    rdfs:label "Linked From" ;
+    rdfs:comment "Documentation that links to this" .
+
+# Semantic Properties
+doc:concept a rdf:Property ;
+    rdfs:domain doc:Documentation ;
+    rdfs:range rdfs:Resource ;
+    rdfs:label "Core Concept" ;
+    rdfs:comment "Central concept explained" .
+
+doc:outcome a rdf:Property ;
+    rdfs:domain doc:Documentation ;
+    rdfs:range rdfs:Literal ;
+    rdfs:label "Learning Outcome" ;
+    rdfs:comment "What reader will know/be able to do" .
+
+doc:pattern a rdf:Property ;
+    rdfs:domain doc:Documentation ;
+    rdfs:range doc:Pattern ;
+    rdfs:label "Pattern" ;
+    rdfs:comment "Reusable pattern demonstrated" .
+
+doc:example a rdf:Property ;
+    rdfs:domain doc:Documentation ;
+    rdfs:range doc:CodeExample ;
+    rdfs:label "Example" ;
+    rdfs:comment "Working code example" .
+
+# Verification Properties
+doc:verifiedBy a rdf:Property ;
+    rdfs:domain doc:Documentation ;
+    rdfs:range spec:Specification ;
+    rdfs:label "Verified By" ;
+    rdfs:comment "Which specification verifies this documentation" .
+
+doc:verificationStatus a rdf:Property ;
+    rdfs:domain doc:Documentation ;
+    rdfs:range [ rdf:type rdfs:Class ] ;
+    rdfs:label "Verification Status" ;
+    rdfs:comment "One of: Verified, Outdated, Unverified" .
+
+doc:sha256 a rdf:Property ;
+    rdfs:domain doc:Documentation ;
+    rdfs:range rdfs:Literal ;
+    rdfs:label "SHA256 Hash" ;
+    rdfs:comment "Cryptographic proof of content" .
+
+# Token Optimization
+doc:tokenCount a rdf:Property ;
+    rdfs:domain doc:Documentation ;
+    rdfs:range xsd:integer ;
+    rdfs:label "Token Count" ;
+    rdfs:comment "Estimated tokens for this documentation" .
+
+doc:compressedVersion a rdf:Property ;
+    rdfs:domain doc:Documentation ;
+    rdfs:range doc:Documentation ;
+    rdfs:label "Compressed Version" ;
+    rdfs:comment "Token-optimized version for AI" .
+
+# File References
+doc:markdownFile a rdf:Property ;
+    rdfs:domain doc:Documentation ;
+    rdfs:range rdfs:Resource ;
+    rdfs:label "Markdown File" .
+
+doc:jsonldFile a rdf:Property ;
+    rdfs:domain doc:Documentation ;
+    rdfs:range rdfs:Resource ;
+    rdfs:label "JSON-LD File" .
+
+doc:turtleFile a rdf:Property ;
+    rdfs:domain doc:Documentation ;
+    rdfs:range rdfs:Resource ;
+    rdfs:label "Turtle File" .
+
+# ============================================================================
+# DOCUMENTATION INSTANCES
+# ============================================================================
+
+# Tutorial 1: Getting Started
+<http://ggen-spec-kit.org/doc/tutorial-01> a doc:Tutorial ;
+    rdfs:label "Tutorial 1: Getting Started" ;
+    doc:title "Getting Started with ggen Spec Kit" ;
+    doc:summary "Install Specify CLI, verify system, understand the three core concepts" ;
+    doc:learningTime "PT10M"^^xsd:duration ;
+    doc:difficulty "Beginner" ;
+    doc:prerequisites () ;
+    doc:outcome "Install Specify CLI and understand RDF-first development" ;
+    doc:verificationStatus "Verified" ;
+    doc:markdownFile <file:///docs/tutorials/01-getting-started.md> ;
+    doc:relatedTo <http://ggen-spec-kit.org/doc/tutorial-02> ;
+    doc:linkedFrom <http://ggen-spec-kit.org/doc/quick-start> .
+
+# Tutorial 2: Create Your First Project
+<http://ggen-spec-kit.org/doc/tutorial-02> a doc:Tutorial ;
+    rdfs:label "Tutorial 2: Create Your First Project" ;
+    doc:title "Initialize Your First Spec Kit Project" ;
+    doc:learningTime "PT15M"^^xsd:duration ;
+    doc:difficulty "Beginner" ;
+    doc:prerequisites <http://ggen-spec-kit.org/doc/tutorial-01> ;
+    doc:relatedTo <http://ggen-spec-kit.org/doc/tutorial-03> ;
+    doc:outcome "Create a Spec Kit project with complete structure" .
+
+# Tutorial 3: Write RDF Specification
+<http://ggen-spec-kit.org/doc/tutorial-03> a doc:Tutorial ;
+    rdfs:label "Tutorial 3: Write Your First RDF Specification" ;
+    doc:learningTime "PT20M"^^xsd:duration ;
+    doc:difficulty "Beginner" ;
+    doc:prerequisites <http://ggen-spec-kit.org/doc/tutorial-02> ;
+    doc:concept spec:RDFSpecification ;
+    doc:pattern <http://ggen-spec-kit.org/pattern/rdf-command-simple> ;
+    doc:relatedTo <http://ggen-spec-kit.org/doc/howto-add-cli-command> .
+
+# How-To: Add CLI Command
+<http://ggen-spec-kit.org/doc/howto-add-cli-command> a doc:HowToGuide ;
+    rdfs:label "How-To: Add a CLI Command" ;
+    doc:title "Add a New CLI Command from RDF" ;
+    doc:summary "Define an RDF specification, run ggen sync, implement business logic" ;
+    doc:learningTime "PT25M"^^xsd:duration ;
+    doc:difficulty "Intermediate" ;
+    doc:prerequisites <http://ggen-spec-kit.org/doc/tutorial-03> ;
+    doc:outcome "Add new CLI command following RDF-first pattern" ;
+    doc:pattern <http://ggen-spec-kit.org/pattern/rdf-command-simple>,
+                <http://ggen-spec-kit.org/pattern/rdf-command-arguments> ;
+    doc:verifiedBy spec:CliCommandOntology .
+
+# How-To: Run Tests
+<http://ggen-spec-kit.org/doc/howto-run-tests> a doc:HowToGuide ;
+    rdfs:label "How-To: Run Tests" ;
+    doc:title "Execute and Manage Your Test Suite" ;
+    doc:learningTime "PT20M"^^xsd:duration ;
+    doc:difficulty "Intermediate" ;
+    doc:prerequisites <http://ggen-spec-kit.org/doc/tutorial-04> ;
+    doc:outcome "Run tests and monitor coverage" ;
+    doc:pattern <http://ggen-spec-kit.org/pattern/test-unit>,
+                <http://ggen-spec-kit.org/pattern/test-e2e> .
+
+# How-To: Run ggen Sync
+<http://ggen-spec-kit.org/doc/howto-run-ggen-sync> a doc:HowToGuide ;
+    rdfs:label "How-To: Run ggen Sync" ;
+    doc:title "Execute RDF Transformations" ;
+    doc:summary "Run ggen to transform RDF specs into code, tests, and docs" ;
+    doc:learningTime "PT15M"^^xsd:duration ;
+    doc:difficulty "Intermediate" ;
+    doc:prerequisites <http://ggen-spec-kit.org/doc/tutorial-03> ;
+    doc:outcome "Transform RDF specifications into code and documentation" ;
+    doc:concept spec:GgenTransformation .
+
+# How-To: Three-Tier Architecture
+<http://ggen-spec-kit.org/doc/howto-three-tier> a doc:HowToGuide ;
+    rdfs:label "How-To: Implement Three-Tier Architecture" ;
+    doc:title "Organize Code into Commands/Ops/Runtime" ;
+    doc:learningTime "PT30M"^^xsd:duration ;
+    doc:difficulty "Intermediate" ;
+    doc:prerequisites <http://ggen-spec-kit.org/doc/tutorial-02> ;
+    doc:outcome "Understand and apply three-tier architecture" ;
+    doc:concept spec:ThreeTierArchitecture .
+
+# How-To: Apply JTBD Framework
+<http://ggen-spec-kit.org/doc/howto-apply-jtbd> a doc:HowToGuide ;
+    rdfs:label "How-To: Apply JTBD Framework" ;
+    doc:title "Prioritize Features Using Jobs-to-be-Done" ;
+    doc:learningTime "PT25M"^^xsd:duration ;
+    doc:difficulty "Intermediate" ;
+    doc:prerequisites <http://ggen-spec-kit.org/doc/tutorial-06> ;
+    doc:outcome "Apply JTBD for feature prioritization" ;
+    doc:concept spec:JobsToBeDone .
+
+# Reference: RDF Ontology
+<http://ggen-spec-kit.org/doc/ref-rdf-ontology> a doc:Reference ;
+    rdfs:label "Reference: RDF Ontology" ;
+    doc:title "Complete RDF Ontology Specification" ;
+    doc:summary "All RDF classes, properties, and relationships in Spec Kit" ;
+    doc:difficulty "Advanced" ;
+    doc:concept spec:RDFOntology ;
+    rdfs:seeAlso spec:CliCommandOntology, spec:ThreeTierArchitecture .
+
+# Reference: SPARQL Queries
+<http://ggen-spec-kit.org/doc/ref-sparql> a doc:Reference ;
+    rdfs:label "Reference: SPARQL Queries" ;
+    doc:title "Available SPARQL Query Templates" ;
+    doc:summary "SPARQL queries for extracting specification data" ;
+    doc:difficulty "Advanced" .
+
+# Reference: Quality Metrics
+<http://ggen-spec-kit.org/doc/ref-quality-metrics> a doc:Reference ;
+    rdfs:label "Reference: Quality Metrics" ;
+    doc:title "Quality Standards and Performance Targets" ;
+    doc:summary "Acceptance criteria and metrics for Spec Kit" ;
+    doc:difficulty "Intermediate" .
+
+# Explanation: Constitutional Equation
+<http://ggen-spec-kit.org/doc/explain-constitutional> a doc:Explanation ;
+    rdfs:label "Explanation: The Constitutional Equation" ;
+    doc:title "Understanding spec.md = μ(feature.ttl)" ;
+    doc:summary "RDF specifications transform into code and documentation" ;
+    doc:learningTime "PT15M"^^xsd:duration ;
+    doc:difficulty "Intermediate" ;
+    doc:prerequisites <http://ggen-spec-kit.org/doc/tutorial-01> ;
+    doc:outcome "Understand the core principle of Spec Kit" ;
+    doc:concept spec:ConstitutionalEquation ;
+    rdfs:seeAlso <http://ggen-spec-kit.org/doc/explain-rdf-first> .
+
+# Explanation: RDF-First Development
+<http://ggen-spec-kit.org/doc/explain-rdf-first> a doc:Explanation ;
+    rdfs:label "Explanation: RDF-First Development" ;
+    doc:title "Why RDF is the Source of Truth" ;
+    doc:learningTime "PT20M"^^xsd:duration ;
+    doc:difficulty "Intermediate" ;
+    doc:outcome "Understand philosophy behind RDF-first approach" .
+
+# Explanation: Three-Tier Architecture
+<http://ggen-spec-kit.org/doc/explain-three-tier> a doc:Explanation ;
+    rdfs:label "Explanation: Three-Tier Architecture" ;
+    doc:title "Commands/Ops/Runtime Layer Separation" ;
+    doc:learningTime "PT20M"^^xsd:duration ;
+    doc:difficulty "Intermediate" ;
+    doc:outcome "Understand why separation of concerns matters" ;
+    doc:concept spec:ThreeTierArchitecture .
+
+# ============================================================================
+# PATTERNS (FEW-SHOT EXAMPLES)
+# ============================================================================
+
+<http://ggen-spec-kit.org/pattern/rdf-command-simple> a doc:Pattern ;
+    rdfs:label "Simple RDF Command" ;
+    rdfs:comment "RDF definition for a command with no arguments" ;
+    doc:example <http://ggen-spec-kit.org/example/hello-command> .
+
+<http://ggen-spec-kit.org/pattern/rdf-command-arguments> a doc:Pattern ;
+    rdfs:label "RDF Command with Arguments" ;
+    rdfs:comment "RDF definition for a command with required/optional arguments" ;
+    doc:example <http://ggen-spec-kit.org/example/greet-command> .
+
+<http://ggen-spec-kit.org/pattern/test-unit> a doc:Pattern ;
+    rdfs:label "Unit Test Pattern" ;
+    rdfs:comment "How to write unit tests for operations" ;
+    doc:example <http://ggen-spec-kit.org/example/test-operation-simple> .
+
+<http://ggen-spec-kit.org/pattern/test-e2e> a doc:Pattern ;
+    rdfs:label "End-to-End Test Pattern" ;
+    rdfs:comment "How to test CLI commands" ;
+    doc:example <http://ggen-spec-kit.org/example/test-command-e2e> .
+
+<http://ggen-spec-kit.org/pattern/impl-pure-function> a doc:Pattern ;
+    rdfs:label "Pure Function Pattern" ;
+    rdfs:comment "Implementation pattern for operations layer" ;
+    doc:example <http://ggen-spec-kit.org/example/impl-hello-operation> .
+
+# ============================================================================
+# CODE EXAMPLES
+# ============================================================================
+
+<http://ggen-spec-kit.org/example/hello-command> a doc:CodeExample ;
+    rdfs:label "Hello Command Example" ;
+    doc:content """
+sk:hello
+    a sk:Command ;
+    rdfs:label "hello" ;
+    sk:description "Greet the user" ;
+    sk:hasModule "specify_cli.commands.hello" .
+""" .
+
+<http://ggen-spec-kit.org/example/greet-command> a doc:CodeExample ;
+    rdfs:label "Greet Command with Argument" ;
+    doc:content """
+sk:greet
+    a sk:Command ;
+    rdfs:label "greet" ;
+    sk:description "Greet a person by name" ;
+    sk:hasModule "specify_cli.commands.greet" ;
+    sk:hasArgument [
+        a sk:Argument ;
+        sk:name "name" ;
+        sk:description "Name to greet" ;
+        sk:required true ;
+        sk:type "str"
+    ] .
+""" .
+
+<http://ggen-spec-kit.org/example/impl-hello-operation> a doc:CodeExample ;
+    rdfs:label "Hello Operation Implementation" ;
+    doc:content """
+def hello_operation() -> str:
+    \"\"\"Generate greeting message.
+
+    Returns
+    -------
+    str
+        Greeting message
+    \"\"\"
+    return "Hello, World! Welcome to Spec Kit."
+""" .
+
+# ============================================================================
+# CONCEPTUAL MAP (RELATIONSHIPS)
+# ============================================================================
+
+<http://ggen-spec-kit.org/map/learning-path> a doc:ConceptualMap ;
+    rdfs:label "Learning Path Map" ;
+    rdfs:comment "Progressive learning from basics to advanced" ;
+    doc:linkedFrom <http://ggen-spec-kit.org/doc/tutorial-01>,
+                   <http://ggen-spec-kit.org/doc/tutorial-02>,
+                   <http://ggen-spec-kit.org/doc/tutorial-03>,
+                   <http://ggen-spec-kit.org/doc/tutorial-04>,
+                   <http://ggen-spec-kit.org/doc/tutorial-05>,
+                   <http://ggen-spec-kit.org/doc/tutorial-06>,
+                   <http://ggen-spec-kit.org/doc/tutorial-07> .
+
+<http://ggen-spec-kit.org/map/implementation-path> a doc:ConceptualMap ;
+    rdfs:label "Implementation Path Map" ;
+    rdfs:comment "How to implement features" ;
+    doc:linkedFrom <http://ggen-spec-kit.org/doc/howto-add-cli-command>,
+                   <http://ggen-spec-kit.org/doc/howto-run-tests>,
+                   <http://ggen-spec-kit.org/doc/howto-three-tier> .
+
+# ============================================================================
+# SHACL SHAPES FOR VALIDATION
+# ============================================================================
+
+<http://ggen-spec-kit.org/shape/DocumentationShape> a sh:NodeShape ;
+    sh:targetClass doc:Documentation ;
+    sh:property [
+        sh:path rdfs:label ;
+        sh:minCount 1 ;
+        sh:datatype rdfs:Literal ;
+        sh:message "Every documentation must have a label"
+    ] ;
+    sh:property [
+        sh:path doc:title ;
+        sh:minCount 1 ;
+        sh:datatype rdfs:Literal ;
+        sh:message "Every documentation must have a title"
+    ] ;
+    sh:property [
+        sh:path doc:summary ;
+        sh:minCount 0 ;
+        sh:maxLength 500 ;
+        sh:message "Summary must be under 500 characters"
+    ] ;
+    sh:property [
+        sh:path doc:difficulty ;
+        sh:in ( "Beginner" "Intermediate" "Advanced" )
+    ] .
+
+<http://ggen-spec-kit.org/shape/TutorialShape> a sh:NodeShape ;
+    sh:targetClass doc:Tutorial ;
+    sh:property [
+        sh:path doc:learningTime ;
+        sh:minCount 1 ;
+        sh:message "Tutorials must specify learning time"
+    ] ;
+    sh:property [
+        sh:path doc:outcome ;
+        sh:minCount 1 ;
+        sh:message "Tutorials must specify learning outcomes"
+    ] .
+
+<http://ggen-spec-kit.org/shape/HowToGuideShape> a sh:NodeShape ;
+    sh:targetClass doc:HowToGuide ;
+    sh:property [
+        sh:path doc:outcome ;
+        sh:minCount 1 ;
+        sh:message "How-to guides must specify the goal/outcome"
+    ] .
