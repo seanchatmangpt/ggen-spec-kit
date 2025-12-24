@@ -1,0 +1,146 @@
+{# AGI Tester Agent Template - Generates Python Tester agent implementation #}
+{# Constitutional equation: agi/agents/tester.py = μ(agi-agents.ttl) #}
+{# This template implements μ₃ EMIT stage of the constitutional equation #}
+
+{%- set tester_agent = sparql_results | first -%}
+
+"""
+agi.agents.tester - Tester Agent Implementation
+{{ "=" | repeat(count=50) }}
+
+Testing agent for test generation and verification.
+
+This module provides a specialized agent that generates tests
+and verifies code correctness.
+
+Auto-generated from: ontology/agi-agents.ttl
+Constitutional equation: tester.py = μ(agi-agents.ttl)
+DO NOT EDIT MANUALLY - Edit the RDF source instead.
+
+Examples
+--------
+    >>> tester = TesterAgent(config={"name": "tester"})
+    >>> await tester.start()
+    >>> result = await tester.run_task({
+    ...     "code": "def add(a, b): return a + b",
+    ...     "spec": "Function that adds two numbers"
+    ... })
+
+See Also
+--------
+- :mod:`agi.agents.base` : Base Agent class
+- :mod:`agi.synthesizer` : Code synthesis engine (for test generation)
+"""
+
+from __future__ import annotations
+
+from typing import Any
+
+from opentelemetry import trace
+
+from specify_cli.core.telemetry import span
+
+from .base import Agent, AgentConfig
+
+tracer = trace.get_tracer(__name__)
+
+
+# ============================================================================
+# Tester Agent
+# ============================================================================
+
+class TesterAgent(Agent):
+    """
+    {{ tester_agent.description | default(value="Agent specialized in test generation and verification") }}.
+
+    This agent uses {{ tester_agent.testingMethod | default(value="property-based testing") }}
+    to generate comprehensive test suites.
+
+    Attributes
+    ----------
+    test_framework : str
+        Testing framework to use
+
+    Methods
+    -------
+    execute_task(task)
+        Generate tests for code
+
+    Notes
+    -----
+    Can integrate with multiple testing frameworks.
+    """
+
+    def __init__(
+        self,
+        config: AgentConfig | dict[str, Any],
+        test_framework: str = "{{ tester_agent.defaultFramework | default(value="pytest") }}",
+    ) -> None:
+        """
+        Initialize tester agent.
+
+        Parameters
+        ----------
+        config : AgentConfig | dict[str, Any]
+            Agent configuration
+        test_framework : str
+            Testing framework to use
+        """
+        super().__init__(config)
+
+        self.test_framework = test_framework
+
+        # Add testing capability
+        if "testing" not in self.config.capabilities:
+            self.config.capabilities.append("testing")
+
+    async def execute_task(self, task: dict[str, Any]) -> dict[str, Any]:
+        """
+        Execute testing task.
+
+        Parameters
+        ----------
+        task : dict[str, Any]
+            Task with 'code' and optionally 'spec' keys
+
+        Returns
+        -------
+        dict[str, Any]
+            Generated tests
+
+        Raises
+        ------
+        ValueError
+            If task missing required fields
+        """
+        with span(
+            "tester_agent.execute_task",
+            attributes={"agent_id": self.id, "task": task.get("id", "")},
+        ):
+            # Validate input
+            if "code" not in task:
+                raise ValueError("Task must have 'code' field")
+
+            code = task["code"]
+            spec = task.get("spec", "")
+
+            # TODO: Integrate with actual test generation
+            # - Analyze code structure
+            # - Generate edge cases
+            # - Create property-based tests
+
+            # Placeholder implementation
+            tests = [
+                f'''def test_basic():
+    """Test basic functionality"""
+    # TODO: Implement test
+    pass
+'''
+            ]
+
+            return {
+                "success": True,
+                "tests": tests,
+                "framework": self.test_framework,
+                "agent_id": self.id,
+            }

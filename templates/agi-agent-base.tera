@@ -1,0 +1,495 @@
+{# AGI Agent Base Template - Generates Python base Agent class from RDF #}
+{# Constitutional equation: agi/agents/base.py = μ(agi-agents.ttl) #}
+{# This template implements μ₃ EMIT stage of the constitutional equation #}
+
+{%- set agent = sparql_results | first -%}
+
+"""
+agi.agents.base - Base Agent Class with Lifecycle
+{{ "=" | repeat(count=50) }}
+
+Base class for autonomous AGI agents with lifecycle management.
+
+This module provides the foundational Agent class that all AGI agents inherit from,
+implementing:
+- Agent lifecycle (initialize, execute, cleanup)
+- State management
+- Event handling
+- Telemetry integration
+
+Auto-generated from: ontology/agi-agents.ttl
+Constitutional equation: base.py = μ(agi-agents.ttl)
+DO NOT EDIT MANUALLY - Edit the RDF source instead.
+
+Examples
+--------
+    >>> class MyAgent(Agent):
+    ...     async def execute_task(self, task):
+    ...         return {"result": "done"}
+    >>> agent = MyAgent(name="my_agent")
+    >>> await agent.start()
+
+See Also
+--------
+- :mod:`agi.agents.planner` : Planner agent implementation
+- :mod:`agi.agents.reasoner` : Reasoner agent implementation
+- :mod:`agi.types` : Agent data types
+"""
+
+from __future__ import annotations
+
+import asyncio
+from abc import ABC, abstractmethod
+from dataclasses import dataclass, field
+from datetime import datetime
+from enum import Enum
+from typing import Any, Optional
+from uuid import uuid4
+
+from opentelemetry import trace
+
+from specify_cli.core.telemetry import span, timed
+
+tracer = trace.get_tracer(__name__)
+
+
+# ============================================================================
+# Agent Types
+# ============================================================================
+
+class AgentState(Enum):
+    """Agent lifecycle state."""
+
+    CREATED = "created"
+    INITIALIZED = "initialized"
+    IDLE = "idle"
+    EXECUTING = "executing"
+    PAUSED = "paused"
+    STOPPED = "stopped"
+    FAILED = "failed"
+
+
+class AgentEvent(Enum):
+    """Agent lifecycle events."""
+
+    STARTED = "started"
+    TASK_ASSIGNED = "task_assigned"
+    TASK_STARTED = "task_started"
+    TASK_COMPLETED = "task_completed"
+    TASK_FAILED = "task_failed"
+    ERROR = "error"
+    STOPPED = "stopped"
+
+
+@dataclass
+class AgentConfig:
+    """
+    Agent configuration.
+
+    Attributes
+    ----------
+    name : str
+        Agent name
+    capabilities : list[str]
+        Agent capabilities
+    max_concurrent_tasks : int
+        Maximum parallel tasks
+    timeout_seconds : int
+        Task timeout in seconds
+    retry_attempts : int
+        Maximum retry attempts on failure
+    metadata : dict[str, Any]
+        Additional configuration
+    """
+
+    name: str
+    capabilities: list[str] = field(default_factory=list)
+    max_concurrent_tasks: int = 1
+    timeout_seconds: int = 300
+    retry_attempts: int = 3
+    metadata: dict[str, Any] = field(default_factory=dict)
+
+    def to_dict(self) -> dict[str, Any]:
+        """Convert config to dictionary."""
+        return {
+            "name": self.name,
+            "capabilities": self.capabilities,
+            "max_concurrent_tasks": self.max_concurrent_tasks,
+            "timeout_seconds": self.timeout_seconds,
+            "retry_attempts": self.retry_attempts,
+            "metadata": self.metadata,
+        }
+
+
+@dataclass
+class AgentMetrics:
+    """
+    Agent performance metrics.
+
+    Attributes
+    ----------
+    tasks_completed : int
+        Total tasks completed
+    tasks_failed : int
+        Total tasks failed
+    total_execution_time_ms : int
+        Total execution time
+    average_task_duration_ms : float
+        Average task duration
+    last_activity : datetime
+        Last activity timestamp
+    """
+
+    tasks_completed: int = 0
+    tasks_failed: int = 0
+    total_execution_time_ms: int = 0
+    average_task_duration_ms: float = 0.0
+    last_activity: datetime = field(default_factory=datetime.now)
+
+    def to_dict(self) -> dict[str, Any]:
+        """Convert metrics to dictionary."""
+        return {
+            "tasks_completed": self.tasks_completed,
+            "tasks_failed": self.tasks_failed,
+            "total_execution_time_ms": self.total_execution_time_ms,
+            "average_task_duration_ms": self.average_task_duration_ms,
+            "last_activity": self.last_activity.isoformat(),
+        }
+
+    def record_task_completion(self, duration_ms: int) -> None:
+        """Record successful task completion."""
+        self.tasks_completed += 1
+        self.total_execution_time_ms += duration_ms
+        self.average_task_duration_ms = (
+            self.total_execution_time_ms / self.tasks_completed
+        )
+        self.last_activity = datetime.now()
+
+    def record_task_failure(self) -> None:
+        """Record task failure."""
+        self.tasks_failed += 1
+        self.last_activity = datetime.now()
+
+
+# ============================================================================
+# Base Agent
+# ============================================================================
+
+class Agent(ABC):
+    """
+    {{ agent.description | default(value="Base class for autonomous AGI agents") }}.
+
+    This abstract class provides the foundation for all AGI agents, implementing
+    {{ agent.lifecycleModel | default(value="standard lifecycle management") }}.
+
+    Attributes
+    ----------
+    id : str
+        Unique agent identifier
+    config : AgentConfig
+        Agent configuration
+    state : AgentState
+        Current lifecycle state
+    metrics : AgentMetrics
+        Performance metrics
+    current_tasks : list[str]
+        Currently executing task IDs
+
+    Methods
+    -------
+    start()
+        Initialize and start agent
+    stop()
+        Stop agent and cleanup
+    execute_task(task)
+        Execute assigned task (abstract)
+    pause()
+        Pause agent execution
+    resume()
+        Resume agent execution
+
+    Notes
+    -----
+    All agent operations are instrumented with OpenTelemetry.
+    Subclasses must implement execute_task().
+    """
+
+    def __init__(
+        self,
+        config: AgentConfig | dict[str, Any],
+    ) -> None:
+        """
+        Initialize agent.
+
+        Parameters
+        ----------
+        config : AgentConfig | dict[str, Any]
+            Agent configuration
+        """
+        if isinstance(config, dict):
+            self.config = AgentConfig(**config)
+        else:
+            self.config = config
+
+        self.id = str(uuid4())
+        self.state = AgentState.CREATED
+        self.metrics = AgentMetrics()
+        self.current_tasks: list[str] = []
+        self._event_handlers: dict[AgentEvent, list[callable]] = {
+            event: [] for event in AgentEvent
+        }
+
+    @timed
+    async def start(self) -> None:
+        """
+        Initialize and start agent.
+
+        This method transitions the agent from CREATED to IDLE state,
+        performing any necessary initialization.
+
+        Raises
+        ------
+        AgentError
+            If agent is already started or initialization fails
+        """
+        with span("agent.start", attributes={"agent_id": self.id, "name": self.config.name}):
+            if self.state != AgentState.CREATED:
+                raise AgentError(f"Agent already started: {self.state}")
+
+            # Run initialization
+            await self._initialize()
+
+            # Update state
+            self.state = AgentState.IDLE
+
+            # Fire event
+            await self._fire_event(AgentEvent.STARTED)
+
+    async def _initialize(self) -> None:
+        """
+        Perform agent-specific initialization.
+
+        Override this method in subclasses for custom initialization logic.
+        """
+        pass  # Default: no-op
+
+    @timed
+    async def stop(self) -> None:
+        """
+        Stop agent and cleanup resources.
+
+        This method gracefully stops the agent, completing current tasks
+        before cleanup.
+
+        Raises
+        ------
+        AgentError
+            If cleanup fails
+        """
+        with span("agent.stop", attributes={"agent_id": self.id}):
+            # Wait for current tasks
+            while self.current_tasks:
+                await asyncio.sleep(0.1)
+
+            # Run cleanup
+            await self._cleanup()
+
+            # Update state
+            self.state = AgentState.STOPPED
+
+            # Fire event
+            await self._fire_event(AgentEvent.STOPPED)
+
+    async def _cleanup(self) -> None:
+        """
+        Perform agent-specific cleanup.
+
+        Override this method in subclasses for custom cleanup logic.
+        """
+        pass  # Default: no-op
+
+    @abstractmethod
+    async def execute_task(self, task: dict[str, Any]) -> dict[str, Any]:
+        """
+        Execute assigned task.
+
+        This is the core agent behavior that must be implemented by subclasses.
+
+        Parameters
+        ----------
+        task : dict[str, Any]
+            Task to execute with parameters
+
+        Returns
+        -------
+        dict[str, Any]
+            Task result
+
+        Raises
+        ------
+        TaskExecutionError
+            If task execution fails
+        """
+        pass
+
+    @timed
+    async def run_task(self, task: dict[str, Any]) -> dict[str, Any]:
+        """
+        Run task with lifecycle management.
+
+        This wrapper handles task lifecycle, metrics, and error handling.
+
+        Parameters
+        ----------
+        task : dict[str, Any]
+            Task to execute
+
+        Returns
+        -------
+        dict[str, Any]
+            Task result
+
+        Raises
+        ------
+        AgentError
+            If agent is not in correct state
+        TaskExecutionError
+            If task execution fails after retries
+        """
+        task_id = task.get("id", str(uuid4()))
+
+        with span(
+            "agent.run_task",
+            attributes={"agent_id": self.id, "task_id": task_id},
+        ):
+            if self.state not in (AgentState.IDLE, AgentState.EXECUTING):
+                raise AgentError(f"Agent not ready: {self.state}")
+
+            # Check capacity
+            if len(self.current_tasks) >= self.config.max_concurrent_tasks:
+                raise AgentError("Agent at capacity")
+
+            # Update state
+            self.current_tasks.append(task_id)
+            self.state = AgentState.EXECUTING
+
+            # Fire event
+            await self._fire_event(AgentEvent.TASK_STARTED, {"task_id": task_id})
+
+            start_time = datetime.now()
+            result = None
+            error = None
+
+            try:
+                # Execute with timeout
+                result = await asyncio.wait_for(
+                    self.execute_task(task),
+                    timeout=self.config.timeout_seconds,
+                )
+
+                # Record success
+                duration_ms = int((datetime.now() - start_time).total_seconds() * 1000)
+                self.metrics.record_task_completion(duration_ms)
+
+                # Fire event
+                await self._fire_event(
+                    AgentEvent.TASK_COMPLETED,
+                    {"task_id": task_id, "duration_ms": duration_ms},
+                )
+
+            except asyncio.TimeoutError:
+                error = TaskExecutionError(f"Task timeout: {self.config.timeout_seconds}s")
+                self.metrics.record_task_failure()
+                await self._fire_event(
+                    AgentEvent.TASK_FAILED,
+                    {"task_id": task_id, "error": str(error)},
+                )
+
+            except Exception as e:
+                error = TaskExecutionError(f"Task execution failed: {e}")
+                self.metrics.record_task_failure()
+                await self._fire_event(
+                    AgentEvent.TASK_FAILED,
+                    {"task_id": task_id, "error": str(error)},
+                )
+
+            finally:
+                # Cleanup
+                self.current_tasks.remove(task_id)
+                if not self.current_tasks:
+                    self.state = AgentState.IDLE
+
+            if error:
+                raise error
+
+            return result or {}
+
+    async def pause(self) -> None:
+        """Pause agent execution."""
+        with span("agent.pause", attributes={"agent_id": self.id}):
+            if self.state == AgentState.EXECUTING:
+                self.state = AgentState.PAUSED
+
+    async def resume(self) -> None:
+        """Resume agent execution."""
+        with span("agent.resume", attributes={"agent_id": self.id}):
+            if self.state == AgentState.PAUSED:
+                self.state = AgentState.IDLE
+
+    def on(self, event: AgentEvent, handler: callable) -> None:
+        """
+        Register event handler.
+
+        Parameters
+        ----------
+        event : AgentEvent
+            Event to handle
+        handler : callable
+            Handler function
+        """
+        self._event_handlers[event].append(handler)
+
+    async def _fire_event(
+        self,
+        event: AgentEvent,
+        data: Optional[dict[str, Any]] = None,
+    ) -> None:
+        """Fire agent event to registered handlers."""
+        for handler in self._event_handlers[event]:
+            try:
+                await handler(self, event, data or {})
+            except Exception as e:
+                # Log but don't fail on handler errors
+                pass
+
+    def get_status(self) -> dict[str, Any]:
+        """
+        Get agent status summary.
+
+        Returns
+        -------
+        dict[str, Any]
+            Status including state, metrics, current tasks
+        """
+        return {
+            "id": self.id,
+            "name": self.config.name,
+            "state": self.state.value,
+            "capabilities": self.config.capabilities,
+            "current_tasks": self.current_tasks,
+            "metrics": self.metrics.to_dict(),
+        }
+
+
+# ============================================================================
+# Exceptions
+# ============================================================================
+
+class AgentError(Exception):
+    """Raised when agent operation fails."""
+    pass
+
+
+class TaskExecutionError(Exception):
+    """Raised when task execution fails."""
+    pass

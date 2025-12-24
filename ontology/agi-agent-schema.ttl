@@ -1,0 +1,160 @@
+@prefix agi: <http://spec-kit.io/agi#> .
+@prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix owl: <http://www.w3.org/2002/07/owl#> .
+@prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
+@prefix sh: <http://www.w3.org/ns/shacl#> .
+
+# ============================================================================
+# AGI Agent Schema - Core Framework for Autonomous Agents
+# ============================================================================
+
+# Core Classes
+agi:Agent a owl:Class ;
+    rdfs:label "AGI Agent"@en ;
+    rdfs:comment "Autonomous agent with capabilities, reasoning, and decision-making" ;
+    rdfs:isDefinedBy <http://spec-kit.io/agi> .
+
+agi:AgentCapability a owl:Class ;
+    rdfs:label "Agent Capability"@en ;
+    rdfs:comment "A specific capability or skill an agent can perform" ;
+    rdfs:isDefinedBy <http://spec-kit.io/agi> .
+
+agi:ReasoningStrategy a owl:Class ;
+    rdfs:label "Reasoning Strategy"@en ;
+    rdfs:comment "Strategy for multi-step logical reasoning" ;
+    rdfs:isDefinedBy <http://spec-kit.io/agi> .
+
+agi:Task a owl:Class ;
+    rdfs:label "Task"@en ;
+    rdfs:comment "Atomic work unit with dependencies and parallelization info" ;
+    rdfs:isDefinedBy <http://spec-kit.io/agi> .
+
+agi:TaskDependency a owl:Class ;
+    rdfs:label "Task Dependency"@en ;
+    rdfs:comment "Dependency relationship between tasks" ;
+    rdfs:isDefinedBy <http://spec-kit.io/agi> .
+
+agi:ParallelizationGroup a owl:Class ;
+    rdfs:label "Parallelization Group"@en ;
+    rdfs:comment "Group of tasks that can execute in parallel" ;
+    rdfs:isDefinedBy <http://spec-kit.io/agi> .
+
+# Object Properties
+agi:hasCapability a owl:ObjectProperty ;
+    rdfs:label "has capability"@en ;
+    rdfs:domain agi:Agent ;
+    rdfs:range agi:AgentCapability ;
+    rdfs:comment "Agent has a specific capability" ;
+    rdfs:isDefinedBy <http://spec-kit.io/agi> .
+
+agi:usesStrategy a owl:ObjectProperty ;
+    rdfs:label "uses strategy"@en ;
+    rdfs:domain agi:Agent ;
+    rdfs:range agi:ReasoningStrategy ;
+    rdfs:comment "Agent uses a reasoning strategy" ;
+    rdfs:isDefinedBy <http://spec-kit.io/agi> .
+
+agi:dependsOn a owl:ObjectProperty ;
+    rdfs:label "depends on"@en ;
+    rdfs:domain agi:Task ;
+    rdfs:range agi:Task ;
+    rdfs:comment "Explicit task dependency" ;
+    rdfs:isDefinedBy <http://spec-kit.io/agi> .
+
+agi:canParallelizeWith a owl:ObjectProperty ;
+    rdfs:label "can parallelize with"@en ;
+    rdfs:domain agi:Task ;
+    rdfs:range agi:Task ;
+    rdfs:comment "Can execute in parallel with another task" ;
+    rdfs:isDefinedBy <http://spec-kit.io/agi> .
+
+# Datatype Properties
+agi:agentName a owl:DatatypeProperty ;
+    rdfs:label "agent name"@en ;
+    rdfs:domain agi:Agent ;
+    rdfs:range xsd:string ;
+    rdfs:comment "Name of the agent" ;
+    rdfs:isDefinedBy <http://spec-kit.io/agi> .
+
+agi:capabilityName a owl:DatatypeProperty ;
+    rdfs:label "capability name"@en ;
+    rdfs:domain agi:AgentCapability ;
+    rdfs:range xsd:string ;
+    rdfs:comment "Name of the capability" ;
+    rdfs:isDefinedBy <http://spec-kit.io/agi> .
+
+agi:taskName a owl:DatatypeProperty ;
+    rdfs:label "task name"@en ;
+    rdfs:domain agi:Task ;
+    rdfs:range xsd:string ;
+    rdfs:comment "Name of the task" ;
+    rdfs:isDefinedBy <http://spec-kit.io/agi> .
+
+agi:complexity a owl:DatatypeProperty ;
+    rdfs:label "complexity"@en ;
+    rdfs:domain agi:Task ;
+    rdfs:range xsd:float ;
+    rdfs:comment "Complexity score (0.0-1.0)" ;
+    rdfs:isDefinedBy <http://spec-kit.io/agi> .
+
+agi:estimatedDuration a owl:DatatypeProperty ;
+    rdfs:label "estimated duration"@en ;
+    rdfs:domain agi:Task ;
+    rdfs:range xsd:float ;
+    rdfs:comment "Estimated duration in seconds" ;
+    rdfs:isDefinedBy <http://spec-kit.io/agi> .
+
+# ============================================================================
+# SHACL Validation Shapes
+# ============================================================================
+
+agi:AgentShape a sh:NodeShape ;
+    sh:targetClass agi:Agent ;
+    sh:property [
+        sh:path agi:agentName ;
+        sh:minCount 1 ;
+        sh:maxCount 1 ;
+        sh:datatype xsd:string ;
+        sh:minLength 1 ;
+        sh:maxLength 255
+    ] ;
+    sh:property [
+        sh:path agi:hasCapability ;
+        sh:minCount 1 ;
+        sh:class agi:AgentCapability
+    ] .
+
+agi:TaskShape a sh:NodeShape ;
+    sh:targetClass agi:Task ;
+    sh:property [
+        sh:path agi:taskName ;
+        sh:minCount 1 ;
+        sh:maxCount 1 ;
+        sh:datatype xsd:string ;
+        sh:minLength 1
+    ] ;
+    sh:property [
+        sh:path agi:complexity ;
+        sh:minCount 1 ;
+        sh:maxCount 1 ;
+        sh:datatype xsd:float ;
+        sh:minInclusive 0.0 ;
+        sh:maxInclusive 1.0
+    ] ;
+    sh:property [
+        sh:path agi:estimatedDuration ;
+        sh:minCount 1 ;
+        sh:datatype xsd:float ;
+        sh:minInclusive 0.0
+    ] .
+
+agi:AgentCapabilityShape a sh:NodeShape ;
+    sh:targetClass agi:AgentCapability ;
+    sh:property [
+        sh:path agi:capabilityName ;
+        sh:minCount 1 ;
+        sh:maxCount 1 ;
+        sh:datatype xsd:string ;
+        sh:minLength 1
+    ] .

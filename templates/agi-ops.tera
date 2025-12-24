@@ -1,0 +1,340 @@
+{# AGI Ops Template - Generates operations layer for AGI tasks from RDF #}
+{# Constitutional equation: ops/agi.py = μ(agi-commands.ttl) #}
+{# This template implements μ₃ EMIT stage of the constitutional equation #}
+
+{%- set ops = sparql_results | first -%}
+
+"""
+specify_cli.ops.agi - AGI Operations Layer
+{{ "=" | repeat(count=50) }}
+
+Pure business logic for AGI operations (no side effects, no I/O).
+
+This module contains the operations layer for AGI functionality.
+All subprocess execution and I/O happens in the runtime layer.
+
+Functions
+---------
+- create_plan : Generate execution plan from goal
+- reason : Perform logical reasoning from premises
+- synthesize_code : Generate code from specification
+- orchestrate : Coordinate multiple agents
+
+All functions use OpenTelemetry instrumentation for observability.
+
+See Also
+--------
+- :mod:`specify_cli.runtime.agi` : Runtime I/O layer
+- :mod:`specify_cli.commands.agi` : CLI command layer
+"""
+
+from __future__ import annotations
+
+from typing import Any, Optional
+
+from specify_cli.core.telemetry import span, timed
+
+
+__all__ = [
+    "create_plan",
+    "reason",
+    "synthesize_code",
+    "orchestrate",
+    "make_decision",
+]
+
+
+# ============================================================================
+# Planning Operations
+# ============================================================================
+
+@timed
+def create_plan(
+    goal: str,
+    context: Optional[str] = None,
+    max_depth: int = 5,
+    max_tasks: int = 50,
+) -> dict[str, Any]:
+    """
+    Generate execution plan from high-level goal.
+
+    This is pure business logic for plan creation. No I/O operations.
+
+    Parameters
+    ----------
+    goal : str
+        High-level goal to plan for
+    context : str, optional
+        Planning context (JSON string)
+    max_depth : int
+        Maximum decomposition depth
+    max_tasks : int
+        Maximum tasks per plan
+
+    Returns
+    -------
+    dict[str, Any]
+        Operation result with plan data
+
+    Notes
+    -----
+    This is pure business logic with no side effects.
+    All I/O operations are delegated to the runtime layer.
+    """
+    with span("agi.create_plan", attributes={"goal": goal}):
+        # TODO: Implement actual planning logic
+        # - Parse context
+        # - Decompose goal
+        # - Build task graph
+        # - Validate plan
+
+        # Placeholder implementation
+        import json
+        ctx = json.loads(context) if context else {}
+
+        plan = {
+            "goal": goal,
+            "tasks": [
+                {
+                    "id": "task_0001",
+                    "description": f"Implement {goal}",
+                    "dependencies": [],
+                    "estimated_duration": 300,
+                }
+            ],
+            "context": ctx,
+            "estimated_duration": 300,
+        }
+
+        return {
+            "success": True,
+            "plan": plan,
+        }
+
+
+# ============================================================================
+# Reasoning Operations
+# ============================================================================
+
+@timed
+def reason(
+    premises: list[str],
+    goal: Optional[str] = None,
+    mode: str = "deductive",
+    max_depth: int = 10,
+) -> dict[str, Any]:
+    """
+    Perform logical reasoning from premises.
+
+    This is pure business logic for reasoning. No I/O operations.
+
+    Parameters
+    ----------
+    premises : list[str]
+        Logical premises
+    goal : str, optional
+        Target conclusion to prove
+    mode : str
+        Reasoning mode (deductive, inductive, abductive)
+    max_depth : int
+        Maximum inference depth
+
+    Returns
+    -------
+    dict[str, Any]
+        Operation result with conclusions
+
+    Notes
+    -----
+    This is pure business logic with no side effects.
+    """
+    with span("agi.reason", attributes={"mode": mode, "premise_count": len(premises)}):
+        # TODO: Implement actual reasoning logic
+        # - Normalize premises
+        # - Apply inference rules
+        # - Derive conclusions
+        # - Build proof trace
+
+        # Placeholder implementation
+        conclusions = [
+            {
+                "statement": "Derived conclusion from premises",
+                "confidence": 0.8,
+                "supporting_premises": premises,
+                "mode": mode,
+            }
+        ]
+
+        return {
+            "success": True,
+            "conclusions": conclusions,
+        }
+
+
+# ============================================================================
+# Code Synthesis Operations
+# ============================================================================
+
+@timed
+def synthesize_code(
+    spec: str,
+    language: str = "python",
+    verify: bool = True,
+) -> dict[str, Any]:
+    """
+    Generate code from specification.
+
+    This is pure business logic for code synthesis. No I/O operations.
+
+    Parameters
+    ----------
+    spec : str
+        Code specification
+    language : str
+        Target programming language
+    verify : bool
+        Whether to verify generated code
+
+    Returns
+    -------
+    dict[str, Any]
+        Operation result with generated code
+
+    Notes
+    -----
+    This is pure business logic with no side effects.
+    """
+    with span("agi.synthesize_code", attributes={"language": language}):
+        # TODO: Implement actual synthesis logic
+        # - Parse specification
+        # - Generate code structure
+        # - Apply templates
+        # - Format output
+
+        # Placeholder implementation
+        if language == "python":
+            code = f'''def generated_function():
+    """
+    {spec}
+    """
+    # TODO: Implement {spec}
+    pass
+'''
+        else:
+            code = f"// {spec}\n// TODO: Implement"
+
+        return {
+            "success": True,
+            "code": code,
+            "language": language,
+            "confidence": 0.7,
+        }
+
+
+# ============================================================================
+# Orchestration Operations
+# ============================================================================
+
+@timed
+def orchestrate(
+    goal: str,
+    agents: list[str],
+    orchestration_type: str = "sequential",
+) -> dict[str, Any]:
+    """
+    Orchestrate multiple agents to achieve goal.
+
+    This is pure business logic for orchestration. No I/O operations.
+
+    Parameters
+    ----------
+    goal : str
+        High-level goal
+    agents : list[str]
+        Agent names to orchestrate
+    orchestration_type : str
+        Orchestration pattern (sequential, parallel, pipeline)
+
+    Returns
+    -------
+    dict[str, Any]
+        Operation result with orchestration data
+
+    Notes
+    -----
+    This is pure business logic with no side effects.
+    """
+    with span(
+        "agi.orchestrate",
+        attributes={"type": orchestration_type, "agent_count": len(agents)},
+    ):
+        # TODO: Implement actual orchestration logic
+        # - Initialize agents
+        # - Distribute tasks
+        # - Coordinate execution
+        # - Aggregate results
+
+        # Placeholder implementation
+        return {
+            "success": True,
+            "goal": goal,
+            "agents": agents,
+            "type": orchestration_type,
+            "duration_ms": 1000,
+        }
+
+
+# ============================================================================
+# Decision-Making Operations
+# ============================================================================
+
+@timed
+def make_decision(
+    options: list[dict[str, Any]],
+    criteria: dict[str, float],
+    strategy: str = "utility_maximization",
+) -> dict[str, Any]:
+    """
+    Make decision from options based on criteria.
+
+    This is pure business logic for decision-making. No I/O operations.
+
+    Parameters
+    ----------
+    options : list[dict[str, Any]]
+        Available options
+    criteria : dict[str, float]
+        Decision criteria with weights
+    strategy : str
+        Decision strategy
+
+    Returns
+    -------
+    dict[str, Any]
+        Operation result with selected option
+
+    Notes
+    -----
+    This is pure business logic with no side effects.
+    """
+    with span("agi.make_decision", attributes={"strategy": strategy}):
+        # TODO: Implement actual decision logic
+        # - Evaluate options
+        # - Apply criteria weights
+        # - Select best option
+        # - Generate justification
+
+        # Placeholder implementation
+        if options:
+            selected = options[0]
+            return {
+                "success": True,
+                "selected_option": selected,
+                "score": 0.8,
+                "strategy": strategy,
+            }
+        else:
+            return {
+                "success": False,
+                "errors": ["No options provided"],
+            }

@@ -1,0 +1,240 @@
+@prefix agi: <http://spec-kit.io/agi#> .
+@prefix reasoning: <http://spec-kit.io/agi/reasoning#> .
+@prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix owl: <http://www.w3.org/2002/07/owl#> .
+@prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
+@prefix sh: <http://www.w3.org/ns/shacl#> .
+
+# ============================================================================
+# AGI Reasoning & Decision Schema - Logical Inference and Multi-Objective Choice
+# ============================================================================
+
+# Reasoning Strategy Implementations
+reasoning:ReasoningChain a owl:Class ;
+    rdfs:label "Reasoning Chain"@en ;
+    rdfs:comment "Sequence of reasoning steps" ;
+    rdfs:isDefinedBy <http://spec-kit.io/agi/reasoning> .
+
+reasoning:ReasoningStep a owl:Class ;
+    rdfs:label "Reasoning Step"@en ;
+    rdfs:comment "Single step in reasoning process" ;
+    rdfs:isDefinedBy <http://spec-kit.io/agi/reasoning> .
+
+reasoning:Premise a owl:Class ;
+    rdfs:label "Premise"@en ;
+    rdfs:comment "Input fact or assumption" ;
+    rdfs:isDefinedBy <http://spec-kit.io/agi/reasoning> .
+
+reasoning:Conclusion a owl:Class ;
+    rdfs:label "Conclusion"@en ;
+    rdfs:comment "Output derived from reasoning" ;
+    rdfs:isDefinedBy <http://spec-kit.io/agi/reasoning> .
+
+# Decision Framework
+reasoning:DecisionContext a owl:Class ;
+    rdfs:label "Decision Context"@en ;
+    rdfs:comment "Context for decision-making" ;
+    rdfs:isDefinedBy <http://spec-kit.io/agi/reasoning> .
+
+reasoning:DecisionCriterion a owl:Class ;
+    rdfs:label "Decision Criterion"@en ;
+    rdfs:comment "Single criterion for evaluating options" ;
+    rdfs:isDefinedBy <http://spec-kit.io/agi/reasoning> .
+
+reasoning:DesignOption a owl:Class ;
+    rdfs:label "Design Option"@en ;
+    rdfs:comment "Alternative design in decision space" ;
+    rdfs:isDefinedBy <http://spec-kit.io/agi/reasoning> .
+
+# Object Properties
+reasoning:hasStep a owl:ObjectProperty ;
+    rdfs:label "has step"@en ;
+    rdfs:domain reasoning:ReasoningChain ;
+    rdfs:range reasoning:ReasoningStep ;
+    rdfs:comment "Reasoning chain contains steps" ;
+    rdfs:isDefinedBy <http://spec-kit.io/agi/reasoning> .
+
+reasoning:hasPremise a owl:ObjectProperty ;
+    rdfs:label "has premise"@en ;
+    rdfs:domain reasoning:ReasoningStep ;
+    rdfs:range reasoning:Premise ;
+    rdfs:comment "Reasoning step starts with premise" ;
+    rdfs:isDefinedBy <http://spec-kit.io/agi/reasoning> .
+
+reasoning:producesConclusion a owl:ObjectProperty ;
+    rdfs:label "produces conclusion"@en ;
+    rdfs:domain reasoning:ReasoningStep ;
+    rdfs:range reasoning:Conclusion ;
+    rdfs:comment "Reasoning step produces conclusion" ;
+    rdfs:isDefinedBy <http://spec-kit.io/agi/reasoning> .
+
+reasoning:hasCriterion a owl:ObjectProperty ;
+    rdfs:label "has criterion"@en ;
+    rdfs:domain reasoning:DecisionContext ;
+    rdfs:range reasoning:DecisionCriterion ;
+    rdfs:comment "Decision context includes criteria" ;
+    rdfs:isDefinedBy <http://spec-kit.io/agi/reasoning> .
+
+# Datatype Properties
+reasoning:reasoningType a owl:DatatypeProperty ;
+    rdfs:label "reasoning type"@en ;
+    rdfs:domain reasoning:ReasoningChain ;
+    rdfs:range xsd:string ;
+    rdfs:comment "Type: deduction, induction, abduction, analogy" ;
+    rdfs:isDefinedBy <http://spec-kit.io/agi/reasoning> .
+
+reasoning:premiseStatement a owl:DatatypeProperty ;
+    rdfs:label "premise statement"@en ;
+    rdfs:domain reasoning:Premise ;
+    rdfs:range xsd:string ;
+    rdfs:comment "The premise statement" ;
+    rdfs:isDefinedBy <http://spec-kit.io/agi/reasoning> .
+
+reasoning:premiseConfidence a owl:DatatypeProperty ;
+    rdfs:label "premise confidence"@en ;
+    rdfs:domain reasoning:Premise ;
+    rdfs:range xsd:float ;
+    rdfs:comment "Confidence in premise (0.0-1.0)" ;
+    rdfs:isDefinedBy <http://spec-kit.io/agi/reasoning> .
+
+reasoning:conclusionStatement a owl:DatatypeProperty ;
+    rdfs:label "conclusion statement"@en ;
+    rdfs:domain reasoning:Conclusion ;
+    rdfs:range xsd:string ;
+    rdfs:comment "The conclusion statement" ;
+    rdfs:isDefinedBy <http://spec-kit.io/agi/reasoning> .
+
+reasoning:conclusionConfidence a owl:DatatypeProperty ;
+    rdfs:label "conclusion confidence"@en ;
+    rdfs:domain reasoning:Conclusion ;
+    rdfs:range xsd:float ;
+    rdfs:comment "Confidence in conclusion (0.0-1.0)" ;
+    rdfs:isDefinedBy <http://spec-kit.io/agi/reasoning> .
+
+reasoning:criterionName a owl:DatatypeProperty ;
+    rdfs:label "criterion name"@en ;
+    rdfs:domain reasoning:DecisionCriterion ;
+    rdfs:range xsd:string ;
+    rdfs:comment "Name of the criterion" ;
+    rdfs:isDefinedBy <http://spec-kit.io/agi/reasoning> .
+
+reasoning:criterionWeight a owl:DatatypeProperty ;
+    rdfs:label "criterion weight"@en ;
+    rdfs:domain reasoning:DecisionCriterion ;
+    rdfs:range xsd:float ;
+    rdfs:comment "Importance weight (0.0-1.0)" ;
+    rdfs:isDefinedBy <http://spec-kit.io/agi/reasoning> .
+
+reasoning:optionName a owl:DatatypeProperty ;
+    rdfs:label "option name"@en ;
+    rdfs:domain reasoning:DesignOption ;
+    rdfs:range xsd:string ;
+    rdfs:comment "Name of the design option" ;
+    rdfs:isDefinedBy <http://spec-kit.io/agi/reasoning> .
+
+reasoning:optionScore a owl:DatatypeProperty ;
+    rdfs:label "option score"@en ;
+    rdfs:domain reasoning:DesignOption ;
+    rdfs:range xsd:float ;
+    rdfs:comment "Overall score for the option" ;
+    rdfs:isDefinedBy <http://spec-kit.io/agi/reasoning> .
+
+reasoning:optionFeasibility a owl:DatatypeProperty ;
+    rdfs:label "option feasibility"@en ;
+    rdfs:domain reasoning:DesignOption ;
+    rdfs:range xsd:float ;
+    rdfs:comment "Feasibility score (0.0-1.0)" ;
+    rdfs:isDefinedBy <http://spec-kit.io/agi/reasoning> .
+
+# ============================================================================
+# SHACL Validation Shapes
+# ============================================================================
+
+reasoning:ReasoningChainShape a sh:NodeShape ;
+    sh:targetClass reasoning:ReasoningChain ;
+    sh:property [
+        sh:path reasoning:reasoningType ;
+        sh:minCount 1 ;
+        sh:maxCount 1 ;
+        sh:datatype xsd:string ;
+        sh:in ("deduction" "induction" "abduction" "analogy")
+    ] ;
+    sh:property [
+        sh:path reasoning:hasStep ;
+        sh:minCount 1 ;
+        sh:class reasoning:ReasoningStep
+    ] .
+
+reasoning:PremiseShape a sh:NodeShape ;
+    sh:targetClass reasoning:Premise ;
+    sh:property [
+        sh:path reasoning:premiseStatement ;
+        sh:minCount 1 ;
+        sh:maxCount 1 ;
+        sh:datatype xsd:string ;
+        sh:minLength 1
+    ] ;
+    sh:property [
+        sh:path reasoning:premiseConfidence ;
+        sh:minCount 1 ;
+        sh:datatype xsd:float ;
+        sh:minInclusive 0.0 ;
+        sh:maxInclusive 1.0
+    ] .
+
+reasoning:ConclusionShape a sh:NodeShape ;
+    sh:targetClass reasoning:Conclusion ;
+    sh:property [
+        sh:path reasoning:conclusionStatement ;
+        sh:minCount 1 ;
+        sh:maxCount 1 ;
+        sh:datatype xsd:string ;
+        sh:minLength 1
+    ] ;
+    sh:property [
+        sh:path reasoning:conclusionConfidence ;
+        sh:minCount 1 ;
+        sh:datatype xsd:float ;
+        sh:minInclusive 0.0 ;
+        sh:maxInclusive 1.0
+    ] .
+
+reasoning:DecisionCriterionShape a sh:NodeShape ;
+    sh:targetClass reasoning:DecisionCriterion ;
+    sh:property [
+        sh:path reasoning:criterionName ;
+        sh:minCount 1 ;
+        sh:maxCount 1 ;
+        sh:datatype xsd:string ;
+        sh:minLength 1
+    ] ;
+    sh:property [
+        sh:path reasoning:criterionWeight ;
+        sh:minCount 1 ;
+        sh:datatype xsd:float ;
+        sh:minInclusive 0.0 ;
+        sh:maxInclusive 1.0
+    ] .
+
+reasoning:DesignOptionShape a sh:NodeShape ;
+    sh:targetClass reasoning:DesignOption ;
+    sh:property [
+        sh:path reasoning:optionName ;
+        sh:minCount 1 ;
+        sh:maxCount 1 ;
+        sh:datatype xsd:string ;
+        sh:minLength 1
+    ] ;
+    sh:property [
+        sh:path reasoning:optionScore ;
+        sh:minCount 1 ;
+        sh:datatype xsd:float
+    ] ;
+    sh:property [
+        sh:path reasoning:optionFeasibility ;
+        sh:minCount 1 ;
+        sh:datatype xsd:float ;
+        sh:minInclusive 0.0 ;
+        sh:maxInclusive 1.0
+    ] .

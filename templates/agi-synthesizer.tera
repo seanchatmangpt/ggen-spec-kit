@@ -1,0 +1,522 @@
+{# AGI Synthesizer Template - Generates Python code synthesis engine from RDF #}
+{# Constitutional equation: agi/synthesizer.py = μ(agi-agents.ttl) #}
+{# This template implements μ₃ EMIT stage of the constitutional equation #}
+
+{%- set synth = sparql_results | first -%}
+
+"""
+agi.synthesizer - AGI Code Synthesis Engine
+{{ "=" | repeat(count=50) }}
+
+Autonomous code generation system for synthesizing implementations.
+
+This module provides code synthesis capabilities for AGI agents, enabling:
+- Program synthesis from specifications
+- Code transformation and refactoring
+- Template-based code generation
+- Test generation
+
+Auto-generated from: ontology/agi-agents.ttl
+Constitutional equation: synthesizer.py = μ(agi-agents.ttl)
+DO NOT EDIT MANUALLY - Edit the RDF source instead.
+
+Examples
+--------
+    >>> synth = CodeSynthesizer()
+    >>> code = synth.synthesize(
+    ...     spec="Function that adds two numbers",
+    ...     language="python"
+    ... )
+    >>> print(code)
+
+See Also
+--------
+- :mod:`agi.ops.synthesizer` : Business logic
+- :mod:`agi.runtime.synthesizer` : Runtime layer
+- :mod:`agi.types` : Data types
+"""
+
+from __future__ import annotations
+
+from dataclasses import dataclass, field
+from datetime import datetime
+from enum import Enum
+from pathlib import Path
+from typing import Any, Optional
+
+from opentelemetry import trace
+
+from specify_cli.core.telemetry import span, timed
+
+tracer = trace.get_tracer(__name__)
+
+
+# ============================================================================
+# Synthesis Types
+# ============================================================================
+
+class SynthesisStrategy(Enum):
+    """Code synthesis strategy."""
+
+    TEMPLATE_BASED = "template_based"  # Template expansion
+    EXAMPLE_BASED = "example_based"  # Learn from examples
+    SPECIFICATION_BASED = "specification_based"  # From formal spec
+    SEARCH_BASED = "search_based"  # Genetic programming
+
+
+class CodeLanguage(Enum):
+    """Supported programming languages."""
+
+    PYTHON = "python"
+    JAVASCRIPT = "javascript"
+    TYPESCRIPT = "typescript"
+    RUST = "rust"
+    GO = "go"
+
+
+@dataclass
+class Specification:
+    """
+    Code specification for synthesis.
+
+    Attributes
+    ----------
+    description : str
+        Natural language description
+    input_types : list[str]
+        Expected input types
+    output_type : str
+        Expected output type
+    constraints : list[str]
+        Constraints and requirements
+    examples : list[dict[str, Any]]
+        Input/output examples
+    metadata : dict[str, Any]
+        Additional specification metadata
+    """
+
+    description: str
+    input_types: list[str] = field(default_factory=list)
+    output_type: str = "Any"
+    constraints: list[str] = field(default_factory=list)
+    examples: list[dict[str, Any]] = field(default_factory=list)
+    metadata: dict[str, Any] = field(default_factory=dict)
+
+    def to_dict(self) -> dict[str, Any]:
+        """Convert specification to dictionary."""
+        return {
+            "description": self.description,
+            "input_types": self.input_types,
+            "output_type": self.output_type,
+            "constraints": self.constraints,
+            "examples": self.examples,
+            "metadata": self.metadata,
+        }
+
+
+@dataclass
+class SynthesizedCode:
+    """
+    Generated code with metadata.
+
+    Attributes
+    ----------
+    code : str
+        Generated source code
+    language : CodeLanguage
+        Programming language
+    spec : Specification
+        Source specification
+    confidence : float
+        Confidence in correctness (0.0-1.0)
+    tests : list[str]
+        Generated test cases
+    documentation : str
+        Generated documentation
+    metadata : dict[str, Any]
+        Additional code metadata
+    timestamp : datetime
+        Generation timestamp
+    """
+
+    code: str
+    language: CodeLanguage
+    spec: Specification
+    confidence: float = 0.0
+    tests: list[str] = field(default_factory=list)
+    documentation: str = ""
+    metadata: dict[str, Any] = field(default_factory=dict)
+    timestamp: datetime = field(default_factory=datetime.now)
+
+    def to_dict(self) -> dict[str, Any]:
+        """Convert synthesized code to dictionary."""
+        return {
+            "code": self.code,
+            "language": self.language.value,
+            "spec": self.spec.to_dict(),
+            "confidence": self.confidence,
+            "tests": self.tests,
+            "documentation": self.documentation,
+            "metadata": self.metadata,
+            "timestamp": self.timestamp.isoformat(),
+        }
+
+    def save(self, path: Path) -> None:
+        """
+        Save generated code to file.
+
+        Parameters
+        ----------
+        path : Path
+            Output file path
+        """
+        path.write_text(self.code)
+
+
+# ============================================================================
+# Code Synthesizer
+# ============================================================================
+
+class CodeSynthesizer:
+    """
+    {{ synth.description | default(value="Autonomous code synthesis engine") }}.
+
+    Implements {{ synth.synthesisMethod | default(value="template-based") }}
+    synthesis with {{ synth.verificationMethod | default(value="test-based") }} verification.
+
+    Attributes
+    ----------
+    default_language : CodeLanguage
+        Default target language
+    default_strategy : SynthesisStrategy
+        Default synthesis strategy
+    verify_output : bool
+        Whether to verify generated code
+
+    Methods
+    -------
+    synthesize(spec, language, strategy)
+        Generate code from specification
+    verify(code, spec)
+        Verify generated code meets specification
+    refactor(code, transformations)
+        Refactor existing code
+
+    Notes
+    -----
+    Uses OpenTelemetry for observability.
+    All synthesis operations are traced.
+    """
+
+    def __init__(
+        self,
+        default_language: CodeLanguage = CodeLanguage.{{ synth.defaultLanguage | default(value="PYTHON") }},
+        default_strategy: SynthesisStrategy = SynthesisStrategy.{{ synth.defaultStrategy | default(value="TEMPLATE_BASED") }},
+        verify_output: bool = {{ synth.verifyOutput | default(value="true") }},
+    ) -> None:
+        """
+        Initialize code synthesizer.
+
+        Parameters
+        ----------
+        default_language : CodeLanguage
+            Default programming language
+        default_strategy : SynthesisStrategy
+            Default synthesis strategy
+        verify_output : bool
+            Whether to verify generated code
+        """
+        self.default_language = default_language
+        self.default_strategy = default_strategy
+        self.verify_output = verify_output
+
+    @timed
+    def synthesize(
+        self,
+        spec: str | Specification,
+        language: Optional[CodeLanguage] = None,
+        strategy: Optional[SynthesisStrategy] = None,
+    ) -> SynthesizedCode:
+        """
+        Generate code from specification.
+
+        This method synthesizes code using {{ synth.synthesisMethod | default(value="AI-driven") }}
+        techniques and optionally verifies the output.
+
+        Parameters
+        ----------
+        spec : str | Specification
+            Code specification (natural language or Specification object)
+        language : CodeLanguage, optional
+            Target programming language
+        strategy : SynthesisStrategy, optional
+            Synthesis strategy to use
+
+        Returns
+        -------
+        SynthesizedCode
+            Generated code with metadata
+
+        Raises
+        ------
+        SynthesisError
+            If code generation fails
+        ValidationError
+            If generated code fails verification
+
+        Examples
+        --------
+        >>> synth = CodeSynthesizer()
+        >>> result = synth.synthesize(
+        ...     spec="Function to calculate factorial",
+        ...     language=CodeLanguage.PYTHON
+        ... )
+        >>> print(result.code)
+        """
+        target_language = language or self.default_language
+        synth_strategy = strategy or self.default_strategy
+
+        with span(
+            "synthesizer.synthesize",
+            attributes={
+                "language": target_language.value,
+                "strategy": synth_strategy.value,
+            },
+        ):
+            # Normalize specification
+            specification = self._normalize_spec(spec)
+
+            # Generate code based on strategy
+            code = self._generate_code(
+                specification,
+                target_language,
+                synth_strategy,
+            )
+
+            # Generate tests
+            tests = self._generate_tests(specification, target_language)
+
+            # Generate documentation
+            docs = self._generate_documentation(specification, target_language)
+
+            # Create result
+            result = SynthesizedCode(
+                code=code,
+                language=target_language,
+                spec=specification,
+                tests=tests,
+                documentation=docs,
+            )
+
+            # Verify if requested
+            if self.verify_output:
+                result.confidence = self.verify(result, specification)
+
+            return result
+
+    def _normalize_spec(self, spec: str | Specification) -> Specification:
+        """Normalize specification input."""
+        if isinstance(spec, str):
+            return Specification(description=spec)
+        return spec
+
+    def _generate_code(
+        self,
+        spec: Specification,
+        language: CodeLanguage,
+        strategy: SynthesisStrategy,
+    ) -> str:
+        """
+        Generate code implementation.
+
+        Parameters
+        ----------
+        spec : Specification
+            Code specification
+        language : CodeLanguage
+            Target language
+        strategy : SynthesisStrategy
+            Synthesis strategy
+
+        Returns
+        -------
+        str
+            Generated source code
+        """
+        with span("synthesizer.generate_code"):
+            if strategy == SynthesisStrategy.TEMPLATE_BASED:
+                return self._template_synthesis(spec, language)
+            elif strategy == SynthesisStrategy.EXAMPLE_BASED:
+                return self._example_synthesis(spec, language)
+            else:
+                # TODO: Implement other strategies
+                return self._template_synthesis(spec, language)
+
+    def _template_synthesis(
+        self,
+        spec: Specification,
+        language: CodeLanguage,
+    ) -> str:
+        """Template-based code generation."""
+        with span("synthesizer.template_synthesis"):
+            # TODO: Implement template-based synthesis
+            # - Load language-specific templates
+            # - Expand with specification data
+            # - Apply code formatting
+
+            if language == CodeLanguage.PYTHON:
+                return self._generate_python_template(spec)
+            else:
+                raise SynthesisError(f"Unsupported language: {language}")
+
+    def _generate_python_template(self, spec: Specification) -> str:
+        """Generate Python code from template."""
+        # Placeholder implementation
+        function_name = spec.description.lower().replace(" ", "_")
+        params = ", ".join(f"param{i}" for i in range(len(spec.input_types)))
+
+        template = f'''def {function_name}({params}):
+    """
+    {spec.description}
+
+    Parameters
+    ----------
+{"\n".join(f"    param{i} : {t}" for i, t in enumerate(spec.input_types))}
+
+    Returns
+    -------
+    {spec.output_type}
+        TODO: Document return value
+    """
+    # TODO: Implement {spec.description}
+    pass
+'''
+        return template
+
+    def _example_synthesis(
+        self,
+        spec: Specification,
+        language: CodeLanguage,
+    ) -> str:
+        """Example-based code generation."""
+        with span("synthesizer.example_synthesis"):
+            # TODO: Implement example-based synthesis
+            # - Analyze input/output examples
+            # - Infer program structure
+            # - Generate code matching examples
+
+            return self._template_synthesis(spec, language)
+
+    def _generate_tests(
+        self,
+        spec: Specification,
+        language: CodeLanguage,
+    ) -> list[str]:
+        """Generate test cases for specification."""
+        with span("synthesizer.generate_tests"):
+            tests = []
+
+            # Generate tests from examples
+            for i, example in enumerate(spec.examples):
+                if language == CodeLanguage.PYTHON:
+                    test = f"""def test_example_{i}():
+    result = function({example.get('input', '')})
+    assert result == {example.get('output', '')}
+"""
+                    tests.append(test)
+
+            return tests
+
+    def _generate_documentation(
+        self,
+        spec: Specification,
+        language: CodeLanguage,
+    ) -> str:
+        """Generate documentation for code."""
+        with span("synthesizer.generate_docs"):
+            return f"# {spec.description}\n\n{spec.description}"
+
+    @timed
+    def verify(
+        self,
+        code: SynthesizedCode,
+        spec: Specification,
+    ) -> float:
+        """
+        Verify generated code meets specification.
+
+        Parameters
+        ----------
+        code : SynthesizedCode
+            Generated code to verify
+        spec : Specification
+            Source specification
+
+        Returns
+        -------
+        float
+            Confidence score (0.0-1.0)
+        """
+        with span("synthesizer.verify"):
+            # TODO: Implement verification
+            # - Static analysis
+            # - Test execution
+            # - Specification matching
+
+            # Placeholder: return moderate confidence
+            return 0.7
+
+    @timed
+    def refactor(
+        self,
+        code: str,
+        transformations: list[str],
+        language: CodeLanguage,
+    ) -> str:
+        """
+        Refactor existing code.
+
+        Parameters
+        ----------
+        code : str
+            Source code to refactor
+        transformations : list[str]
+            Refactoring operations to apply
+        language : CodeLanguage
+            Code language
+
+        Returns
+        -------
+        str
+            Refactored code
+
+        Examples
+        --------
+        >>> synth = CodeSynthesizer()
+        >>> refactored = synth.refactor(
+        ...     code="def f(x): return x + 1",
+        ...     transformations=["rename:f->increment"],
+        ...     language=CodeLanguage.PYTHON
+        ... )
+        """
+        with span("synthesizer.refactor", attributes={"language": language.value}):
+            # TODO: Implement refactoring
+            # - Parse code to AST
+            # - Apply transformations
+            # - Generate refactored code
+
+            return code
+
+
+# ============================================================================
+# Exceptions
+# ============================================================================
+
+class SynthesisError(Exception):
+    """Raised when code synthesis fails."""
+    pass
+
+
+class ValidationError(Exception):
+    """Raised when code validation fails."""
+    pass

@@ -1,0 +1,507 @@
+{# AGI Metrics Template - Generates telemetry decorators from RDF #}
+{# Constitutional equation: agi/metrics.py = μ(agi-schema.ttl) #}
+{# This template implements μ₃ EMIT stage of the constitutional equation #}
+
+{%- set metrics = sparql_results | first -%}
+
+"""
+agi.metrics - AGI Telemetry and Metrics
+{{ "=" | repeat(count=50) }}
+
+OpenTelemetry instrumentation for AGI operations.
+
+This module provides decorators and utilities for instrumenting AGI code
+with OpenTelemetry metrics, traces, and logs.
+
+Auto-generated from: ontology/agi-schema.ttl
+Constitutional equation: metrics.py = μ(agi-schema.ttl)
+DO NOT EDIT MANUALLY - Edit the RDF source instead.
+
+Examples
+--------
+    >>> from agi.metrics import timed, counted, traced
+    >>> @timed
+    ... @traced("my_operation")
+    ... def my_function():
+    ...     return "result"
+
+See Also
+--------
+- :mod:`specify_cli.core.telemetry` : Core telemetry utilities
+- :mod:`agi.planner` : Planning engine using these decorators
+"""
+
+from __future__ import annotations
+
+import functools
+import time
+from contextlib import contextmanager
+from typing import Any, Callable, Iterator, Optional
+
+from opentelemetry import metrics, trace
+from opentelemetry.metrics import Counter, Histogram
+from opentelemetry.trace import Status, StatusCode
+
+# Get tracer and meter
+tracer = trace.get_tracer("agi", version="{{ metrics.version | default(value="1.0.0") }}")
+meter = metrics.get_meter("agi", version="{{ metrics.version | default(value="1.0.0") }}")
+
+# ============================================================================
+# Metrics Instruments
+# ============================================================================
+
+# Counters
+operation_counter = meter.create_counter(
+    name="agi.operations.total",
+    description="Total AGI operations executed",
+    unit="1",
+)
+
+error_counter = meter.create_counter(
+    name="agi.errors.total",
+    description="Total AGI errors encountered",
+    unit="1",
+)
+
+task_counter = meter.create_counter(
+    name="agi.tasks.total",
+    description="Total tasks executed by agents",
+    unit="1",
+)
+
+# Histograms
+operation_duration = meter.create_histogram(
+    name="agi.operation.duration",
+    description="AGI operation duration in milliseconds",
+    unit="ms",
+)
+
+task_duration = meter.create_histogram(
+    name="agi.task.duration",
+    description="Task execution duration in milliseconds",
+    unit="ms",
+)
+
+plan_size = meter.create_histogram(
+    name="agi.plan.size",
+    description="Number of tasks in generated plans",
+    unit="1",
+)
+
+
+# ============================================================================
+# Decorators
+# ============================================================================
+
+def timed(func: Callable) -> Callable:
+    """
+    Time function execution and record histogram.
+
+    This decorator measures function execution time and records it
+    to OpenTelemetry histogram metrics.
+
+    Parameters
+    ----------
+    func : Callable
+        Function to time
+
+    Returns
+    -------
+    Callable
+        Wrapped function
+
+    Examples
+    --------
+    >>> @timed
+    ... def slow_operation():
+    ...     time.sleep(1)
+    ...     return "done"
+    """
+    @functools.wraps(func)
+    def wrapper(*args: Any, **kwargs: Any) -> Any:
+        start_time = time.time()
+
+        try:
+            result = func(*args, **kwargs)
+            return result
+        finally:
+            duration_ms = (time.time() - start_time) * 1000
+            operation_duration.record(
+                duration_ms,
+                attributes={
+                    "function": func.__name__,
+                    "module": func.__module__,
+                },
+            )
+
+    return wrapper
+
+
+def counted(
+    metric_name: str,
+    description: str = "",
+) -> Callable:
+    """
+    Count function invocations.
+
+    This decorator increments a counter each time the function is called.
+
+    Parameters
+    ----------
+    metric_name : str
+        Counter metric name
+    description : str
+        Counter description
+
+    Returns
+    -------
+    Callable
+        Decorator function
+
+    Examples
+    --------
+    >>> @counted("my_function.calls", "Number of my_function calls")
+    ... def my_function():
+    ...     return "result"
+    """
+    counter = meter.create_counter(
+        name=metric_name,
+        description=description or f"{metric_name} invocations",
+        unit="1",
+    )
+
+    def decorator(func: Callable) -> Callable:
+        @functools.wraps(func)
+        def wrapper(*args: Any, **kwargs: Any) -> Any:
+            counter.add(
+                1,
+                attributes={
+                    "function": func.__name__,
+                    "module": func.__module__,
+                },
+            )
+            return func(*args, **kwargs)
+
+        return wrapper
+
+    return decorator
+
+
+def traced(
+    span_name: Optional[str] = None,
+    attributes: Optional[dict[str, Any]] = None,
+) -> Callable:
+    """
+    Create OpenTelemetry span for function.
+
+    This decorator creates a trace span for the function execution,
+    capturing timing and any exceptions.
+
+    Parameters
+    ----------
+    span_name : str, optional
+        Span name (defaults to function name)
+    attributes : dict[str, Any], optional
+        Additional span attributes
+
+    Returns
+    -------
+    Callable
+        Decorator function
+
+    Examples
+    --------
+    >>> @traced("plan_creation", {"component": "planner"})
+    ... def create_plan(goal: str):
+    ...     return Plan(goal=goal)
+    """
+    def decorator(func: Callable) -> Callable:
+        @functools.wraps(func)
+        def wrapper(*args: Any, **kwargs: Any) -> Any:
+            name = span_name or f"{func.__module__}.{func.__name__}"
+            attrs = attributes or {}
+
+            with tracer.start_as_current_span(name) as span:
+                # Add default attributes
+                span.set_attribute("function", func.__name__)
+                span.set_attribute("module", func.__module__)
+
+                # Add custom attributes
+                for key, value in attrs.items():
+                    span.set_attribute(key, value)
+
+                try:
+                    result = func(*args, **kwargs)
+                    span.set_status(Status(StatusCode.OK))
+                    return result
+
+                except Exception as e:
+                    span.set_status(Status(StatusCode.ERROR, str(e)))
+                    span.record_exception(e)
+                    raise
+
+        return wrapper
+
+    return decorator
+
+
+def instrumented(
+    operation_name: str,
+    operation_type: str = "generic",
+) -> Callable:
+    """
+    Comprehensive instrumentation combining timing, counting, and tracing.
+
+    This decorator applies multiple instrumentation layers to a function,
+    providing comprehensive observability.
+
+    Parameters
+    ----------
+    operation_name : str
+        Operation name for metrics
+    operation_type : str
+        Operation type (planning, reasoning, synthesis, etc.)
+
+    Returns
+    -------
+    Callable
+        Decorator function
+
+    Examples
+    --------
+    >>> @instrumented("create_plan", "planning")
+    ... def create_plan(goal: str):
+    ...     return Plan(goal=goal)
+    """
+    def decorator(func: Callable) -> Callable:
+        @functools.wraps(func)
+        def wrapper(*args: Any, **kwargs: Any) -> Any:
+            start_time = time.time()
+
+            # Increment operation counter
+            operation_counter.add(
+                1,
+                attributes={
+                    "operation": operation_name,
+                    "type": operation_type,
+                },
+            )
+
+            # Create trace span
+            with tracer.start_as_current_span(operation_name) as span:
+                span.set_attribute("operation.name", operation_name)
+                span.set_attribute("operation.type", operation_type)
+
+                try:
+                    result = func(*args, **kwargs)
+                    span.set_status(Status(StatusCode.OK))
+                    return result
+
+                except Exception as e:
+                    # Record error
+                    error_counter.add(
+                        1,
+                        attributes={
+                            "operation": operation_name,
+                            "error_type": type(e).__name__,
+                        },
+                    )
+
+                    span.set_status(Status(StatusCode.ERROR, str(e)))
+                    span.record_exception(e)
+                    raise
+
+                finally:
+                    # Record duration
+                    duration_ms = (time.time() - start_time) * 1000
+                    operation_duration.record(
+                        duration_ms,
+                        attributes={
+                            "operation": operation_name,
+                            "type": operation_type,
+                        },
+                    )
+
+        return wrapper
+
+    return decorator
+
+
+# ============================================================================
+# Context Managers
+# ============================================================================
+
+@contextmanager
+def measure_operation(
+    operation_name: str,
+    attributes: Optional[dict[str, Any]] = None,
+) -> Iterator[None]:
+    """
+    Context manager for measuring operation duration.
+
+    Parameters
+    ----------
+    operation_name : str
+        Operation name
+    attributes : dict[str, Any], optional
+        Additional attributes
+
+    Yields
+    ------
+    None
+
+    Examples
+    --------
+    >>> with measure_operation("plan_creation", {"goal": "build API"}):
+    ...     plan = create_plan("build API")
+    """
+    start_time = time.time()
+    attrs = attributes or {}
+
+    try:
+        yield
+    finally:
+        duration_ms = (time.time() - start_time) * 1000
+        operation_duration.record(duration_ms, attributes={
+            "operation": operation_name,
+            **attrs,
+        })
+
+
+@contextmanager
+def trace_operation(
+    span_name: str,
+    attributes: Optional[dict[str, Any]] = None,
+) -> Iterator[trace.Span]:
+    """
+    Context manager for creating trace span.
+
+    Parameters
+    ----------
+    span_name : str
+        Span name
+    attributes : dict[str, Any], optional
+        Span attributes
+
+    Yields
+    ------
+    Span
+        OpenTelemetry span
+
+    Examples
+    --------
+    >>> with trace_operation("planning", {"goal": "build API"}) as span:
+    ...     span.set_attribute("task_count", 5)
+    ...     plan = create_plan("build API")
+    """
+    with tracer.start_as_current_span(span_name) as span:
+        # Add attributes
+        if attributes:
+            for key, value in attributes.items():
+                span.set_attribute(key, value)
+
+        try:
+            yield span
+            span.set_status(Status(StatusCode.OK))
+        except Exception as e:
+            span.set_status(Status(StatusCode.ERROR, str(e)))
+            span.record_exception(e)
+            raise
+
+
+# ============================================================================
+# Recording Utilities
+# ============================================================================
+
+def record_task_completion(
+    task_id: str,
+    duration_ms: int,
+    success: bool,
+) -> None:
+    """
+    Record task completion metrics.
+
+    Parameters
+    ----------
+    task_id : str
+        Task identifier
+    duration_ms : int
+        Task duration in milliseconds
+    success : bool
+        Whether task succeeded
+    """
+    task_counter.add(
+        1,
+        attributes={
+            "task_id": task_id,
+            "success": str(success),
+        },
+    )
+
+    task_duration.record(
+        duration_ms,
+        attributes={
+            "task_id": task_id,
+            "success": str(success),
+        },
+    )
+
+
+def record_plan_creation(
+    goal: str,
+    task_count: int,
+    duration_ms: int,
+) -> None:
+    """
+    Record plan creation metrics.
+
+    Parameters
+    ----------
+    goal : str
+        Planning goal
+    task_count : int
+        Number of tasks in plan
+    duration_ms : int
+        Planning duration in milliseconds
+    """
+    operation_counter.add(
+        1,
+        attributes={"operation": "plan_creation"},
+    )
+
+    plan_size.record(
+        task_count,
+        attributes={"goal": goal},
+    )
+
+    operation_duration.record(
+        duration_ms,
+        attributes={"operation": "plan_creation"},
+    )
+
+
+def record_error(
+    error_type: str,
+    operation: str,
+    details: Optional[dict[str, Any]] = None,
+) -> None:
+    """
+    Record error occurrence.
+
+    Parameters
+    ----------
+    error_type : str
+        Type of error
+    operation : str
+        Operation that failed
+    details : dict[str, Any], optional
+        Error details
+    """
+    error_counter.add(
+        1,
+        attributes={
+            "error_type": error_type,
+            "operation": operation,
+            **(details or {}),
+        },
+    )

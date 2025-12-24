@@ -1,0 +1,504 @@
+{# AGI Decision Maker Template - Generates Python decision tree executor from RDF #}
+{# Constitutional equation: agi/decision_maker.py = μ(agi-agents.ttl) #}
+{# This template implements μ₃ EMIT stage of the constitutional equation #}
+
+{%- set decision = sparql_results | first -%}
+
+"""
+agi.decision_maker - AGI Decision Tree Executor
+{{ "=" | repeat(count=50) }}
+
+Autonomous decision-making system for selecting optimal actions.
+
+This module provides decision-making capabilities for AGI agents, enabling:
+- Multi-criteria decision analysis (MCDA)
+- Cost-benefit evaluation
+- Risk assessment and mitigation
+- Constraint satisfaction
+
+Auto-generated from: ontology/agi-agents.ttl
+Constitutional equation: decision_maker.py = μ(agi-agents.ttl)
+DO NOT EDIT MANUALLY - Edit the RDF source instead.
+
+Examples
+--------
+    >>> dm = DecisionMaker()
+    >>> decision = dm.decide(
+    ...     options=["option_a", "option_b"],
+    ...     criteria={"cost": 0.4, "quality": 0.6}
+    ... )
+    >>> print(decision.selected_option)
+
+See Also
+--------
+- :mod:`agi.ops.decision_maker` : Business logic
+- :mod:`agi.runtime.decision_maker` : Runtime layer
+- :mod:`agi.types` : Data types
+"""
+
+from __future__ import annotations
+
+from dataclasses import dataclass, field
+from datetime import datetime
+from enum import Enum
+from typing import Any, Callable, Optional
+
+from opentelemetry import trace
+
+from specify_cli.core.telemetry import span, timed
+
+tracer = trace.get_tracer(__name__)
+
+
+# ============================================================================
+# Decision Types
+# ============================================================================
+
+class DecisionStrategy(Enum):
+    """Strategy for decision-making."""
+
+    UTILITY_MAXIMIZATION = "utility_maximization"
+    RISK_MINIMIZATION = "risk_minimization"
+    PARETO_OPTIMAL = "pareto_optimal"
+    SATISFICING = "satisficing"  # First acceptable option
+
+
+class CriterionType(Enum):
+    """Type of decision criterion."""
+
+    BENEFIT = "benefit"  # Higher is better
+    COST = "cost"  # Lower is better
+
+
+@dataclass
+class Criterion:
+    """
+    Decision-making criterion.
+
+    Attributes
+    ----------
+    name : str
+        Criterion name
+    weight : float
+        Importance weight (0.0-1.0)
+    type : CriterionType
+        Whether to maximize or minimize
+    threshold : Optional[float]
+        Minimum acceptable value
+    evaluator : Optional[Callable]
+        Custom evaluation function
+    """
+
+    name: str
+    weight: float
+    type: CriterionType = CriterionType.BENEFIT
+    threshold: Optional[float] = None
+    evaluator: Optional[Callable[[Any], float]] = None
+
+    def to_dict(self) -> dict[str, Any]:
+        """Convert criterion to dictionary."""
+        return {
+            "name": self.name,
+            "weight": self.weight,
+            "type": self.type.value,
+            "threshold": self.threshold,
+        }
+
+
+@dataclass
+class Option:
+    """
+    Decision option to evaluate.
+
+    Attributes
+    ----------
+    id : str
+        Unique option identifier
+    name : str
+        Human-readable option name
+    attributes : dict[str, float]
+        Criterion values for this option
+    constraints : dict[str, Any]
+        Constraints this option must satisfy
+    metadata : dict[str, Any]
+        Additional option metadata
+    """
+
+    id: str
+    name: str
+    attributes: dict[str, float] = field(default_factory=dict)
+    constraints: dict[str, Any] = field(default_factory=dict)
+    metadata: dict[str, Any] = field(default_factory=dict)
+
+    def get_value(self, criterion: str, default: float = 0.0) -> float:
+        """Get attribute value for criterion."""
+        return self.attributes.get(criterion, default)
+
+    def to_dict(self) -> dict[str, Any]:
+        """Convert option to dictionary."""
+        return {
+            "id": self.id,
+            "name": self.name,
+            "attributes": self.attributes,
+            "constraints": self.constraints,
+            "metadata": self.metadata,
+        }
+
+
+@dataclass
+class Decision:
+    """
+    Decision result with justification.
+
+    Attributes
+    ----------
+    selected_option : Option
+        Chosen option
+    score : float
+        Final decision score
+    criterion_scores : dict[str, float]
+        Scores per criterion
+    alternatives : list[tuple[Option, float]]
+        Alternative options with scores
+    justification : str
+        Natural language justification
+    confidence : float
+        Confidence in decision (0.0-1.0)
+    strategy : DecisionStrategy
+        Strategy used for decision
+    timestamp : datetime
+        Decision timestamp
+    """
+
+    selected_option: Option
+    score: float
+    criterion_scores: dict[str, float] = field(default_factory=dict)
+    alternatives: list[tuple[Option, float]] = field(default_factory=list)
+    justification: str = ""
+    confidence: float = 1.0
+    strategy: DecisionStrategy = DecisionStrategy.UTILITY_MAXIMIZATION
+    timestamp: datetime = field(default_factory=datetime.now)
+
+    def to_dict(self) -> dict[str, Any]:
+        """Convert decision to dictionary."""
+        return {
+            "selected_option": self.selected_option.to_dict(),
+            "score": self.score,
+            "criterion_scores": self.criterion_scores,
+            "alternatives": [
+                {"option": opt.to_dict(), "score": score}
+                for opt, score in self.alternatives
+            ],
+            "justification": self.justification,
+            "confidence": self.confidence,
+            "strategy": self.strategy.value,
+            "timestamp": self.timestamp.isoformat(),
+        }
+
+
+# ============================================================================
+# Decision Maker
+# ============================================================================
+
+class DecisionMaker:
+    """
+    {{ decision.description | default(value="Autonomous decision-making system") }}.
+
+    Implements {{ decision.decisionMethod | default(value="multi-criteria decision analysis") }}
+    using {{ decision.scoringMethod | default(value="weighted sum") }} scoring.
+
+    Attributes
+    ----------
+    default_strategy : DecisionStrategy
+        Default decision strategy
+    normalize_scores : bool
+        Whether to normalize criterion scores
+
+    Methods
+    -------
+    decide(options, criteria, strategy)
+        Select optimal option from alternatives
+    evaluate_option(option, criteria)
+        Evaluate single option against criteria
+    compare_options(option_a, option_b, criteria)
+        Compare two options
+
+    Notes
+    -----
+    Uses OpenTelemetry for observability.
+    All decisions are traced with full context.
+    """
+
+    def __init__(
+        self,
+        default_strategy: DecisionStrategy = DecisionStrategy.{{ decision.defaultStrategy | default(value="UTILITY_MAXIMIZATION") }},
+        normalize_scores: bool = {{ decision.normalizeScores | default(value="true") }},
+    ) -> None:
+        """
+        Initialize decision maker.
+
+        Parameters
+        ----------
+        default_strategy : DecisionStrategy
+            Default decision strategy
+        normalize_scores : bool
+            Whether to normalize scores to [0, 1]
+        """
+        self.default_strategy = default_strategy
+        self.normalize_scores = normalize_scores
+
+    @timed
+    def decide(
+        self,
+        options: list[Option],
+        criteria: list[Criterion] | dict[str, float],
+        strategy: Optional[DecisionStrategy] = None,
+        constraints: Optional[dict[str, Any]] = None,
+    ) -> Decision:
+        """
+        Select optimal option from alternatives.
+
+        This method evaluates all options against criteria using
+        {{ decision.decisionMethod | default(value="MCDA") }} and selects
+        the best option according to the specified strategy.
+
+        Parameters
+        ----------
+        options : list[Option]
+            Available options to choose from
+        criteria : list[Criterion] | dict[str, float]
+            Decision criteria (list of Criterion or name→weight dict)
+        strategy : DecisionStrategy, optional
+            Decision strategy (defaults to instance default)
+        constraints : dict[str, Any], optional
+            Additional constraints to satisfy
+
+        Returns
+        -------
+        Decision
+            Selected option with justification
+
+        Raises
+        ------
+        ValueError
+            If no valid options or criteria provided
+        DecisionError
+            If decision-making fails
+
+        Examples
+        --------
+        >>> dm = DecisionMaker()
+        >>> options = [
+        ...     Option("a", "Option A", {"cost": 100, "quality": 8}),
+        ...     Option("b", "Option B", {"cost": 150, "quality": 9}),
+        ... ]
+        >>> criteria = [
+        ...     Criterion("cost", 0.4, CriterionType.COST),
+        ...     Criterion("quality", 0.6, CriterionType.BENEFIT),
+        ... ]
+        >>> decision = dm.decide(options, criteria)
+        >>> print(decision.selected_option.name)
+        """
+        decision_strategy = strategy or self.default_strategy
+
+        with span(
+            "decision_maker.decide",
+            attributes={
+                "strategy": decision_strategy.value,
+                "option_count": len(options),
+            },
+        ):
+            # Normalize criteria
+            normalized_criteria = self._normalize_criteria(criteria)
+
+            # Validate inputs
+            if not options:
+                raise ValueError("At least one option required")
+            if not normalized_criteria:
+                raise ValueError("At least one criterion required")
+
+            # Filter options by constraints
+            valid_options = self._filter_by_constraints(
+                options,
+                constraints or {},
+            )
+
+            if not valid_options:
+                raise DecisionError("No options satisfy constraints")
+
+            # Evaluate all options
+            scored_options = [
+                (opt, self.evaluate_option(opt, normalized_criteria))
+                for opt in valid_options
+            ]
+
+            # Select best option based on strategy
+            best_option, best_score = self._select_best(
+                scored_options,
+                decision_strategy,
+            )
+
+            # Calculate criterion scores for best option
+            criterion_scores = self._calculate_criterion_scores(
+                best_option,
+                normalized_criteria,
+            )
+
+            # Generate justification
+            justification = self._generate_justification(
+                best_option,
+                criterion_scores,
+                normalized_criteria,
+            )
+
+            # Rank alternatives
+            alternatives = [
+                (opt, score)
+                for opt, score in sorted(
+                    scored_options,
+                    key=lambda x: x[1],
+                    reverse=True,
+                )
+                if opt.id != best_option.id
+            ]
+
+            return Decision(
+                selected_option=best_option,
+                score=best_score,
+                criterion_scores=criterion_scores,
+                alternatives=alternatives,
+                justification=justification,
+                strategy=decision_strategy,
+            )
+
+    def _normalize_criteria(
+        self,
+        criteria: list[Criterion] | dict[str, float],
+    ) -> list[Criterion]:
+        """Normalize criteria input to list of Criterion objects."""
+        if isinstance(criteria, dict):
+            return [
+                Criterion(name=name, weight=weight)
+                for name, weight in criteria.items()
+            ]
+        return criteria
+
+    def _filter_by_constraints(
+        self,
+        options: list[Option],
+        constraints: dict[str, Any],
+    ) -> list[Option]:
+        """Filter options that satisfy constraints."""
+        # TODO: Implement constraint satisfaction
+        return options
+
+    @timed
+    def evaluate_option(
+        self,
+        option: Option,
+        criteria: list[Criterion],
+    ) -> float:
+        """
+        Evaluate single option against criteria.
+
+        Parameters
+        ----------
+        option : Option
+            Option to evaluate
+        criteria : list[Criterion]
+            Evaluation criteria
+
+        Returns
+        -------
+        float
+            Weighted score for option
+        """
+        with span("decision_maker.evaluate", attributes={"option": option.id}):
+            total_score = 0.0
+            total_weight = sum(c.weight for c in criteria)
+
+            for criterion in criteria:
+                value = option.get_value(criterion.name, 0.0)
+
+                # Apply custom evaluator if provided
+                if criterion.evaluator:
+                    value = criterion.evaluator(value)
+
+                # Invert for cost criteria (lower is better)
+                if criterion.type == CriterionType.COST:
+                    # Normalize to benefit (higher is better)
+                    if value > 0:
+                        value = 1.0 / value
+
+                # Check threshold
+                if criterion.threshold is not None:
+                    if value < criterion.threshold:
+                        return 0.0  # Option fails threshold
+
+                # Weighted contribution
+                total_score += value * criterion.weight
+
+            # Normalize if requested
+            if self.normalize_scores and total_weight > 0:
+                total_score /= total_weight
+
+            return total_score
+
+    def _select_best(
+        self,
+        scored_options: list[tuple[Option, float]],
+        strategy: DecisionStrategy,
+    ) -> tuple[Option, float]:
+        """Select best option according to strategy."""
+        if strategy == DecisionStrategy.UTILITY_MAXIMIZATION:
+            return max(scored_options, key=lambda x: x[1])
+        elif strategy == DecisionStrategy.RISK_MINIMIZATION:
+            # TODO: Implement risk-aware selection
+            return min(scored_options, key=lambda x: x[1])
+        elif strategy == DecisionStrategy.SATISFICING:
+            # First option above threshold
+            threshold = 0.7
+            for opt, score in scored_options:
+                if score >= threshold:
+                    return opt, score
+            # Fallback to best
+            return max(scored_options, key=lambda x: x[1])
+        else:
+            return max(scored_options, key=lambda x: x[1])
+
+    def _calculate_criterion_scores(
+        self,
+        option: Option,
+        criteria: list[Criterion],
+    ) -> dict[str, float]:
+        """Calculate individual criterion scores."""
+        return {
+            criterion.name: option.get_value(criterion.name, 0.0)
+            for criterion in criteria
+        }
+
+    def _generate_justification(
+        self,
+        option: Option,
+        scores: dict[str, float],
+        criteria: list[Criterion],
+    ) -> str:
+        """Generate natural language justification."""
+        parts = [f"Selected {option.name}:"]
+
+        for criterion in criteria:
+            score = scores.get(criterion.name, 0.0)
+            parts.append(
+                f"  • {criterion.name}: {score:.2f} (weight: {criterion.weight:.2f})"
+            )
+
+        return "\n".join(parts)
+
+
+# ============================================================================
+# Exceptions
+# ============================================================================
+
+class DecisionError(Exception):
+    """Raised when decision-making fails."""
+    pass

@@ -1,0 +1,188 @@
+# ============================================================================
+# AGI Code Generation Configuration
+# ============================================================================
+# Transformation rules for RDF-to-Code generation of AGI system components
+# Implements: agi_module.py = μ(agi_ontology.ttl)
+
+[project]
+name = "spec-kit-agi"
+version = "0.1.0"
+description = "RDF-driven AGI code generation system"
+
+[metadata]
+name = "spec-kit-agi-transformations"
+schema_files = [
+  "ontology/agi-agent-schema.ttl",
+  "ontology/agi-task-planning.ttl",
+  "ontology/agi-reasoning.ttl"
+]
+
+[validation]
+shacl_shapes = [
+  "ontology/agi-agent-schema.ttl",
+  "ontology/agi-task-planning.ttl",
+  "ontology/agi-reasoning.ttl"
+]
+fail_on_warning = true
+
+# ============================================================================
+# TASK PLANNING TRANSFORMATIONS
+# ============================================================================
+
+[[transformations.code]]
+name = "agi-task-planner-ops"
+description = "Generate task planning operations from RDF"
+input_files = ["ontology/agi-task-planning.ttl"]
+schema_files = ["ontology/agi-agent-schema.ttl", "ontology/agi-task-planning.ttl"]
+sparql_query = "sparql/agi-task-extraction.rq"
+template = "templates/agi-task-planner.tera"
+output_file = "src/specify_cli/ops/agi_task_planning.py"
+deterministic = true
+
+[[transformations.code]]
+name = "agi-task-planner-command"
+description = "Generate task planner CLI command"
+input_files = ["ontology/agi-task-planning.ttl"]
+schema_files = ["ontology/agi-agent-schema.ttl"]
+sparql_query = "sparql/agi-task-extraction.rq"
+template = "templates/agi-command.tera"
+output_file = "src/specify_cli/commands/agi_task_planner.py"
+deterministic = true
+
+[[transformations.code]]
+name = "agi-task-planner-tests"
+description = "Generate task planner tests"
+input_files = ["ontology/agi-task-planning.ttl"]
+schema_files = ["ontology/agi-agent-schema.ttl"]
+sparql_query = "sparql/agi-task-extraction.rq"
+template = "templates/agi-test-template.tera"
+output_file = "tests/unit/test_agi_task_planning.py"
+deterministic = true
+
+[[transformations.code]]
+name = "agi-task-executor-runtime"
+description = "Generate task executor runtime"
+input_files = ["ontology/agi-task-planning.ttl"]
+schema_files = ["ontology/agi-agent-schema.ttl", "ontology/agi-task-planning.ttl"]
+sparql_query = "sparql/agi-task-extraction.rq"
+template = "templates/agi-runtime.tera"
+output_file = "src/specify_cli/runtime/agi_task_executor.py"
+deterministic = true
+
+# ============================================================================
+# REASONING TRANSFORMATIONS
+# ============================================================================
+
+[[transformations.code]]
+name = "agi-reasoning-engine-ops"
+description = "Generate reasoning operations from RDF"
+input_files = ["ontology/agi-reasoning.ttl"]
+schema_files = ["ontology/agi-agent-schema.ttl", "ontology/agi-reasoning.ttl"]
+sparql_query = "sparql/agi-reasoning-extraction.rq"
+template = "templates/agi-reasoner.tera"
+output_file = "src/specify_cli/ops/agi_reasoning.py"
+deterministic = true
+
+[[transformations.code]]
+name = "agi-reasoning-command"
+description = "Generate reasoning CLI command"
+input_files = ["ontology/agi-reasoning.ttl"]
+schema_files = ["ontology/agi-agent-schema.ttl"]
+sparql_query = "sparql/agi-reasoning-extraction.rq"
+template = "templates/agi-command.tera"
+output_file = "src/specify_cli/commands/agi_reasoner.py"
+deterministic = true
+
+[[transformations.code]]
+name = "agi-reasoning-tests"
+description = "Generate reasoning tests"
+input_files = ["ontology/agi-reasoning.ttl"]
+schema_files = ["ontology/agi-agent-schema.ttl", "ontology/agi-reasoning.ttl"]
+sparql_query = "sparql/agi-reasoning-extraction.rq"
+template = "templates/agi-test-template.tera"
+output_file = "tests/unit/test_agi_reasoning.py"
+deterministic = true
+
+# ============================================================================
+# CODE SYNTHESIS TRANSFORMATIONS
+# ============================================================================
+
+[[transformations.code]]
+name = "agi-code-synthesizer-ops"
+description = "Generate code synthesis operations"
+input_files = ["ontology/agi-agent-schema.ttl"]
+schema_files = ["ontology/agi-agent-schema.ttl"]
+sparql_query = "sparql/agi-agent-extraction.rq"
+template = "templates/agi-synthesizer.tera"
+output_file = "src/specify_cli/ops/agi_code_synthesizer.py"
+deterministic = true
+
+[[transformations.code]]
+name = "agi-code-emission-runtime"
+description = "Generate code emission runtime"
+input_files = ["ontology/agi-agent-schema.ttl"]
+schema_files = ["ontology/agi-agent-schema.ttl"]
+sparql_query = "sparql/agi-agent-extraction.rq"
+template = "templates/agi-runtime.tera"
+output_file = "src/specify_cli/runtime/agi_code_emission.py"
+deterministic = true
+
+# ============================================================================
+# ORCHESTRATION TRANSFORMATIONS
+# ============================================================================
+
+[[transformations.code]]
+name = "agi-orchestration-ops"
+description = "Generate orchestration operations"
+input_files = ["ontology/agi-agent-schema.ttl"]
+schema_files = ["ontology/agi-agent-schema.ttl"]
+sparql_query = "sparql/agi-agent-extraction.rq"
+template = "templates/agi-orchestrator.tera"
+output_file = "src/specify_cli/ops/agi_orchestration.py"
+deterministic = true
+
+[[transformations.code]]
+name = "agi-orchestration-runtime"
+description = "Generate orchestrator runtime"
+input_files = ["ontology/agi-agent-schema.ttl"]
+schema_files = ["ontology/agi-agent-schema.ttl"]
+sparql_query = "sparql/agi-agent-extraction.rq"
+template = "templates/agi-runtime.tera"
+output_file = "src/specify_cli/runtime/agi_orchestrator.py"
+deterministic = true
+
+# ============================================================================
+# PIPELINE SETTINGS
+# ============================================================================
+
+[pipeline]
+stages = ["normalize", "extract", "emit", "canonicalize", "receipt"]
+
+[pipeline.normalize]
+enabled = true
+fail_on_validation_error = true
+
+[pipeline.extract]
+enabled = true
+timeout_seconds = 30
+
+[pipeline.emit]
+enabled = true
+template_engine = "tera"
+
+[pipeline.canonicalize]
+enabled = true
+line_ending = "lf"
+trim_trailing_whitespace = true
+ensure_final_newline = true
+
+[pipeline.receipt]
+enabled = true
+hash_algorithm = "sha256"
+write_manifest = true
+
+[options]
+continue_on_error = false
+validate_inputs = true
+max_parallel = 4
+verbose = false

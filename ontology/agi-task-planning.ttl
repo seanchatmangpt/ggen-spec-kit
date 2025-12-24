@@ -1,0 +1,146 @@
+@prefix agi: <http://spec-kit.io/agi#> .
+@prefix tp: <http://spec-kit.io/agi/task-planning#> .
+@prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix owl: <http://www.w3.org/2002/07/owl#> .
+@prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
+@prefix sh: <http://www.w3.org/ns/shacl#> .
+
+# ============================================================================
+# AGI Task Planning Schema - Goal Decomposition and Execution Planning
+# ============================================================================
+
+# Core Classes
+tp:Goal a owl:Class ;
+    rdfs:label "Goal"@en ;
+    rdfs:comment "High-level goal to be decomposed into tasks" ;
+    rdfs:isDefinedBy <http://spec-kit.io/agi/task-planning> .
+
+tp:Subgoal a owl:Class ;
+    rdfs:label "Subgoal"@en ;
+    rdfs:comment "Decomposed goal at intermediate level" ;
+    rdfs:isDefinedBy <http://spec-kit.io/agi/task-planning> .
+
+tp:ExecutionPlan a owl:Class ;
+    rdfs:label "Execution Plan"@en ;
+    rdfs:comment "Complete plan with task ordering and parallelization" ;
+    rdfs:isDefinedBy <http://spec-kit.io/agi/task-planning> .
+
+tp:CriticalPath a owl:Class ;
+    rdfs:label "Critical Path"@en ;
+    rdfs:comment "Critical path analysis result" ;
+    rdfs:isDefinedBy <http://spec-kit.io/agi/task-planning> .
+
+# Object Properties
+tp:decomposesInto a owl:ObjectProperty ;
+    rdfs:label "decomposes into"@en ;
+    rdfs:domain tp:Goal ;
+    rdfs:range tp:Subgoal ;
+    rdfs:comment "Goal decomposes into subgoals" ;
+    rdfs:isDefinedBy <http://spec-kit.io/agi/task-planning> .
+
+tp:containsTask a owl:ObjectProperty ;
+    rdfs:label "contains task"@en ;
+    rdfs:domain tp:ExecutionPlan ;
+    rdfs:range agi:Task ;
+    rdfs:comment "Execution plan contains tasks" ;
+    rdfs:isDefinedBy <http://spec-kit.io/agi/task-planning> .
+
+tp:criticalPathFor a owl:ObjectProperty ;
+    rdfs:label "critical path for"@en ;
+    rdfs:domain tp:CriticalPath ;
+    rdfs:range tp:ExecutionPlan ;
+    rdfs:comment "Critical path analysis for execution plan" ;
+    rdfs:isDefinedBy <http://spec-kit.io/agi/task-planning> .
+
+# Datatype Properties
+tp:goalName a owl:DatatypeProperty ;
+    rdfs:label "goal name"@en ;
+    rdfs:domain tp:Goal ;
+    rdfs:range xsd:string ;
+    rdfs:comment "Name of the goal" ;
+    rdfs:isDefinedBy <http://spec-kit.io/agi/task-planning> .
+
+tp:goalDescription a owl:DatatypeProperty ;
+    rdfs:label "goal description"@en ;
+    rdfs:domain tp:Goal ;
+    rdfs:range xsd:string ;
+    rdfs:comment "Description of what to achieve" ;
+    rdfs:isDefinedBy <http://spec-kit.io/agi/task-planning> .
+
+tp:decompositionStrategy a owl:DatatypeProperty ;
+    rdfs:label "decomposition strategy"@en ;
+    rdfs:domain tp:Goal ;
+    rdfs:range xsd:string ;
+    rdfs:comment "Strategy: hierarchical, functional, data-flow" ;
+    rdfs:isDefinedBy <http://spec-kit.io/agi/task-planning> .
+
+tp:estimatedTotalDuration a owl:DatatypeProperty ;
+    rdfs:label "estimated total duration"@en ;
+    rdfs:domain tp:ExecutionPlan ;
+    rdfs:range xsd:float ;
+    rdfs:comment "Total estimated duration in seconds" ;
+    rdfs:isDefinedBy <http://spec-kit.io/agi/task-planning> .
+
+tp:parallelizationPotential a owl:DatatypeProperty ;
+    rdfs:label "parallelization potential"@en ;
+    rdfs:domain tp:ExecutionPlan ;
+    rdfs:range xsd:float ;
+    rdfs:comment "0.0 (sequential) to 1.0 (fully parallel)" ;
+    rdfs:isDefinedBy <http://spec-kit.io/agi/task-planning> .
+
+tp:taskCount a owl:DatatypeProperty ;
+    rdfs:label "task count"@en ;
+    rdfs:domain tp:ExecutionPlan ;
+    rdfs:range xsd:integer ;
+    rdfs:comment "Number of tasks in the plan" ;
+    rdfs:isDefinedBy <http://spec-kit.io/agi/task-planning> .
+
+# ============================================================================
+# SHACL Validation Shapes
+# ============================================================================
+
+tp:GoalShape a sh:NodeShape ;
+    sh:targetClass tp:Goal ;
+    sh:property [
+        sh:path tp:goalName ;
+        sh:minCount 1 ;
+        sh:maxCount 1 ;
+        sh:datatype xsd:string ;
+        sh:minLength 1 ;
+        sh:maxLength 255
+    ] ;
+    sh:property [
+        sh:path tp:goalDescription ;
+        sh:minCount 1 ;
+        sh:maxCount 1 ;
+        sh:datatype xsd:string ;
+        sh:minLength 10
+    ] ;
+    sh:property [
+        sh:path tp:decompositionStrategy ;
+        sh:minCount 1 ;
+        sh:datatype xsd:string ;
+        sh:in ("hierarchical" "functional" "data-flow")
+    ] .
+
+tp:ExecutionPlanShape a sh:NodeShape ;
+    sh:targetClass tp:ExecutionPlan ;
+    sh:property [
+        sh:path tp:containsTask ;
+        sh:minCount 1 ;
+        sh:class agi:Task
+    ] ;
+    sh:property [
+        sh:path tp:estimatedTotalDuration ;
+        sh:minCount 1 ;
+        sh:datatype xsd:float ;
+        sh:minInclusive 0.0
+    ] ;
+    sh:property [
+        sh:path tp:parallelizationPotential ;
+        sh:minCount 1 ;
+        sh:datatype xsd:float ;
+        sh:minInclusive 0.0 ;
+        sh:maxInclusive 1.0
+    ] .

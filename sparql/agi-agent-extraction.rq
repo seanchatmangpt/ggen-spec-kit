@@ -1,0 +1,33 @@
+PREFIX agi: <http://spec-kit.io/agi#>
+PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
+
+SELECT DISTINCT
+  ?agent
+  ?agentName
+  ?agentDescription
+  ?capability
+  ?capabilityName
+  ?capabilityDescription
+  ?strategy
+  ?strategyName
+
+WHERE {
+  # Agent definition
+  ?agent a agi:Agent ;
+         agi:agentName ?agentName ;
+         rdfs:comment ?agentDescription .
+
+  # Capabilities
+  OPTIONAL {
+    ?agent agi:hasCapability ?capability .
+    ?capability agi:capabilityName ?capabilityName ;
+               rdfs:comment ?capabilityDescription .
+  }
+
+  # Reasoning strategies
+  OPTIONAL {
+    ?agent agi:usesStrategy ?strategy .
+    ?strategy rdfs:label ?strategyName .
+  }
+}
+ORDER BY ?agentName ?capabilityName

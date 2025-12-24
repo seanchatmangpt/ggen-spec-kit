@@ -1,0 +1,366 @@
+{# AGI Command Template - Generates CLI command for AGI operations from RDF #}
+{# Constitutional equation: commands/agi.py = μ(agi-commands.ttl) #}
+{# This template implements μ₃ EMIT stage of the constitutional equation #}
+
+{%- set cmd = sparql_results | first -%}
+
+"""
+specify_cli.commands.agi - AGI Operations CLI Command
+{{ "=" | repeat(count=70) }}
+
+CLI command handler for AGI operations.
+
+This module provides the Typer command interface for running AGI agents,
+coordinating multi-agent systems, and managing autonomous operations.
+
+Auto-generated from: ontology/agi-commands.ttl
+Constitutional equation: agi.py = μ(agi-commands.ttl)
+DO NOT EDIT MANUALLY - Edit the RDF source instead.
+
+Examples
+--------
+    $ specify agi plan --goal "Build web scraper"
+    $ specify agi reason --premises "All humans are mortal" "Socrates is human"
+    $ specify agi synthesize --spec "Function to calculate factorial"
+
+See Also
+--------
+- :mod:`specify_cli.ops.agi` : Business logic
+- :mod:`specify_cli.runtime.agi` : Runtime execution
+"""
+
+from __future__ import annotations
+
+from pathlib import Path
+from typing import Optional
+
+import typer
+from rich.console import Console
+from rich.panel import Panel
+from rich.table import Table
+
+from specify_cli.core.instrumentation import instrument_command
+from specify_cli.core.shell import colour
+from specify_cli.ops import agi as agi_ops
+
+console = Console()
+
+app = typer.Typer(
+    name="agi",
+    help="{{ cmd.description | default(value="AGI agent operations and orchestration") }}",
+)
+
+
+@app.command("plan")
+@instrument_command("agi.plan", track_args=True)
+def plan(
+    goal: str = typer.Argument(
+        ...,
+        help="High-level goal to plan for",
+    ),
+    context: Optional[str] = typer.Option(
+        None,
+        "--context",
+        "-c",
+        help="Planning context (JSON string)",
+    ),
+    output: Optional[Path] = typer.Option(
+        None,
+        "--output",
+        "-o",
+        help="Save plan to file",
+    ),
+) -> None:
+    """
+    Create execution plan for goal using AGI planner.
+
+    This command uses the AGI planning system to decompose a high-level goal
+    into concrete, executable tasks with dependencies.
+
+    Examples:
+        $ specify agi plan "Build REST API"
+        $ specify agi plan "Implement authentication" --context '{"language": "Python"}'
+        $ specify agi plan "Create web scraper" --output plan.json
+    """
+    try:
+        # Call ops layer
+        result = agi_ops.create_plan(
+            goal=goal,
+            context=context,
+        )
+
+        if result["success"]:
+            console.print()
+            console.print("[bold]Execution Plan[/bold]")
+            console.print()
+
+            # Display plan
+            console.print(f"[cyan]Goal:[/cyan] {goal}")
+            console.print(f"[cyan]Tasks:[/cyan] {len(result['plan']['tasks'])}")
+            console.print(
+                f"[cyan]Estimated Duration:[/cyan] {result['plan']['estimated_duration']}s"
+            )
+            console.print()
+
+            # Task table
+            table = Table(show_header=True, header_style="bold cyan")
+            table.add_column("ID")
+            table.add_column("Description")
+            table.add_column("Dependencies")
+
+            for task in result["plan"]["tasks"]:
+                table.add_row(
+                    task["id"],
+                    task["description"],
+                    ", ".join(task.get("dependencies", [])) or "None",
+                )
+
+            console.print(table)
+            console.print()
+
+            # Save if requested
+            if output:
+                import json
+                output.write_text(json.dumps(result["plan"], indent=2))
+                colour(f"[green]✓[/green] Plan saved to {output}", "green")
+
+        else:
+            console.print()
+            colour("[red]✗ Planning failed[/red]", "red")
+            for error in result.get("errors", []):
+                console.print(f"  • {error}")
+            raise typer.Exit(1)
+
+    except KeyboardInterrupt:
+        console.print()
+        colour("Operation cancelled.", "yellow")
+        raise typer.Exit(130)
+
+    except Exception as e:
+        console.print()
+        colour(f"[red]Error:[/red] {e}", "red")
+        raise typer.Exit(1)
+
+
+@app.command("reason")
+@instrument_command("agi.reason", track_args=True)
+def reason(
+    premises: list[str] = typer.Argument(
+        ...,
+        help="Logical premises for reasoning",
+    ),
+    goal: Optional[str] = typer.Option(
+        None,
+        "--goal",
+        "-g",
+        help="Target conclusion to prove",
+    ),
+    mode: str = typer.Option(
+        "deductive",
+        "--mode",
+        "-m",
+        help="Reasoning mode (deductive, inductive, abductive)",
+    ),
+) -> None:
+    """
+    Perform logical reasoning from premises.
+
+    This command uses the AGI reasoning engine to derive conclusions
+    from logical premises using various inference strategies.
+
+    Examples:
+        $ specify agi reason "All humans are mortal" "Socrates is human"
+        $ specify agi reason "Birds fly" "Penguins are birds" --mode inductive
+        $ specify agi reason "Data observed" --goal "Best explanation" --mode abductive
+    """
+    try:
+        # Call ops layer
+        result = agi_ops.reason(
+            premises=premises,
+            goal=goal,
+            mode=mode,
+        )
+
+        if result["success"]:
+            console.print()
+            console.print("[bold]Reasoning Results[/bold]")
+            console.print()
+
+            console.print(f"[cyan]Mode:[/cyan] {mode}")
+            console.print(f"[cyan]Premises:[/cyan] {len(premises)}")
+            console.print()
+
+            # Display conclusions
+            for i, conclusion in enumerate(result["conclusions"], 1):
+                console.print(Panel(
+                    f"[bold]{conclusion['statement']}[/bold]\n"
+                    f"Confidence: {conclusion['confidence']:.2%}",
+                    title=f"Conclusion {i}",
+                    border_style="cyan",
+                ))
+
+        else:
+            console.print()
+            colour("[red]✗ Reasoning failed[/red]", "red")
+            for error in result.get("errors", []):
+                console.print(f"  • {error}")
+            raise typer.Exit(1)
+
+    except KeyboardInterrupt:
+        console.print()
+        colour("Operation cancelled.", "yellow")
+        raise typer.Exit(130)
+
+    except Exception as e:
+        console.print()
+        colour(f"[red]Error:[/red] {e}", "red")
+        raise typer.Exit(1)
+
+
+@app.command("synthesize")
+@instrument_command("agi.synthesize", track_args=True)
+def synthesize(
+    spec: str = typer.Argument(
+        ...,
+        help="Code specification or description",
+    ),
+    language: str = typer.Option(
+        "python",
+        "--language",
+        "-l",
+        help="Target programming language",
+    ),
+    output: Optional[Path] = typer.Option(
+        None,
+        "--output",
+        "-o",
+        help="Save generated code to file",
+    ),
+) -> None:
+    """
+    Generate code from specification using AGI synthesizer.
+
+    This command uses the AGI code synthesis engine to generate
+    implementation code from natural language specifications.
+
+    Examples:
+        $ specify agi synthesize "Function to calculate factorial"
+        $ specify agi synthesize "REST API endpoint for user login" --language python
+        $ specify agi synthesize "Binary search algorithm" --output search.py
+    """
+    try:
+        # Call ops layer
+        result = agi_ops.synthesize_code(
+            spec=spec,
+            language=language,
+        )
+
+        if result["success"]:
+            console.print()
+            console.print("[bold]Generated Code[/bold]")
+            console.print()
+
+            console.print(f"[cyan]Language:[/cyan] {language}")
+            console.print(f"[cyan]Confidence:[/cyan] {result.get('confidence', 0):.2%}")
+            console.print()
+
+            # Display code
+            console.print(Panel(
+                result["code"],
+                title="Generated Implementation",
+                border_style="cyan",
+            ))
+
+            # Save if requested
+            if output:
+                output.write_text(result["code"])
+                colour(f"[green]✓[/green] Code saved to {output}", "green")
+
+        else:
+            console.print()
+            colour("[red]✗ Code synthesis failed[/red]", "red")
+            for error in result.get("errors", []):
+                console.print(f"  • {error}")
+            raise typer.Exit(1)
+
+    except KeyboardInterrupt:
+        console.print()
+        colour("Operation cancelled.", "yellow")
+        raise typer.Exit(130)
+
+    except Exception as e:
+        console.print()
+        colour(f"[red]Error:[/red] {e}", "red")
+        raise typer.Exit(1)
+
+
+@app.command("orchestrate")
+@instrument_command("agi.orchestrate", track_args=True)
+def orchestrate(
+    goal: str = typer.Argument(
+        ...,
+        help="High-level goal for orchestration",
+    ),
+    agents: str = typer.Option(
+        "planner,implementer,tester",
+        "--agents",
+        "-a",
+        help="Comma-separated list of agents to use",
+    ),
+    orchestration_type: str = typer.Option(
+        "sequential",
+        "--type",
+        "-t",
+        help="Orchestration type (sequential, parallel, pipeline)",
+    ),
+) -> None:
+    """
+    Orchestrate multiple AGI agents to achieve goal.
+
+    This command coordinates multiple specialized agents to work together
+    on complex tasks requiring planning, implementation, and testing.
+
+    Examples:
+        $ specify agi orchestrate "Build web scraper"
+        $ specify agi orchestrate "Create REST API" --agents "planner,reasoner,implementer"
+        $ specify agi orchestrate "Implement feature" --type pipeline
+    """
+    try:
+        agent_list = [a.strip() for a in agents.split(",")]
+
+        # Call ops layer
+        result = agi_ops.orchestrate(
+            goal=goal,
+            agents=agent_list,
+            orchestration_type=orchestration_type,
+        )
+
+        if result["success"]:
+            console.print()
+            console.print("[bold]Orchestration Results[/bold]")
+            console.print()
+
+            console.print(f"[cyan]Goal:[/cyan] {goal}")
+            console.print(f"[cyan]Agents:[/cyan] {len(agent_list)}")
+            console.print(f"[cyan]Type:[/cyan] {orchestration_type}")
+            console.print(f"[cyan]Duration:[/cyan] {result['duration_ms']}ms")
+            console.print()
+
+            colour("[green]✓[/green] Orchestration completed successfully", "green")
+
+        else:
+            console.print()
+            colour("[red]✗ Orchestration failed[/red]", "red")
+            for error in result.get("errors", []):
+                console.print(f"  • {error}")
+            raise typer.Exit(1)
+
+    except KeyboardInterrupt:
+        console.print()
+        colour("Operation cancelled.", "yellow")
+        raise typer.Exit(130)
+
+    except Exception as e:
+        console.print()
+        colour(f"[red]Error:[/red] {e}", "red")
+        raise typer.Exit(1)

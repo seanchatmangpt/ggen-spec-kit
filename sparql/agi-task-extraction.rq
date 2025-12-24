@@ -1,0 +1,44 @@
+PREFIX agi: <http://spec-kit.io/agi#>
+PREFIX tp: <http://spec-kit.io/agi/task-planning#>
+PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
+PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
+
+SELECT DISTINCT
+  ?goal
+  ?goalName
+  ?goalDescription
+  ?decompositionStrategy
+  ?subgoal
+  ?task
+  ?taskName
+  ?taskComplexity
+  ?taskEstimatedDuration
+  ?dependsOnTask
+  ?canParallelizeWith
+
+WHERE {
+  # Goal and decomposition
+  ?goal a tp:Goal ;
+        tp:goalName ?goalName ;
+        tp:goalDescription ?goalDescription ;
+        tp:decompositionStrategy ?decompositionStrategy .
+
+  # Subgoals (optional)
+  OPTIONAL {
+    ?goal tp:decomposesInto ?subgoal .
+  }
+
+  # Tasks within execution plan
+  OPTIONAL {
+    ?plan a tp:ExecutionPlan ;
+          tp:containsTask ?task .
+    ?task agi:taskName ?taskName ;
+          agi:complexity ?taskComplexity ;
+          agi:estimatedDuration ?taskEstimatedDuration .
+
+    # Task dependencies
+    OPTIONAL { ?task agi:dependsOn ?dependsOnTask }
+    OPTIONAL { ?task agi:canParallelizeWith ?canParallelizeWith }
+  }
+}
+ORDER BY ?goalName ?taskName

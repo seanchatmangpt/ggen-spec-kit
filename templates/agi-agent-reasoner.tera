@@ -1,0 +1,144 @@
+{# AGI Reasoner Agent Template - Generates Python Reasoner agent implementation #}
+{# Constitutional equation: agi/agents/reasoner.py = μ(agi-agents.ttl) #}
+{# This template implements μ₃ EMIT stage of the constitutional equation #}
+
+{%- set reasoner_agent = sparql_results | first -%}
+
+"""
+agi.agents.reasoner - Reasoner Agent Implementation
+{{ "=" | repeat(count=50) }}
+
+Reasoning agent for logical inference and problem solving.
+
+This module provides a specialized agent that performs logical reasoning
+and inference from premises.
+
+Auto-generated from: ontology/agi-agents.ttl
+Constitutional equation: reasoner.py = μ(agi-agents.ttl)
+DO NOT EDIT MANUALLY - Edit the RDF source instead.
+
+Examples
+--------
+    >>> reasoner = ReasonerAgent(config={"name": "reasoner"})
+    >>> await reasoner.start()
+    >>> result = await reasoner.run_task({
+    ...     "premises": ["All humans are mortal", "Socrates is human"]
+    ... })
+
+See Also
+--------
+- :mod:`agi.agents.base` : Base Agent class
+- :mod:`agi.reasoner` : Reasoning engine
+"""
+
+from __future__ import annotations
+
+from typing import Any
+
+from opentelemetry import trace
+
+from specify_cli.core.telemetry import span
+
+from .base import Agent, AgentConfig
+
+tracer = trace.get_tracer(__name__)
+
+
+# ============================================================================
+# Reasoner Agent
+# ============================================================================
+
+class ReasonerAgent(Agent):
+    """
+    {{ reasoner_agent.description | default(value="Agent specialized in logical reasoning and inference") }}.
+
+    This agent uses {{ reasoner_agent.reasoningMethod | default(value="deductive and inductive reasoning") }}
+    to derive conclusions from premises.
+
+    Attributes
+    ----------
+    max_inference_depth : int
+        Maximum inference depth
+
+    Methods
+    -------
+    execute_task(task)
+        Perform logical inference from premises
+
+    Notes
+    -----
+    Integrates with ReasoningEngine for inference.
+    """
+
+    def __init__(
+        self,
+        config: AgentConfig | dict[str, Any],
+        max_inference_depth: int = {{ reasoner_agent.maxDepth | default(value="10") }},
+    ) -> None:
+        """
+        Initialize reasoner agent.
+
+        Parameters
+        ----------
+        config : AgentConfig | dict[str, Any]
+            Agent configuration
+        max_inference_depth : int
+            Maximum inference depth
+        """
+        super().__init__(config)
+
+        self.max_inference_depth = max_inference_depth
+
+        # Add reasoning capability
+        if "reasoning" not in self.config.capabilities:
+            self.config.capabilities.append("reasoning")
+
+    async def execute_task(self, task: dict[str, Any]) -> dict[str, Any]:
+        """
+        Execute reasoning task.
+
+        Parameters
+        ----------
+        task : dict[str, Any]
+            Task with 'premises' key
+
+        Returns
+        -------
+        dict[str, Any]
+            Reasoning conclusions
+
+        Raises
+        ------
+        ValueError
+            If task missing required fields
+        """
+        with span(
+            "reasoner_agent.execute_task",
+            attributes={"agent_id": self.id, "task": task.get("id", "")},
+        ):
+            # Validate input
+            if "premises" not in task:
+                raise ValueError("Task must have 'premises' field")
+
+            premises = task["premises"]
+            goal = task.get("goal")
+
+            # TODO: Integrate with actual ReasoningEngine
+            # from agi.reasoner import ReasoningEngine
+            # engine = ReasoningEngine(max_depth=self.max_inference_depth)
+            # trace = engine.infer(premises, goal)
+
+            # Placeholder implementation
+            conclusions = [
+                {
+                    "statement": "Placeholder conclusion",
+                    "confidence": 0.8,
+                    "supporting_premises": premises,
+                }
+            ]
+
+            return {
+                "success": True,
+                "conclusions": conclusions,
+                "agent_id": self.id,
+            }
