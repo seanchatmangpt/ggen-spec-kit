@@ -656,6 +656,19 @@ Observable execution completes the verification story: specifications define beh
 
 ---
 
+## Code References
+
+The following spec-kit source files implement observable execution:
+
+| Reference | Description |
+|-----------|-------------|
+| `src/specify_cli/core/telemetry.py:1-50` | OpenTelemetry span and timed decorators |
+| `src/specify_cli/core/jtbd_metrics.py:1-100` | JTBD-specific metrics instrumentation |
+| `templates/command.tera:56` | instrument_command import in generated code |
+| `templates/command.tera:88` | @instrument_command decorator in generated commands |
+
+---
+
 ## Related Patterns
 
 - **Specifies:** **[11. Executable Specification](../specification/executable-specification.md)** — Telemetry specified

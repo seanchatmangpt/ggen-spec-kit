@@ -1260,6 +1260,19 @@ Human-readable artifacts bridge the gap between automated generation and human c
 
 ---
 
+## Code References
+
+The following spec-kit source files implement human-readable artifact concepts:
+
+| Reference | Description |
+|-----------|-------------|
+| `templates/command.tera:7-32` | Generated file header with provenance and instructions |
+| `templates/command.tera:116-131` | Human-readable docstrings in generated code |
+| `ontology/cli-commands.ttl:36` | rdfs:comment with human-readable descriptions |
+| `ontology/spec-kit-schema.ttl:22-30` | rdfs:label and rdfs:comment for readability |
+
+---
+
 ## Related Patterns
 
 - **Product of:** **[24. Template Emission](./template-emission.md)** — Templates produce the output

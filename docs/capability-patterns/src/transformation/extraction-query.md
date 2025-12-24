@@ -893,6 +893,19 @@ The extraction stage transforms the graph-shaped specification into the tree-sha
 
 ---
 
+## Code References
+
+The following spec-kit source files implement the extraction query stage (μ₂):
+
+| Reference | Description |
+|-----------|-------------|
+| `sparql/extract-commands.rq:1-23` | Complete SPARQL extraction query for CLI commands |
+| `sparql/extract-commands.rq:7-13` | SELECT clause with GROUP_CONCAT for multi-value properties |
+| `sparql/extract-commands.rq:14-20` | WHERE clause with property path patterns |
+| `src/specify_cli/runtime/receipt.py:136` | Stage "extract" in pipeline |
+
+---
+
 ## Related Patterns
 
 - **Part of:** **[21. Constitutional Equation](./constitutional-equation.md)** — Stage μ₂

@@ -523,6 +523,21 @@ This job understanding enables you to identify:
 
 ---
 
+## Code References
+
+The following spec-kit source files implement the JTBD concepts discussed in this pattern:
+
+| Reference | Description |
+|-----------|-------------|
+| `ontology/jtbd-schema.ttl:22-46` | Job class hierarchy (Job, FunctionalJob, EmotionalJob, SocialJob) |
+| `ontology/jtbd-schema.ttl:114-132` | CustomerSegment and Persona classes linking jobs to people |
+| `ontology/jtbd-schema.ttl:806-844` | JobShape SHACL validation ensuring job specifications are complete |
+| `ontology/jtbd-schema.ttl:889-920` | DesiredOutcomeShape for validating outcome statements |
+| `src/specify_cli/core/jtbd_metrics.py:1-100` | JTBD metrics instrumentation for tracking job completion |
+| `ontology/spec-kit-schema.ttl:20-38` | Feature and UserStory classes that connect to jobs |
+
+---
+
 ## Related Patterns
 
 ### Builds on:

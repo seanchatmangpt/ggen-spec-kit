@@ -935,6 +935,19 @@ This stage establishes the foundation for trustworthy transformation. Invalid in
 
 ---
 
+## Code References
+
+The following spec-kit source files implement the normalization stage (μ₁):
+
+| Reference | Description |
+|-----------|-------------|
+| `ontology/spec-kit-schema.ttl:466-516` | FeatureShape SHACL validation for normalization |
+| `ontology/spec-kit-schema.ttl:522-578` | UserStoryShape with required property validation |
+| `ontology/jtbd-schema.ttl:806-844` | JobShape SHACL validation |
+| `src/specify_cli/runtime/receipt.py:136` | Stage "normalize" in pipeline |
+
+---
+
 ## Related Patterns
 
 - **Part of:** **[21. Constitutional Equation](./constitutional-equation.md)** — Stage μ₁

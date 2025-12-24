@@ -552,6 +552,20 @@ This completes the Context Patterns. You're ready to move to **[Part II: Specifi
 
 ---
 
+## Code References
+
+The following spec-kit source files implement competitive analysis concepts discussed in this pattern:
+
+| Reference | Description |
+|-----------|-------------|
+| `ontology/jtbd-schema.ttl:522-580` | CompetingSolution class with category, strengths, weaknesses properties |
+| `ontology/jtbd-schema.ttl:582-620` | CompetitorCategory enumeration (direct, indirect, non-consumption, future) |
+| `ontology/jtbd-schema.ttl:622-680` | Positioning class with differentiation and target circumstance |
+| `ontology/spec-kit-schema.ttl:20-38` | Feature class that must differentiate from competing solutions |
+| `ontology/cli-commands.ttl:33-77` | InitCommand as a competitive alternative to manual project setup |
+
+---
+
 ## Related Patterns
 
 ### Builds on:

@@ -815,6 +815,18 @@ Deprecation path respects users while enabling progress. You can evolve without 
 
 ---
 
+## Code References
+
+The following spec-kit source files support deprecation path implementation:
+
+| Reference | Description |
+|-----------|-------------|
+| `ontology/spec-kit-schema.ttl:300-350` | Deprecation status properties (sk:deprecated, sk:replacedBy) |
+| `templates/command.tera:7-20` | Template generating deprecation warnings |
+| `ontology/cli-commands.ttl` | Command specifications with versioning support |
+
+---
+
 ## Related Patterns
 
 - **Follows:** **[42. Specification Refinement](./specification-refinement.md)** — New replaces old

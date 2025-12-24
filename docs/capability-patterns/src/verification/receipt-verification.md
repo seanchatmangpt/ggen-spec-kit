@@ -535,6 +535,19 @@ Receipt verification transforms receipts from claims into proofs.
 
 ---
 
+## Code References
+
+The following spec-kit source files implement receipt verification:
+
+| Reference | Description |
+|-----------|-------------|
+| `src/specify_cli/runtime/receipt.py:159-185` | verify_receipt() comparing stored and current hashes |
+| `src/specify_cli/runtime/receipt.py:61-77` | Receipt.from_file() loading receipt for verification |
+| `src/specify_cli/runtime/receipt.py:80-93` | sha256_file() computing current file hash |
+| `src/specify_cli/runtime/receipt.py:188-209` | verify_idempotence() verifying transformation stability |
+
+---
+
 ## Related Patterns
 
 - **Verifies:** **[26. Receipt Generation](../transformation/receipt-generation.md)** — Receipts checked

@@ -821,6 +821,18 @@ Canonicalization is the unsung hero of the transformation pipeline. It eliminate
 
 ---
 
+## Code References
+
+The following spec-kit source files implement the canonicalization stage (μ₄):
+
+| Reference | Description |
+|-----------|-------------|
+| `src/specify_cli/runtime/receipt.py:136` | Stage "canonicalize" in pipeline |
+| `templates/command.tera:229-366` | Template with consistent formatting conventions |
+| `ggen.toml` | Format-specific canonicalization configuration |
+
+---
+
 ## Related Patterns
 
 - **Part of:** **[21. Constitutional Equation](./constitutional-equation.md)** — Stage μ₄

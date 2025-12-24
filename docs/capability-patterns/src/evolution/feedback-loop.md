@@ -1151,6 +1151,18 @@ The feedback loop transforms capabilities from static artifacts into learning sy
 
 ---
 
+## Code References
+
+The following spec-kit source files support feedback loop implementation:
+
+| Reference | Description |
+|-----------|-------------|
+| `src/specify_cli/core/telemetry.py:1-50` | OpenTelemetry instrumentation collecting feedback data |
+| `src/specify_cli/core/jtbd_metrics.py:1-100` | JTBD metrics for outcome-based feedback |
+| `ontology/jtbd-schema.ttl:51-108` | Outcome classes for measuring progress |
+
+---
+
 ## Related Patterns
 
 - **Collects data from:** **[38. Observable Execution](../verification/observable-execution.md)** — Telemetry foundation

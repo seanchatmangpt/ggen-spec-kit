@@ -750,6 +750,19 @@ Multi-target emission is the multiplicative force of specification-driven develo
 
 ---
 
+## Code References
+
+The following spec-kit source files implement multi-target emission:
+
+| Reference | Description |
+|-----------|-------------|
+| `ggen.toml` | Configuration defining multiple output targets |
+| `templates/command.tera` | Python command target template |
+| `templates/*.tera` | Multiple templates for different target formats |
+| `sparql/extract-commands.rq` | Extraction query reused across targets |
+
+---
+
 ## Related Patterns
 
 - **Extends:** **[24. Template Emission](./template-emission.md)** — Multiple templates

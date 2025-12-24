@@ -1007,6 +1007,18 @@ Contract tests are the handshake between specification and implementation. They 
 
 ---
 
+## Code References
+
+The following spec-kit source files implement contract test concepts:
+
+| Reference | Description |
+|-----------|-------------|
+| `ontology/cli-commands.ttl:38-76` | Command argument contracts with types and constraints |
+| `ontology/spec-kit-schema.ttl:466-516` | FeatureShape as interface contract |
+| `src/specify_cli/runtime/receipt.py:159-185` | verify_receipt() as transformation contract verification |
+
+---
+
 ## Related Patterns
 
 - **Complements:** **[31. Test Before Code](./test-before-code.md)** — Different focus (criteria vs. interface)

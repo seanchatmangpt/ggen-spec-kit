@@ -940,6 +940,18 @@ Specification refinement transforms ad-hoc patches into disciplined evolution. T
 
 ---
 
+## Code References
+
+The following spec-kit source files support specification refinement:
+
+| Reference | Description |
+|-----------|-------------|
+| `ontology/cli-commands.ttl:10` | Constitutional equation comment for refinement workflow |
+| `src/specify_cli/runtime/receipt.py:112-156` | generate_receipt() for verifying refinement results |
+| `ggen.toml` | Transformation rules enabling regeneration after refinement |
+
+---
+
 ## Related Patterns
 
 - **Driven by:** **[41. Gap Analysis](./gap-analysis.md)** — Identifies what needs improvement

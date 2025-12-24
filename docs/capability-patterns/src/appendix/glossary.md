@@ -1157,4 +1157,21 @@ Master these terms and you master the language of specification-driven developme
 
 ---
 
+## Code References
+
+Key spec-kit source files demonstrating glossary terms:
+
+| Term | Source File | Line Reference |
+|------|-------------|----------------|
+| Constitutional Equation | `ontology/cli-commands.ttl` | Line 10 |
+| Receipt | `src/specify_cli/runtime/receipt.py` | Lines 39-49 |
+| SHACL/Shape | `ontology/spec-kit-schema.ttl` | Lines 466-676 |
+| SPARQL | `sparql/extract-commands.rq` | Lines 1-23 |
+| Turtle | `ontology/spec-kit-schema.ttl` | Complete file |
+| Tera Template | `templates/command.tera` | Complete file |
+| Idempotent | `src/specify_cli/runtime/receipt.py` | Lines 188-209 |
+| Telemetry | `src/specify_cli/core/telemetry.py` | Lines 1-50 |
+
+---
+
 **Next:** See **[References](./references.md)** for sources and further reading.

@@ -550,6 +550,20 @@ This understanding shapes:
 
 ---
 
+## Code References
+
+The following spec-kit source files implement progress maker concepts discussed in this pattern:
+
+| Reference | Description |
+|-----------|-------------|
+| `ontology/jtbd-schema.ttl:322-380` | ProgressMaker class hierarchy (FormalTool, ShadowTool, ManualProcess, Workaround) |
+| `ontology/jtbd-schema.ttl:382-420` | Solution class linking progress makers to outcomes |
+| `ontology/cli-commands.ttl:21-24` | Command base class as a formal progress maker |
+| `ontology/cli-commands.ttl:82-125` | CheckCommand and VersionCommand as tooling progress makers |
+| `ggen.toml` | Configuration showing ggen as a progress maker for transformation |
+
+---
+
 ## Related Patterns
 
 ### Builds on:

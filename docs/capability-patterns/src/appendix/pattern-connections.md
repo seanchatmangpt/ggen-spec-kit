@@ -1380,4 +1380,18 @@ The pattern connections ensure that building capabilities repairs and enhances t
 
 ---
 
+## Code References
+
+The spec-kit codebase demonstrates these pattern connections:
+
+| Connection | Source Files |
+|------------|--------------|
+| Constitutional Equation → Receipt | `ontology/cli-commands.ttl:10` → `src/specify_cli/runtime/receipt.py:112-156` |
+| Shape Constraint → Normalization | `ontology/spec-kit-schema.ttl:466-516` → validation pipeline |
+| Property Path → Extraction | SPARQL paths in `sparql/extract-commands.rq:14-20` |
+| Emission → Human-Readable | `templates/command.tera:7-32` (provenance headers) |
+| Observable Execution → Feedback | `src/specify_cli/core/telemetry.py` → metrics |
+
+---
+
 **Next:** Use the **[Pattern Index](./pattern-index.md)** to find specific patterns by number or use case.

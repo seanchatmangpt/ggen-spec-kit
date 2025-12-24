@@ -603,6 +603,20 @@ This understanding shapes:
 
 ---
 
+## Code References
+
+The following spec-kit source files implement force concepts discussed in this pattern:
+
+| Reference | Description |
+|-----------|-------------|
+| `ontology/jtbd-schema.ttl:138-176` | Force classes (Force, PushForce, PullForce, Habit, Anxiety) modeling tensions |
+| `ontology/jtbd-schema.ttl:178-220` | ForceTension class linking opposing forces |
+| `ontology/jtbd-schema.ttl:950-990` | ForceShape SHACL validation for force specifications |
+| `ontology/spec-kit-schema.ttl:466-516` | FeatureShape showing how features balance forces |
+| `src/specify_cli/runtime/receipt.py:188-209` | verify_idempotence showing tension between speed and thoroughness |
+
+---
+
 ## Related Patterns
 
 ### Builds on:

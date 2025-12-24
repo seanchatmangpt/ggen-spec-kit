@@ -747,6 +747,20 @@ This pattern is the keystone that enables all subsequent Transformation patterns
 
 ---
 
+## Code References
+
+The following spec-kit source files implement the constitutional equation:
+
+| Reference | Description |
+|-----------|-------------|
+| `ontology/cli-commands.ttl:10` | Constitutional equation comment: `commands/*.py = μ(cli-commands.ttl)` |
+| `templates/command.tera:2-3` | Template header referencing constitutional equation |
+| `src/specify_cli/runtime/receipt.py:5-14` | Module docstring explaining μ₅ RECEIPT stage |
+| `src/specify_cli/runtime/receipt.py:112-156` | generate_receipt() implementing the complete μ pipeline |
+| `ggen.toml` | Configuration defining μ transformation pipeline |
+
+---
+
 ## Related Patterns
 
 - **Implemented by:** **[22-26. Pipeline Stages](./normalization-stage.md)** — The five stages

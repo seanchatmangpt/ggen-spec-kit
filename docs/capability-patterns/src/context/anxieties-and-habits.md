@@ -566,6 +566,21 @@ This directly shapes:
 
 ---
 
+## Code References
+
+The following spec-kit source files implement anxiety and habit concepts discussed in this pattern:
+
+| Reference | Description |
+|-----------|-------------|
+| `ontology/jtbd-schema.ttl:138-176` | Force classes including Habit and Anxiety as resistance forces |
+| `ontology/jtbd-schema.ttl:422-480` | AnxietyCategory enumeration (new solution, switching, missing out, social) |
+| `ontology/jtbd-schema.ttl:482-520` | HabitCategory enumeration (muscle memory, mental model, integration, rhythm) |
+| `ontology/jtbd-schema.ttl:1100-1150` | AnxietyMitigation class for designing responses |
+| `ontology/jtbd-schema.ttl:1152-1200` | HabitBridge class for connecting old patterns to new |
+| `ontology/cli-commands.ttl:51-76` | InitCommand options showing habit-aware design (--here, --no-git for familiar workflows) |
+
+---
+
 ## Related Patterns
 
 ### Builds on:

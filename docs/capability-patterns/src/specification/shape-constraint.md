@@ -860,6 +860,21 @@ This supports **[Shape Validation](../verification/shape-validation.md)** and en
 
 ---
 
+## Code References
+
+The following spec-kit source files implement SHACL shape constraints:
+
+| Reference | Description |
+|-----------|-------------|
+| `ontology/spec-kit-schema.ttl:466-516` | FeatureShape with cardinality, pattern, and datatype constraints |
+| `ontology/spec-kit-schema.ttl:522-578` | UserStoryShape with required properties and format validation |
+| `ontology/spec-kit-schema.ttl:584-617` | AcceptanceScenarioShape with Given/When/Then structure |
+| `ontology/spec-kit-schema.ttl:652-676` | SuccessCriterionShape with conditional constraints |
+| `ontology/jtbd-schema.ttl:806-844` | JobShape with SPARQL-based constraints |
+| `ontology/jtbd-schema.ttl:889-920` | DesiredOutcomeShape with direction/metric/object validation |
+
+---
+
 ## Related Patterns
 
 - *Enables:* **[11. Executable Specification](./executable-specification.md)** — Shapes make specs validatable

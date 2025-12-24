@@ -782,6 +782,18 @@ Branching exploration transforms risky bets into informed decisions. You try bef
 
 ---
 
+## Code References
+
+The following spec-kit source files support branching exploration:
+
+| Reference | Description |
+|-----------|-------------|
+| `ggen.toml` | Configuration that can be branched for exploration |
+| `ontology/*.ttl` | Specification files that can be branched |
+| `src/specify_cli/runtime/receipt.py:188-209` | verify_idempotence() ensuring branches are comparable |
+
+---
+
 ## Related Patterns
 
 - **Supports:** **[42. Specification Refinement](./specification-refinement.md)** — Provides validated approaches

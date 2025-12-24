@@ -612,6 +612,20 @@ This informs:
 
 ---
 
+## Code References
+
+The following spec-kit source files implement circumstance concepts discussed in this pattern:
+
+| Reference | Description |
+|-----------|-------------|
+| `ontology/jtbd-schema.ttl:222-280` | Circumstance class with trigger, emotional state, time budget properties |
+| `ontology/jtbd-schema.ttl:282-320` | CircumstanceType enumeration (internal event, external event, periodic) |
+| `ontology/jtbd-schema.ttl:1000-1050` | CircumstanceShape SHACL validation |
+| `ontology/cli-commands.ttl:130-159` | GgenSyncCommand showing circumstance-aware CLI design (--watch, --dry-run modes) |
+| `templates/command.tera:87-225` | Template logic generating circumstance-appropriate command modes |
+
+---
+
 ## Related Patterns
 
 ### Builds on:

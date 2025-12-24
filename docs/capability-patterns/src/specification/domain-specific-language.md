@@ -1064,6 +1064,19 @@ This supports author productivity while maintaining **[Semantic Foundation](./se
 
 ---
 
+## Code References
+
+The following spec-kit source files implement DSL concepts:
+
+| Reference | Description |
+|-----------|-------------|
+| `ontology/cli-commands.ttl:14` | Structured comment DSL for argument metadata |
+| `templates/command.tera:5-32` | Template DSL patterns for code generation |
+| `ggen.toml` | Configuration DSL for transformation rules |
+| `ontology/spec-kit-schema.ttl:380-440` | Property conventions as domain DSL |
+
+---
+
 ## Related Patterns
 
 - *Simplifies:* **[9. Semantic Foundation](./semantic-foundation.md)** — DSL makes RDF accessible

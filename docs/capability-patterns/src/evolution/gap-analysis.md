@@ -852,6 +852,18 @@ Gap analysis transforms vague "we should improve" into specific "we should fix X
 
 ---
 
+## Code References
+
+The following spec-kit source files support gap analysis:
+
+| Reference | Description |
+|-----------|-------------|
+| `ontology/jtbd-schema.ttl:51-108` | Outcome class for defining target metrics |
+| `ontology/jtbd-schema.ttl:889-920` | DesiredOutcomeShape validating outcome targets |
+| `src/specify_cli/core/jtbd_metrics.py:50-100` | Metrics collection for current vs. target comparison |
+
+---
+
 ## Related Patterns
 
 - **Uses:** **[40. Outcome Measurement](./outcome-measurement.md)** — Provides current performance data

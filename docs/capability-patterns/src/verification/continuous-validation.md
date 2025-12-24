@@ -575,6 +575,18 @@ Continuous validation transforms quality from a phase into a constant—a proper
 
 ---
 
+## Code References
+
+The following spec-kit source files support continuous validation:
+
+| Reference | Description |
+|-----------|-------------|
+| `ontology/spec-kit-schema.ttl:466-676` | SHACL shapes for CI validation |
+| `src/specify_cli/runtime/receipt.py:159-209` | verify_receipt() and verify_idempotence() for CI checks |
+| `ggen.toml` | Configuration for CI validation pipeline |
+
+---
+
 ## Related Patterns
 
 - **Uses:** **[34. Shape Validation](./shape-validation.md)** — SHACL in CI

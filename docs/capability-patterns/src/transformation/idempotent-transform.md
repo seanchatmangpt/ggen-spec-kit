@@ -699,6 +699,19 @@ Idempotence is the mathematical foundation of everything else. Without it, nothi
 
 ---
 
+## Code References
+
+The following spec-kit source files implement idempotent transformation:
+
+| Reference | Description |
+|-----------|-------------|
+| `src/specify_cli/runtime/receipt.py:188-209` | verify_idempotence() function proving μ∘μ = μ |
+| `src/specify_cli/runtime/receipt.py:49` | Receipt.idempotent field tracking verification |
+| `src/specify_cli/runtime/receipt.py:96-109` | sha256_string() for deterministic hashing |
+| `src/specify_cli/runtime/receipt.py:80-93` | sha256_file() for file content hashing |
+
+---
+
 ## Related Patterns
 
 - **Enabled by:** **[25. Canonicalization](./canonicalization.md)** — Eliminates format variation

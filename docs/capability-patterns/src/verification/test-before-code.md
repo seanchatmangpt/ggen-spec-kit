@@ -924,6 +924,18 @@ Test Before Code transforms implementation from "writing code" to "making tests 
 
 ---
 
+## Code References
+
+The following spec-kit source files implement test-before-code concepts:
+
+| Reference | Description |
+|-----------|-------------|
+| `ontology/spec-kit-schema.ttl:40-60` | AcceptanceScenario class that generates tests |
+| `ontology/spec-kit-schema.ttl:584-617` | AcceptanceScenarioShape validating Given/When/Then |
+| `templates/command.tera` | Template that could generate test scaffolding |
+
+---
+
 ## Related Patterns
 
 - **Implements:** **[19. Acceptance Criterion](../specification/acceptance-criterion.md)** — Criteria become tests

@@ -896,6 +896,19 @@ This completes the Specification Patterns and prepares for **[Part III: Transfor
 
 ---
 
+## Code References
+
+The following spec-kit source files implement traceability thread concepts:
+
+| Reference | Description |
+|-----------|-------------|
+| `src/specify_cli/runtime/receipt.py:39-49` | Receipt dataclass with input/output file traceability |
+| `src/specify_cli/runtime/receipt.py:30-37` | StageHash linking transformation stages |
+| `ontology/spec-kit-schema.ttl:250-300` | sk:tracesTo and sk:derivedFrom properties |
+| `templates/command.tera:17-19` | Generated file headers noting source provenance |
+
+---
+
 ## Related Patterns
 
 - *Links:* **[5. Outcome Desired](../context/outcome-desired.md)** ↔ **[19. Acceptance Criterion](./acceptance-criterion.md)**

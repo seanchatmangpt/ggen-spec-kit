@@ -1184,6 +1184,19 @@ Outcome measurement transforms development from feature factory to value deliver
 
 ---
 
+## Code References
+
+The following spec-kit source files implement outcome measurement:
+
+| Reference | Description |
+|-----------|-------------|
+| `ontology/jtbd-schema.ttl:51-108` | Outcome class with direction, metric, object properties |
+| `ontology/jtbd-schema.ttl:110-112` | OutcomeMetric enumeration (time, count, rate, quality) |
+| `ontology/jtbd-schema.ttl:889-920` | DesiredOutcomeShape for outcome validation |
+| `src/specify_cli/core/jtbd_metrics.py:50-100` | Instrumentation tracking outcome metrics |
+
+---
+
 ## Related Patterns
 
 - **Measures:** **[5. Outcome Desired](../context/outcome-desired.md)** — Outcomes defined in context

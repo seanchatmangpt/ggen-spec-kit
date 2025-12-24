@@ -744,6 +744,20 @@ This foundation enables all subsequent specification patterns:
 
 ---
 
+## Code References
+
+The following spec-kit source files implement semantic foundation concepts:
+
+| Reference | Description |
+|-----------|-------------|
+| `ontology/spec-kit-schema.ttl:1-100` | Core ontology with namespaces, prefixes, and base classes |
+| `ontology/cli-commands.ttl:1-30` | CLI command ontology demonstrating RDF as specification format |
+| `ontology/jtbd-schema.ttl:1-50` | JTBD ontology showing domain-specific semantic modeling |
+| `sparql/extract-commands.rq:1-23` | SPARQL query demonstrating structured extraction |
+| `templates/command.tera:1-10` | Template referencing RDF-extracted data |
+
+---
+
 ## Related Patterns
 
 ### Enables:

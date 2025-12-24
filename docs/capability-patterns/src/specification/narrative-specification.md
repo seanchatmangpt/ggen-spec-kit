@@ -1021,6 +1021,19 @@ This enhances **[Human-Readable Artifact](../transformation/human-readable-artif
 
 ---
 
+## Code References
+
+The following spec-kit source files implement narrative specification concepts:
+
+| Reference | Description |
+|-----------|-------------|
+| `ontology/cli-commands.ttl:36` | rdfs:comment with narrative description |
+| `ontology/spec-kit-schema.ttl:22-30` | rdfs:label and rdfs:comment for narrative |
+| `ontology/jtbd-schema.ttl:24-45` | Job classes with embedded narrative context |
+| `templates/command.tera:7-32` | Template extracting narrative for documentation |
+
+---
+
 ## Related Patterns
 
 - *Complements:* **[11. Executable Specification](./executable-specification.md)** — Narrative explains formal specs

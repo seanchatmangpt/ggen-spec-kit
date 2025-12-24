@@ -995,6 +995,18 @@ Integration reality tests complete the testing pyramid—unit tests for speed, c
 
 ---
 
+## Code References
+
+The following spec-kit source files support integration reality testing:
+
+| Reference | Description |
+|-----------|-------------|
+| `ontology/cli-commands.ttl:130-159` | GgenSyncCommand for real ggen integration testing |
+| `src/specify_cli/core/telemetry.py:1-50` | OpenTelemetry instrumentation for real traces |
+| `ggen.toml` | Real ggen configuration for integration tests |
+
+---
+
 ## Related Patterns
 
 - **Builds on:** **[32. Contract Test](./contract-test.md)** — Contracts verified before integration

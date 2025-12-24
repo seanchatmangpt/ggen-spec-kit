@@ -631,4 +631,20 @@ The 45 patterns in this language represent a balanced vocabulary—enough to bui
 
 ---
 
+## Code References
+
+The spec-kit codebase provides concrete implementations of patterns referenced in this index:
+
+| Key File | Patterns Demonstrated |
+|----------|----------------------|
+| `ontology/spec-kit-schema.ttl` | 9, 10, 11, 12, 13, 16 (Semantic Foundation, Shape Constraint, Layered Ontology) |
+| `ontology/cli-commands.ttl` | 10, 11, 21 (Single Source, Executable Specification, Constitutional Equation) |
+| `ontology/jtbd-schema.ttl` | 2, 3, 4, 5, 7 (JTBD patterns: Customer Job, Forces, Outcomes) |
+| `sparql/extract-commands.rq` | 14, 23 (Property Path, Extraction Query) |
+| `templates/command.tera` | 24, 29, 30 (Template Emission, Multi-Target, Human-Readable) |
+| `src/specify_cli/runtime/receipt.py` | 26, 27, 35, 36 (Receipt Generation, Idempotent, Drift, Verification) |
+| `ggen.toml` | 21, 22-26, 37 (Constitutional Equation, Pipeline, Continuous Validation) |
+
+---
+
 **Next:** Explore **[Pattern Connections](./pattern-connections.md)** to understand how patterns relate to each other.

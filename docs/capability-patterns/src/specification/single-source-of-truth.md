@@ -852,6 +852,20 @@ This enables:
 
 ---
 
+## Code References
+
+The following spec-kit source files implement single source of truth concepts:
+
+| Reference | Description |
+|-----------|-------------|
+| `ontology/cli-commands.ttl:10` | Constitutional equation comment: `commands/*.py = μ(cli-commands.ttl)` |
+| `ggen.toml` | Configuration defining source-to-artifact transformation rules |
+| `templates/command.tera:2-3` | Template header noting its source TTL file |
+| `src/specify_cli/runtime/receipt.py:39-49` | Receipt dataclass linking input to output |
+| `src/specify_cli/runtime/receipt.py:112-156` | generate_receipt() creating cryptographic proof |
+
+---
+
 ## Related Patterns
 
 - *Builds on:* **[9. Semantic Foundation](./semantic-foundation.md)** — RDF is the source format

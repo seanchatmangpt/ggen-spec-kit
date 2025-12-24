@@ -992,6 +992,20 @@ The emission stage is where abstract data becomes concrete artifact. Templates d
 
 ---
 
+## Code References
+
+The following spec-kit source files implement the template emission stage (μ₃):
+
+| Reference | Description |
+|-----------|-------------|
+| `templates/command.tera:1-367` | Complete Tera template for Python command generation |
+| `templates/command.tera:5-32` | Template metadata extraction and imports |
+| `templates/command.tera:87-225` | Subcommand generation with argument handling |
+| `templates/command.tera:229-366` | Main command generation for commands without subcommands |
+| `src/specify_cli/runtime/receipt.py:136` | Stage "emit" in pipeline |
+
+---
+
 ## Related Patterns
 
 - **Part of:** **[21. Constitutional Equation](./constitutional-equation.md)** — Stage μ₃

@@ -953,6 +953,20 @@ This enables the full **[Constitutional Equation](../transformation/constitution
 
 ---
 
+## Code References
+
+The following spec-kit source files implement executable specification concepts:
+
+| Reference | Description |
+|-----------|-------------|
+| `ontology/cli-commands.ttl:33-77` | InitCommand as executable specification with arguments/options |
+| `ontology/spec-kit-schema.ttl:466-578` | SHACL shapes making specifications validatable |
+| `sparql/extract-commands.rq:1-23` | SPARQL query executing against specification |
+| `templates/command.tera:87-225` | Tera template rendering specification to code |
+| `src/specify_cli/runtime/receipt.py:188-209` | verify_idempotence() executing transformation |
+
+---
+
 ## Related Patterns
 
 - *Builds on:* **[10. Single Source of Truth](./single-source-of-truth.md)** — Source must be executable

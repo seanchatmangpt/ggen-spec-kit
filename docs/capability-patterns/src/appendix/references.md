@@ -767,4 +767,20 @@ This pattern language synthesizes these streams into a coherent methodology for 
 
 ---
 
+## Code References
+
+The spec-kit codebase serves as a reference implementation for the concepts discussed:
+
+| Domain | Source Files |
+|--------|--------------|
+| RDF/Turtle | `ontology/*.ttl` |
+| SHACL Shapes | `ontology/spec-kit-schema.ttl:466-676`, `ontology/jtbd-schema.ttl:806-920` |
+| SPARQL Queries | `sparql/extract-commands.rq` |
+| Template Emission | `templates/command.tera` |
+| Receipt/Cryptography | `src/specify_cli/runtime/receipt.py` |
+| OpenTelemetry | `src/specify_cli/core/telemetry.py` |
+| ggen Configuration | `ggen.toml` |
+
+---
+
 **Next:** Review the **[Pattern Connections](./pattern-connections.md)** map to understand how patterns relate.

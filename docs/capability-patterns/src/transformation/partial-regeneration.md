@@ -637,6 +637,18 @@ Partial regeneration transforms specification-driven development from a batch pr
 
 ---
 
+## Code References
+
+The following spec-kit source files implement partial regeneration concepts:
+
+| Reference | Description |
+|-----------|-------------|
+| `ontology/spec-kit-schema.ttl:250-300` | Dependency tracking properties (sk:dependsOn, sk:derivedFrom) |
+| `src/specify_cli/runtime/receipt.py:30-37` | StageHash tracking which stages need rerun |
+| `ggen.toml` | Configuration for selective file regeneration |
+
+---
+
 ## Related Patterns
 
 - **Requires:** **[27. Idempotent Transform](./idempotent-transform.md)** — Partial must match full

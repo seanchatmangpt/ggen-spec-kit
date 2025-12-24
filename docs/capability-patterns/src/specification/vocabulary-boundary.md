@@ -633,6 +633,20 @@ This supports **[Layered Ontology](./layered-ontology.md)** and enables **[Trace
 
 ---
 
+## Code References
+
+The following spec-kit source files implement vocabulary boundary concepts:
+
+| Reference | Description |
+|-----------|-------------|
+| `ontology/spec-kit-schema.ttl:1-18` | Namespace declarations defining vocabulary boundaries |
+| `ontology/cli-commands.ttl:1-5` | CLI namespace prefix `cli:` for command vocabulary |
+| `ontology/jtbd-schema.ttl:1-20` | JTBD namespace prefix `jtbd:` for jobs vocabulary |
+| `sparql/extract-commands.rq:1-2` | PREFIX declarations for query vocabulary scope |
+| `templates/command.tera:1-10` | Template accessing specific vocabularies via extraction |
+
+---
+
 ## Related Patterns
 
 - *Organizes:* **[9. Semantic Foundation](./semantic-foundation.md)** — Foundation split into vocabularies

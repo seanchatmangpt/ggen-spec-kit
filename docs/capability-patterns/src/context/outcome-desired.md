@@ -569,6 +569,21 @@ These outcomes feed directly into:
 
 ---
 
+## Code References
+
+The following spec-kit source files implement outcome concepts discussed in this pattern:
+
+| Reference | Description |
+|-----------|-------------|
+| `ontology/jtbd-schema.ttl:51-108` | Outcome class with direction, metric, object properties |
+| `ontology/jtbd-schema.ttl:889-920` | DesiredOutcomeShape SHACL validation for outcome specifications |
+| `ontology/jtbd-schema.ttl:110-112` | OutcomeMetric enumeration (time, count, rate, quality, effort) |
+| `src/specify_cli/core/jtbd_metrics.py:50-100` | Instrumentation tracking outcome achievement |
+| `ontology/spec-kit-schema.ttl:584-617` | AcceptanceScenarioShape linking scenarios to outcomes |
+| `ontology/spec-kit-schema.ttl:652-676` | SuccessCriterionShape defining outcome measurement |
+
+---
+
 ## Related Patterns
 
 ### Builds on:

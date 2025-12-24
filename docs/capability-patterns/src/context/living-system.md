@@ -560,6 +560,20 @@ This context shapes everything that follows:
 
 ---
 
+## Code References
+
+The following spec-kit source files implement concepts discussed in this pattern:
+
+| Reference | Description |
+|-----------|-------------|
+| `ontology/spec-kit-schema.ttl:20-83` | Core classes (Feature, UserStory, AcceptanceScenario) that form the living system of specifications |
+| `ontology/jtbd-schema.ttl:22-46` | Job classes representing the work customers are trying to accomplish |
+| `ontology/jtbd-schema.ttl:114-132` | CustomerSegment and Persona classes for modeling the people in the system |
+| `src/specify_cli/core/telemetry.py:1-50` | OpenTelemetry instrumentation showing how the system observes itself |
+| `ggen.toml` | Configuration file showing how ggen understands its living system context |
+
+---
+
 ## Related Patterns
 
 ### This pattern sets the stage for:

@@ -1064,6 +1064,19 @@ This enables **[Test Before Code](../verification/test-before-code.md)** and sup
 
 ---
 
+## Code References
+
+The following spec-kit source files implement acceptance criterion concepts:
+
+| Reference | Description |
+|-----------|-------------|
+| `ontology/spec-kit-schema.ttl:40-60` | AcceptanceScenario class with Given/When/Then structure |
+| `ontology/spec-kit-schema.ttl:584-617` | AcceptanceScenarioShape SHACL validation |
+| `ontology/spec-kit-schema.ttl:652-676` | SuccessCriterionShape with measurable conditions |
+| `ontology/jtbd-schema.ttl:889-920` | DesiredOutcomeShape linking criteria to outcomes |
+
+---
+
 ## Related Patterns
 
 - *Derives from:* **[5. Outcome Desired](../context/outcome-desired.md)** — Criteria address outcomes

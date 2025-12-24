@@ -863,6 +863,20 @@ This supports **[Vocabulary Boundary](./vocabulary-boundary.md)** and enables **
 
 ---
 
+## Code References
+
+The following spec-kit source files implement layered ontology concepts:
+
+| Reference | Description |
+|-----------|-------------|
+| `ontology/spec-kit-schema.ttl:1-18` | Layer 1 (Framework): Core spec-kit vocabulary imports |
+| `ontology/jtbd-schema.ttl:1-20` | Layer 2 (Domain): JTBD domain vocabulary |
+| `ontology/cli-commands.ttl:1-5` | Layer 2 (Domain): CLI domain vocabulary |
+| `ontology/spec-kit-schema.ttl:20-83` | Layer 1 classes used across domains |
+| `memory/*.ttl` | Layer 3 (Instance): Specific feature/spec instances |
+
+---
+
 ## Related Patterns
 
 - *Refines:* **[13. Vocabulary Boundary](./vocabulary-boundary.md)** — Layers organize vocabularies

@@ -621,6 +621,19 @@ This enhances **[Extraction Query](../transformation/extraction-query.md)** and 
 
 ---
 
+## Code References
+
+The following spec-kit source files implement property path concepts:
+
+| Reference | Description |
+|-----------|-------------|
+| `sparql/extract-commands.rq:14-20` | Property paths navigating command structure |
+| `ontology/spec-kit-schema.ttl:86-120` | Property definitions forming navigation paths |
+| `ontology/jtbd-schema.ttl:180-220` | Job-to-outcome property chains |
+| `ontology/cli-commands.ttl:38-76` | Command-to-argument property relationships |
+
+---
+
 ## Related Patterns
 
 - *Enhances:* **[23. Extraction Query](../transformation/extraction-query.md)** — Paths make extraction powerful

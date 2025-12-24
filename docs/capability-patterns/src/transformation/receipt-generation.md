@@ -754,6 +754,20 @@ Receipts complete the μ pipeline. They transform the Constitutional Equation fr
 
 ---
 
+## Code References
+
+The following spec-kit source files implement the receipt generation stage (μ₅):
+
+| Reference | Description |
+|-----------|-------------|
+| `src/specify_cli/runtime/receipt.py:1-15` | Module docstring explaining μ₅ RECEIPT purpose |
+| `src/specify_cli/runtime/receipt.py:30-37` | StageHash dataclass for intermediate stage hashes |
+| `src/specify_cli/runtime/receipt.py:39-59` | Receipt dataclass with all proof fields |
+| `src/specify_cli/runtime/receipt.py:112-156` | generate_receipt() function creating cryptographic proof |
+| `src/specify_cli/runtime/receipt.py:159-185` | verify_receipt() function for validation |
+
+---
+
 ## Related Patterns
 
 - **Part of:** **[21. Constitutional Equation](./constitutional-equation.md)** — Stage μ₅

@@ -730,6 +730,19 @@ Shape validation is the quality gate that ensures only valid specifications ente
 
 ---
 
+## Code References
+
+The following spec-kit source files implement shape validation:
+
+| Reference | Description |
+|-----------|-------------|
+| `ontology/spec-kit-schema.ttl:466-516` | FeatureShape with comprehensive validation rules |
+| `ontology/spec-kit-schema.ttl:522-578` | UserStoryShape with pattern and cardinality constraints |
+| `ontology/jtbd-schema.ttl:806-844` | JobShape with SPARQL-based validation |
+| `ontology/jtbd-schema.ttl:889-920` | DesiredOutcomeShape with required properties |
+
+---
+
 ## Related Patterns
 
 - **Implements:** **[12. Shape Constraint](../specification/shape-constraint.md)** — Shapes enforced

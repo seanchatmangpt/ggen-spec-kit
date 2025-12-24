@@ -241,6 +241,18 @@ This supports **[Executable Specification](./executable-specification.md)** and 
 
 ---
 
+## Code References
+
+The following spec-kit source files implement inference rule concepts:
+
+| Reference | Description |
+|-----------|-------------|
+| `ontology/spec-kit-schema.ttl:150-200` | rdfs:subClassOf hierarchies enabling inference |
+| `ontology/jtbd-schema.ttl:22-46` | Job class hierarchy with inferred type relationships |
+| `ontology/jtbd-schema.ttl:138-176` | Force class hierarchy with subclass inference |
+
+---
+
 ## Related Patterns
 
 - *Enhances:* **[11. Executable Specification](./executable-specification.md)** — Inference executes rules

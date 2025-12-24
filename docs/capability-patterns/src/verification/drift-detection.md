@@ -727,6 +727,18 @@ Drift detection is the guardian of the constitutional equation—ensuring that s
 
 ---
 
+## Code References
+
+The following spec-kit source files implement drift detection:
+
+| Reference | Description |
+|-----------|-------------|
+| `src/specify_cli/runtime/receipt.py:80-93` | sha256_file() for comparing file hashes |
+| `src/specify_cli/runtime/receipt.py:159-185` | verify_receipt() detecting file drift |
+| `src/specify_cli/runtime/receipt.py:39-49` | Receipt storing expected hashes for comparison |
+
+---
+
 ## Related Patterns
 
 - **Verifies:** **[21. Constitutional Equation](../transformation/constitutional-equation.md)** — Equation enforced

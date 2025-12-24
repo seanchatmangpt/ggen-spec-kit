@@ -657,6 +657,19 @@ Living documentation transforms documentation from burden to benefit. It's alway
 
 ---
 
+## Code References
+
+The following spec-kit source files implement living documentation:
+
+| Reference | Description |
+|-----------|-------------|
+| `templates/command.tera:7-32` | Template generating documentation from specifications |
+| `ontology/cli-commands.ttl:36` | rdfs:comment for extractable documentation |
+| `ontology/spec-kit-schema.ttl:22-30` | rdfs:label and rdfs:comment properties |
+| `ggen.toml` | Configuration linking specs to generated docs |
+
+---
+
 ## Related Patterns
 
 - **Uses:** **[21. Constitutional Equation](../transformation/constitutional-equation.md)** — docs = μ(spec)
