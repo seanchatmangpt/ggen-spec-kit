@@ -71,6 +71,14 @@ References
 - MacKay, D. J. (2003). Information Theory, Inference, and Learning Algorithms
 """
 
+from specify_cli.hyperdimensional.agi_reasoning import (
+    AutonomousReasoningEngine,
+    Constraint,
+    ReasoningStep,
+    ReasoningStrategy,
+    ReasoningTrace,
+    Solution,
+)
 from specify_cli.hyperdimensional.embedding_store import (
     RDFLIB_AVAILABLE,
     EmbeddingMetadata,
@@ -80,6 +88,20 @@ from specify_cli.hyperdimensional.embeddings import (
     HyperdimensionalEmbedding,
     VectorOperations,
     VectorStats,
+)
+from specify_cli.hyperdimensional.rdf_to_vector import (
+    RDFVectorTransformer,
+    TransformationResult,
+    VectorizedConstraint,
+)
+from specify_cli.hyperdimensional.semantic_agents import (
+    CollaborativeResult,
+    DesignExplorer,
+    DependencyResolver,
+    ExplorationResult,
+    SemanticAgent,
+    SemanticPath,
+    SpecificationAnalyzer,
 )
 from specify_cli.hyperdimensional.metrics import (
     approximate_entropy,
