@@ -1,0 +1,145 @@
+{# AGI Implementer Agent Template - Generates Python Implementer agent #}
+{# Constitutional equation: agi/agents/implementer.py = μ(agi-agents.ttl) #}
+{# This template implements μ₃ EMIT stage of the constitutional equation #}
+
+{%- set impl_agent = sparql_results | first -%}
+
+"""
+agi.agents.implementer - Implementer Agent
+{{ "=" | repeat(count=50) }}
+
+Implementation agent for code synthesis and generation.
+
+This module provides a specialized agent that generates code implementations
+from specifications.
+
+Auto-generated from: ontology/agi-agents.ttl
+Constitutional equation: implementer.py = μ(agi-agents.ttl)
+DO NOT EDIT MANUALLY - Edit the RDF source instead.
+
+Examples
+--------
+    >>> impl = ImplementerAgent(config={"name": "implementer"})
+    >>> await impl.start()
+    >>> result = await impl.run_task({
+    ...     "spec": "Function to calculate factorial",
+    ...     "language": "python"
+    ... })
+
+See Also
+--------
+- :mod:`agi.agents.base` : Base Agent class
+- :mod:`agi.synthesizer` : Code synthesis engine
+"""
+
+from __future__ import annotations
+
+from typing import Any
+
+from opentelemetry import trace
+
+from specify_cli.core.telemetry import span
+
+from .base import Agent, AgentConfig
+
+tracer = trace.get_tracer(__name__)
+
+
+# ============================================================================
+# Implementer Agent
+# ============================================================================
+
+class ImplementerAgent(Agent):
+    """
+    {{ impl_agent.description | default(value="Agent specialized in code implementation") }}.
+
+    This agent uses {{ impl_agent.implementationMethod | default(value="template-based synthesis") }}
+    to generate code from specifications.
+
+    Attributes
+    ----------
+    default_language : str
+        Default programming language
+
+    Methods
+    -------
+    execute_task(task)
+        Generate code from specification
+
+    Notes
+    -----
+    Integrates with CodeSynthesizer for generation.
+    """
+
+    def __init__(
+        self,
+        config: AgentConfig | dict[str, Any],
+        default_language: str = "{{ impl_agent.defaultLanguage | default(value="python") }}",
+    ) -> None:
+        """
+        Initialize implementer agent.
+
+        Parameters
+        ----------
+        config : AgentConfig | dict[str, Any]
+            Agent configuration
+        default_language : str
+            Default programming language
+        """
+        super().__init__(config)
+
+        self.default_language = default_language
+
+        # Add implementation capability
+        if "implementation" not in self.config.capabilities:
+            self.config.capabilities.append("implementation")
+
+    async def execute_task(self, task: dict[str, Any]) -> dict[str, Any]:
+        """
+        Execute implementation task.
+
+        Parameters
+        ----------
+        task : dict[str, Any]
+            Task with 'spec' key
+
+        Returns
+        -------
+        dict[str, Any]
+            Generated code
+
+        Raises
+        ------
+        ValueError
+            If task missing required fields
+        """
+        with span(
+            "implementer_agent.execute_task",
+            attributes={"agent_id": self.id, "task": task.get("id", "")},
+        ):
+            # Validate input
+            if "spec" not in task:
+                raise ValueError("Task must have 'spec' field")
+
+            spec = task["spec"]
+            language = task.get("language", self.default_language)
+
+            # TODO: Integrate with actual CodeSynthesizer
+            # from agi.synthesizer import CodeSynthesizer
+            # synth = CodeSynthesizer(default_language=language)
+            # result = synth.synthesize(spec, language)
+
+            # Placeholder implementation
+            code = f'''def placeholder():
+    """
+    {spec}
+    """
+    pass
+'''
+
+            return {
+                "success": True,
+                "code": code,
+                "language": language,
+                "agent_id": self.id,
+            }

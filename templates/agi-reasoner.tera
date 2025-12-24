@@ -1,0 +1,538 @@
+{# AGI Reasoner Template - Generates Python reasoning engine from RDF specifications #}
+{# Constitutional equation: agi/reasoner.py = μ(agi-agents.ttl) #}
+{# This template implements μ₃ EMIT stage of the constitutional equation #}
+
+{%- set reasoner = sparql_results | first -%}
+
+"""
+agi.reasoner - AGI Reasoning Engine with Inference
+{{ "=" | repeat(count=50) }}
+
+Autonomous reasoning system for logical inference and problem solving.
+
+This module provides the core reasoning engine for AGI agents, enabling:
+- Deductive and inductive reasoning
+- Constraint satisfaction
+- Knowledge graph inference
+- Probabilistic reasoning
+
+Auto-generated from: ontology/agi-agents.ttl
+Constitutional equation: reasoner.py = μ(agi-agents.ttl)
+DO NOT EDIT MANUALLY - Edit the RDF source instead.
+
+Examples
+--------
+    >>> reasoner = ReasoningEngine()
+    >>> result = reasoner.infer(premises=["All humans are mortal", "Socrates is human"])
+    >>> print(result.conclusion)  # "Socrates is mortal"
+
+See Also
+--------
+- :mod:`agi.ops.reasoner` : Business logic for reasoning
+- :mod:`agi.runtime.reasoner` : Runtime execution layer
+- :mod:`agi.types` : Data types and structures
+"""
+
+from __future__ import annotations
+
+from dataclasses import dataclass, field
+from datetime import datetime
+from enum import Enum
+from typing import Any, Optional
+
+from opentelemetry import trace
+
+from specify_cli.core.telemetry import span, timed
+
+tracer = trace.get_tracer(__name__)
+
+
+# ============================================================================
+# Reasoning Types
+# ============================================================================
+
+class ReasoningMode(Enum):
+    """Reasoning strategy for inference."""
+
+    DEDUCTIVE = "deductive"  # General → Specific
+    INDUCTIVE = "inductive"  # Specific → General
+    ABDUCTIVE = "abductive"  # Best explanation
+    ANALOGICAL = "analogical"  # Pattern matching
+
+
+class InferenceStrategy(Enum):
+    """Inference algorithm strategy."""
+
+    FORWARD_CHAINING = "forward_chaining"  # Data-driven
+    BACKWARD_CHAINING = "backward_chaining"  # Goal-driven
+    RESOLUTION = "resolution"  # Proof by contradiction
+    BAYESIAN = "bayesian"  # Probabilistic
+
+
+@dataclass
+class Premise:
+    """
+    Logical premise for reasoning.
+
+    Attributes
+    ----------
+    statement : str
+        Natural language premise statement
+    confidence : float
+        Confidence in premise truth (0.0-1.0)
+    source : Optional[str]
+        Source of this premise (knowledge base, observation, etc.)
+    metadata : dict[str, Any]
+        Additional premise metadata
+    """
+
+    statement: str
+    confidence: float = 1.0
+    source: Optional[str] = None
+    metadata: dict[str, Any] = field(default_factory=dict)
+
+    def to_dict(self) -> dict[str, Any]:
+        """Convert premise to dictionary."""
+        return {
+            "statement": self.statement,
+            "confidence": self.confidence,
+            "source": self.source,
+            "metadata": self.metadata,
+        }
+
+
+@dataclass
+class Conclusion:
+    """
+    Reasoning conclusion with supporting evidence.
+
+    Attributes
+    ----------
+    statement : str
+        Inferred conclusion statement
+    confidence : float
+        Confidence in conclusion (0.0-1.0)
+    supporting_premises : list[str]
+        Premises supporting this conclusion
+    inference_steps : list[str]
+        Logical steps taken to reach conclusion
+    mode : ReasoningMode
+        Reasoning mode used
+    metadata : dict[str, Any]
+        Additional conclusion metadata
+    """
+
+    statement: str
+    confidence: float
+    supporting_premises: list[str] = field(default_factory=list)
+    inference_steps: list[str] = field(default_factory=list)
+    mode: ReasoningMode = ReasoningMode.DEDUCTIVE
+    metadata: dict[str, Any] = field(default_factory=dict)
+
+    def to_dict(self) -> dict[str, Any]:
+        """Convert conclusion to dictionary."""
+        return {
+            "statement": self.statement,
+            "confidence": self.confidence,
+            "supporting_premises": self.supporting_premises,
+            "inference_steps": self.inference_steps,
+            "mode": self.mode.value,
+            "metadata": self.metadata,
+        }
+
+
+@dataclass
+class ReasoningTrace:
+    """
+    Complete trace of reasoning process.
+
+    Attributes
+    ----------
+    premises : list[Premise]
+        Input premises
+    conclusions : list[Conclusion]
+        Derived conclusions
+    mode : ReasoningMode
+        Reasoning mode used
+    strategy : InferenceStrategy
+        Inference strategy used
+    duration_ms : int
+        Reasoning duration in milliseconds
+    timestamp : datetime
+        Reasoning timestamp
+    """
+
+    premises: list[Premise]
+    conclusions: list[Conclusion]
+    mode: ReasoningMode
+    strategy: InferenceStrategy
+    duration_ms: int = 0
+    timestamp: datetime = field(default_factory=datetime.now)
+
+    def to_dict(self) -> dict[str, Any]:
+        """Convert trace to dictionary."""
+        return {
+            "premises": [p.to_dict() for p in self.premises],
+            "conclusions": [c.to_dict() for c in self.conclusions],
+            "mode": self.mode.value,
+            "strategy": self.strategy.value,
+            "duration_ms": self.duration_ms,
+            "timestamp": self.timestamp.isoformat(),
+        }
+
+
+# ============================================================================
+# Reasoning Engine
+# ============================================================================
+
+class ReasoningEngine:
+    """
+    {{ reasoner.description | default(value="Autonomous reasoning engine for logical inference") }}.
+
+    This engine implements {{ reasoner.reasoningType | default(value="multi-modal") }}
+    reasoning with {{ reasoner.inferenceMethod | default(value="forward and backward chaining") }}.
+
+    Attributes
+    ----------
+    default_mode : ReasoningMode
+        Default reasoning mode ({{ reasoner.defaultMode | default(value="DEDUCTIVE") }})
+    default_strategy : InferenceStrategy
+        Default inference strategy ({{ reasoner.defaultStrategy | default(value="FORWARD_CHAINING") }})
+    max_depth : int
+        Maximum inference depth ({{ reasoner.maxDepth | default(value="10") }})
+
+    Methods
+    -------
+    infer(premises, goal, mode, strategy)
+        Perform logical inference from premises
+    validate_conclusion(conclusion, premises)
+        Validate conclusion against premises
+    explain(conclusion)
+        Generate explanation for conclusion
+
+    Notes
+    -----
+    Uses OpenTelemetry for observability.
+    All reasoning operations are traced and timed.
+    """
+
+    def __init__(
+        self,
+        default_mode: ReasoningMode = ReasoningMode.{{ reasoner.defaultMode | default(value="DEDUCTIVE") }},
+        default_strategy: InferenceStrategy = InferenceStrategy.{{ reasoner.defaultStrategy | default(value="FORWARD_CHAINING") }},
+        max_depth: int = {{ reasoner.maxDepth | default(value="10") }},
+    ) -> None:
+        """
+        Initialize reasoning engine.
+
+        Parameters
+        ----------
+        default_mode : ReasoningMode
+            Default reasoning mode
+        default_strategy : InferenceStrategy
+            Default inference strategy
+        max_depth : int
+            Maximum inference depth
+        """
+        self.default_mode = default_mode
+        self.default_strategy = default_strategy
+        self.max_depth = max_depth
+
+    @timed
+    def infer(
+        self,
+        premises: list[str | Premise],
+        goal: Optional[str] = None,
+        mode: Optional[ReasoningMode] = None,
+        strategy: Optional[InferenceStrategy] = None,
+    ) -> ReasoningTrace:
+        """
+        Perform logical inference from premises.
+
+        This method applies {{ reasoner.inferenceMethod | default(value="logical inference") }}
+        to derive conclusions from the given premises.
+
+        Parameters
+        ----------
+        premises : list[str | Premise]
+            Input premises for reasoning (strings or Premise objects)
+        goal : str, optional
+            Target conclusion to prove (for backward chaining)
+        mode : ReasoningMode, optional
+            Reasoning mode (defaults to engine default)
+        strategy : InferenceStrategy, optional
+            Inference strategy (defaults to engine default)
+
+        Returns
+        -------
+        ReasoningTrace
+            Complete reasoning trace with conclusions
+
+        Raises
+        ------
+        ValueError
+            If premises are invalid or contradictory
+        ReasoningError
+            If inference fails
+
+        Examples
+        --------
+        >>> reasoner = ReasoningEngine()
+        >>> trace = reasoner.infer(
+        ...     premises=["All birds can fly", "Penguins are birds"],
+        ...     mode=ReasoningMode.DEDUCTIVE
+        ... )
+        >>> print(trace.conclusions[0].statement)
+        """
+        reasoning_mode = mode or self.default_mode
+        inference_strategy = strategy or self.default_strategy
+
+        with span(
+            "reasoner.infer",
+            attributes={
+                "mode": reasoning_mode.value,
+                "strategy": inference_strategy.value,
+                "premise_count": len(premises),
+            },
+        ):
+            start_time = datetime.now()
+
+            # Normalize premises
+            normalized_premises = self._normalize_premises(premises)
+
+            # Validate premises
+            self._validate_premises(normalized_premises)
+
+            # Perform inference based on strategy
+            conclusions = self._apply_inference(
+                normalized_premises,
+                goal,
+                reasoning_mode,
+                inference_strategy,
+            )
+
+            # Calculate duration
+            duration_ms = int((datetime.now() - start_time).total_seconds() * 1000)
+
+            return ReasoningTrace(
+                premises=normalized_premises,
+                conclusions=conclusions,
+                mode=reasoning_mode,
+                strategy=inference_strategy,
+                duration_ms=duration_ms,
+            )
+
+    def _normalize_premises(
+        self,
+        premises: list[str | Premise],
+    ) -> list[Premise]:
+        """
+        Normalize premise inputs to Premise objects.
+
+        Parameters
+        ----------
+        premises : list[str | Premise]
+            Raw premises
+
+        Returns
+        -------
+        list[Premise]
+            Normalized premise objects
+        """
+        normalized = []
+        for p in premises:
+            if isinstance(p, str):
+                normalized.append(Premise(statement=p))
+            else:
+                normalized.append(p)
+        return normalized
+
+    def _validate_premises(self, premises: list[Premise]) -> None:
+        """
+        Validate premises for consistency.
+
+        Parameters
+        ----------
+        premises : list[Premise]
+            Premises to validate
+
+        Raises
+        ------
+        ValueError
+            If premises are invalid or contradictory
+        """
+        if not premises:
+            raise ValueError("At least one premise required for reasoning")
+
+        # TODO: Implement contradiction detection
+        # - Check for logical inconsistencies
+        # - Validate premise format
+
+    def _apply_inference(
+        self,
+        premises: list[Premise],
+        goal: Optional[str],
+        mode: ReasoningMode,
+        strategy: InferenceStrategy,
+    ) -> list[Conclusion]:
+        """
+        Apply inference strategy to derive conclusions.
+
+        Parameters
+        ----------
+        premises : list[Premise]
+            Normalized premises
+        goal : Optional[str]
+            Target conclusion (for backward chaining)
+        mode : ReasoningMode
+            Reasoning mode
+        strategy : InferenceStrategy
+            Inference strategy
+
+        Returns
+        -------
+        list[Conclusion]
+            Derived conclusions
+        """
+        with span("reasoner.apply_inference"):
+            if strategy == InferenceStrategy.FORWARD_CHAINING:
+                return self._forward_chain(premises, mode)
+            elif strategy == InferenceStrategy.BACKWARD_CHAINING:
+                if not goal:
+                    raise ValueError("Goal required for backward chaining")
+                return self._backward_chain(premises, goal, mode)
+            else:
+                # TODO: Implement other strategies
+                return []
+
+    def _forward_chain(
+        self,
+        premises: list[Premise],
+        mode: ReasoningMode,
+    ) -> list[Conclusion]:
+        """
+        Forward chaining inference (data-driven).
+
+        Parameters
+        ----------
+        premises : list[Premise]
+            Input premises
+        mode : ReasoningMode
+            Reasoning mode
+
+        Returns
+        -------
+        list[Conclusion]
+            Derived conclusions
+        """
+        with span("reasoner.forward_chain"):
+            # TODO: Implement forward chaining
+            # - Apply inference rules to premises
+            # - Derive new facts iteratively
+            # - Halt when no new facts can be derived
+
+            # Placeholder implementation
+            return []
+
+    def _backward_chain(
+        self,
+        premises: list[Premise],
+        goal: str,
+        mode: ReasoningMode,
+    ) -> list[Conclusion]:
+        """
+        Backward chaining inference (goal-driven).
+
+        Parameters
+        ----------
+        premises : list[Premise]
+            Input premises
+        goal : str
+            Target conclusion to prove
+        mode : ReasoningMode
+            Reasoning mode
+
+        Returns
+        -------
+        list[Conclusion]
+            Proof trace or empty list if goal cannot be proven
+        """
+        with span("reasoner.backward_chain", attributes={"goal": goal}):
+            # TODO: Implement backward chaining
+            # - Start from goal
+            # - Find rules that could prove goal
+            # - Recursively prove sub-goals
+            # - Build proof tree
+
+            # Placeholder implementation
+            return []
+
+    @timed
+    def validate_conclusion(
+        self,
+        conclusion: Conclusion,
+        premises: list[Premise],
+    ) -> bool:
+        """
+        Validate conclusion against premises.
+
+        Parameters
+        ----------
+        conclusion : Conclusion
+            Conclusion to validate
+        premises : list[Premise]
+            Supporting premises
+
+        Returns
+        -------
+        bool
+            True if conclusion is logically valid
+        """
+        with span("reasoner.validate", attributes={"conclusion": conclusion.statement}):
+            # TODO: Implement validation logic
+            # - Check logical consistency
+            # - Verify inference steps
+            # - Confirm premise support
+
+            return True
+
+    @timed
+    def explain(self, conclusion: Conclusion) -> str:
+        """
+        Generate natural language explanation for conclusion.
+
+        Parameters
+        ----------
+        conclusion : Conclusion
+            Conclusion to explain
+
+        Returns
+        -------
+        str
+            Natural language explanation of reasoning
+        """
+        with span("reasoner.explain"):
+            parts = [f"Conclusion: {conclusion.statement}"]
+
+            if conclusion.inference_steps:
+                parts.append("\nReasoning steps:")
+                for i, step in enumerate(conclusion.inference_steps, 1):
+                    parts.append(f"  {i}. {step}")
+
+            if conclusion.supporting_premises:
+                parts.append("\nSupporting premises:")
+                for premise in conclusion.supporting_premises:
+                    parts.append(f"  • {premise}")
+
+            parts.append(f"\nConfidence: {conclusion.confidence:.2%}")
+
+            return "\n".join(parts)
+
+
+# ============================================================================
+# Exceptions
+# ============================================================================
+
+class ReasoningError(Exception):
+    """Raised when reasoning operation fails."""
+    pass

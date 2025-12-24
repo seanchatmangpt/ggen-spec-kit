@@ -1,0 +1,507 @@
+{# AGI Types Template - Generates dataclasses for AGI types from RDF #}
+{# Constitutional equation: agi/types.py = μ(agi-schema.ttl) #}
+{# This template implements μ₃ EMIT stage of the constitutional equation #}
+
+{%- set schema = sparql_results | first -%}
+
+"""
+agi.types - AGI Type Definitions
+{{ "=" | repeat(count=50) }}
+
+Type definitions and dataclasses for AGI system.
+
+This module provides all data structures used throughout the AGI system,
+including agents, tasks, plans, and orchestration types.
+
+Auto-generated from: ontology/agi-schema.ttl
+Constitutional equation: types.py = μ(agi-schema.ttl)
+DO NOT EDIT MANUALLY - Edit the RDF source instead.
+
+Examples
+--------
+    >>> from agi.types import Task, ExecutionPlan
+    >>> task = Task(id="task_001", description="Implement feature")
+    >>> plan = ExecutionPlan(goal="Build system", tasks=[task])
+
+See Also
+--------
+- :mod:`agi.planner` : Planning engine using these types
+- :mod:`agi.agents.base` : Agent base class using these types
+"""
+
+from __future__ import annotations
+
+from dataclasses import dataclass, field
+from datetime import datetime
+from enum import Enum
+from pathlib import Path
+from typing import Any, Callable, Optional
+from uuid import uuid4
+
+
+# ============================================================================
+# Enumerations
+# ============================================================================
+
+class Priority(Enum):
+    """Task or operation priority level."""
+
+    CRITICAL = "critical"
+    HIGH = "high"
+    MEDIUM = "medium"
+    LOW = "low"
+
+
+class Status(Enum):
+    """Execution status."""
+
+    PENDING = "pending"
+    READY = "ready"
+    IN_PROGRESS = "in_progress"
+    COMPLETED = "completed"
+    FAILED = "failed"
+    BLOCKED = "blocked"
+    CANCELLED = "cancelled"
+
+
+class AgentType(Enum):
+    """Type of AGI agent."""
+
+    PLANNER = "planner"
+    REASONER = "reasoner"
+    IMPLEMENTER = "implementer"
+    TESTER = "tester"
+    ORCHESTRATOR = "orchestrator"
+    CUSTOM = "custom"
+
+
+class LanguageType(Enum):
+    """Programming language."""
+
+    PYTHON = "python"
+    JAVASCRIPT = "javascript"
+    TYPESCRIPT = "typescript"
+    RUST = "rust"
+    GO = "go"
+    JAVA = "java"
+    CPP = "cpp"
+
+
+# ============================================================================
+# Task Types
+# ============================================================================
+
+@dataclass
+class TaskMetadata:
+    """
+    Metadata for a task.
+
+    Attributes
+    ----------
+    created_at : datetime
+        Task creation timestamp
+    updated_at : datetime
+        Last update timestamp
+    created_by : Optional[str]
+        Agent or user that created task
+    tags : list[str]
+        Task tags for categorization
+    properties : dict[str, Any]
+        Additional custom properties
+    """
+
+    created_at: datetime = field(default_factory=datetime.now)
+    updated_at: datetime = field(default_factory=datetime.now)
+    created_by: Optional[str] = None
+    tags: list[str] = field(default_factory=list)
+    properties: dict[str, Any] = field(default_factory=dict)
+
+    def to_dict(self) -> dict[str, Any]:
+        """Convert metadata to dictionary."""
+        return {
+            "created_at": self.created_at.isoformat(),
+            "updated_at": self.updated_at.isoformat(),
+            "created_by": self.created_by,
+            "tags": self.tags,
+            "properties": self.properties,
+        }
+
+
+@dataclass
+class TaskConstraint:
+    """
+    Constraint on task execution.
+
+    Attributes
+    ----------
+    type : str
+        Constraint type (resource, time, dependency, etc.)
+    value : Any
+        Constraint value
+    description : str
+        Human-readable constraint description
+    """
+
+    type: str
+    value: Any
+    description: str = ""
+
+    def to_dict(self) -> dict[str, Any]:
+        """Convert constraint to dictionary."""
+        return {
+            "type": self.type,
+            "value": self.value,
+            "description": self.description,
+        }
+
+
+@dataclass
+class TaskResult:
+    """
+    Result of task execution.
+
+    Attributes
+    ----------
+    success : bool
+        Whether task succeeded
+    output : Any
+        Task output data
+    errors : list[str]
+        Error messages if failed
+    warnings : list[str]
+        Warning messages
+    metrics : dict[str, Any]
+        Execution metrics
+    artifacts : list[Path]
+        Generated artifacts
+    """
+
+    success: bool
+    output: Any = None
+    errors: list[str] = field(default_factory=list)
+    warnings: list[str] = field(default_factory=list)
+    metrics: dict[str, Any] = field(default_factory=dict)
+    artifacts: list[Path] = field(default_factory=list)
+
+    def to_dict(self) -> dict[str, Any]:
+        """Convert result to dictionary."""
+        return {
+            "success": self.success,
+            "output": self.output,
+            "errors": self.errors,
+            "warnings": self.warnings,
+            "metrics": self.metrics,
+            "artifacts": [str(a) for a in self.artifacts],
+        }
+
+
+# ============================================================================
+# Agent Types
+# ============================================================================
+
+@dataclass
+class AgentCapability:
+    """
+    Agent capability definition.
+
+    Attributes
+    ----------
+    name : str
+        Capability name (e.g., "planning", "reasoning")
+    level : int
+        Capability level (1-10)
+    description : str
+        Capability description
+    requirements : list[str]
+        Required dependencies or prerequisites
+    """
+
+    name: str
+    level: int = 5
+    description: str = ""
+    requirements: list[str] = field(default_factory=list)
+
+    def to_dict(self) -> dict[str, Any]:
+        """Convert capability to dictionary."""
+        return {
+            "name": self.name,
+            "level": self.level,
+            "description": self.description,
+            "requirements": self.requirements,
+        }
+
+
+@dataclass
+class AgentState:
+    """
+    Current state of an agent.
+
+    Attributes
+    ----------
+    status : Status
+        Current status
+    current_task : Optional[str]
+        Currently executing task ID
+    task_queue : list[str]
+        Queued task IDs
+    last_activity : datetime
+        Last activity timestamp
+    health : str
+        Health status (healthy, degraded, unhealthy)
+    """
+
+    status: Status = Status.PENDING
+    current_task: Optional[str] = None
+    task_queue: list[str] = field(default_factory=list)
+    last_activity: datetime = field(default_factory=datetime.now)
+    health: str = "healthy"
+
+    def to_dict(self) -> dict[str, Any]:
+        """Convert state to dictionary."""
+        return {
+            "status": self.status.value,
+            "current_task": self.current_task,
+            "task_queue": self.task_queue,
+            "last_activity": self.last_activity.isoformat(),
+            "health": self.health,
+        }
+
+
+# ============================================================================
+# Code Types
+# ============================================================================
+
+@dataclass
+class CodeSpecification:
+    """
+    Specification for code generation.
+
+    Attributes
+    ----------
+    description : str
+        Natural language description
+    language : LanguageType
+        Target programming language
+    input_schema : dict[str, Any]
+        Input parameter schema
+    output_schema : dict[str, Any]
+        Output schema
+    constraints : list[str]
+        Code constraints
+    examples : list[dict[str, Any]]
+        Input/output examples
+    """
+
+    description: str
+    language: LanguageType = LanguageType.PYTHON
+    input_schema: dict[str, Any] = field(default_factory=dict)
+    output_schema: dict[str, Any] = field(default_factory=dict)
+    constraints: list[str] = field(default_factory=list)
+    examples: list[dict[str, Any]] = field(default_factory=list)
+
+    def to_dict(self) -> dict[str, Any]:
+        """Convert specification to dictionary."""
+        return {
+            "description": self.description,
+            "language": self.language.value,
+            "input_schema": self.input_schema,
+            "output_schema": self.output_schema,
+            "constraints": self.constraints,
+            "examples": self.examples,
+        }
+
+
+@dataclass
+class GeneratedCode:
+    """
+    Generated code artifact.
+
+    Attributes
+    ----------
+    source : str
+        Source code
+    language : LanguageType
+        Programming language
+    specification : CodeSpecification
+        Source specification
+    tests : list[str]
+        Generated tests
+    documentation : str
+        Generated documentation
+    confidence : float
+        Confidence score (0.0-1.0)
+    metadata : dict[str, Any]
+        Additional metadata
+    """
+
+    source: str
+    language: LanguageType
+    specification: CodeSpecification
+    tests: list[str] = field(default_factory=list)
+    documentation: str = ""
+    confidence: float = 0.0
+    metadata: dict[str, Any] = field(default_factory=dict)
+
+    def to_dict(self) -> dict[str, Any]:
+        """Convert generated code to dictionary."""
+        return {
+            "source": self.source,
+            "language": self.language.value,
+            "specification": self.specification.to_dict(),
+            "tests": self.tests,
+            "documentation": self.documentation,
+            "confidence": self.confidence,
+            "metadata": self.metadata,
+        }
+
+
+# ============================================================================
+# Reasoning Types
+# ============================================================================
+
+@dataclass
+class LogicalPremise:
+    """
+    Logical premise for reasoning.
+
+    Attributes
+    ----------
+    statement : str
+        Premise statement
+    confidence : float
+        Confidence level (0.0-1.0)
+    source : Optional[str]
+        Source of premise
+    type : str
+        Premise type (fact, assumption, hypothesis)
+    """
+
+    statement: str
+    confidence: float = 1.0
+    source: Optional[str] = None
+    type: str = "fact"
+
+    def to_dict(self) -> dict[str, Any]:
+        """Convert premise to dictionary."""
+        return {
+            "statement": self.statement,
+            "confidence": self.confidence,
+            "source": self.source,
+            "type": self.type,
+        }
+
+
+@dataclass
+class InferenceStep:
+    """
+    Step in inference chain.
+
+    Attributes
+    ----------
+    rule : str
+        Inference rule applied
+    inputs : list[str]
+        Input statements
+    output : str
+        Output statement
+    confidence : float
+        Confidence in this step
+    """
+
+    rule: str
+    inputs: list[str]
+    output: str
+    confidence: float = 1.0
+
+    def to_dict(self) -> dict[str, Any]:
+        """Convert step to dictionary."""
+        return {
+            "rule": self.rule,
+            "inputs": self.inputs,
+            "output": self.output,
+            "confidence": self.confidence,
+        }
+
+
+# ============================================================================
+# Orchestration Types
+# ============================================================================
+
+@dataclass
+class Message:
+    """
+    Inter-agent message.
+
+    Attributes
+    ----------
+    id : str
+        Unique message ID
+    sender_id : str
+        Sender agent ID
+    receiver_id : str
+        Receiver agent ID
+    content : dict[str, Any]
+        Message content
+    timestamp : datetime
+        Message timestamp
+    priority : Priority
+        Message priority
+    """
+
+    id: str = field(default_factory=lambda: str(uuid4()))
+    sender_id: str = ""
+    receiver_id: str = ""
+    content: dict[str, Any] = field(default_factory=dict)
+    timestamp: datetime = field(default_factory=datetime.now)
+    priority: Priority = Priority.MEDIUM
+
+    def to_dict(self) -> dict[str, Any]:
+        """Convert message to dictionary."""
+        return {
+            "id": self.id,
+            "sender_id": self.sender_id,
+            "receiver_id": self.receiver_id,
+            "content": self.content,
+            "timestamp": self.timestamp.isoformat(),
+            "priority": self.priority.value,
+        }
+
+
+@dataclass
+class WorkflowStep:
+    """
+    Step in orchestrated workflow.
+
+    Attributes
+    ----------
+    id : str
+        Step identifier
+    agent_id : str
+        Assigned agent
+    task_id : str
+        Task to execute
+    dependencies : list[str]
+        Dependent step IDs
+    status : Status
+        Step status
+    result : Optional[TaskResult]
+        Step result
+    """
+
+    id: str
+    agent_id: str
+    task_id: str
+    dependencies: list[str] = field(default_factory=list)
+    status: Status = Status.PENDING
+    result: Optional[TaskResult] = None
+
+    def to_dict(self) -> dict[str, Any]:
+        """Convert workflow step to dictionary."""
+        return {
+            "id": self.id,
+            "agent_id": self.agent_id,
+            "task_id": self.task_id,
+            "dependencies": self.dependencies,
+            "status": self.status.value,
+            "result": self.result.to_dict() if self.result else None,
+        }

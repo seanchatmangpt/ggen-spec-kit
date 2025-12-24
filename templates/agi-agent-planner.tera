@@ -1,0 +1,153 @@
+{# AGI Planner Agent Template - Generates Python Planner agent implementation #}
+{# Constitutional equation: agi/agents/planner.py = μ(agi-agents.ttl) #}
+{# This template implements μ₃ EMIT stage of the constitutional equation #}
+
+{%- set planner_agent = sparql_results | first -%}
+
+"""
+agi.agents.planner - Planner Agent Implementation
+{{ "=" | repeat(count=50) }}
+
+Planning agent for task decomposition and plan generation.
+
+This module provides a specialized agent that creates execution plans
+from high-level goals.
+
+Auto-generated from: ontology/agi-agents.ttl
+Constitutional equation: planner.py = μ(agi-agents.ttl)
+DO NOT EDIT MANUALLY - Edit the RDF source instead.
+
+Examples
+--------
+    >>> planner = PlannerAgent(config={"name": "planner"})
+    >>> await planner.start()
+    >>> result = await planner.run_task({"goal": "Build web scraper"})
+
+See Also
+--------
+- :mod:`agi.agents.base` : Base Agent class
+- :mod:`agi.planner` : Planning engine
+"""
+
+from __future__ import annotations
+
+from typing import Any
+
+from opentelemetry import trace
+
+from specify_cli.core.telemetry import span
+
+from .base import Agent, AgentConfig
+
+tracer = trace.get_tracer(__name__)
+
+
+# ============================================================================
+# Planner Agent
+# ============================================================================
+
+class PlannerAgent(Agent):
+    """
+    {{ planner_agent.description | default(value="Agent specialized in task planning and decomposition") }}.
+
+    This agent uses {{ planner_agent.planningMethod | default(value="hierarchical task networks") }}
+    to break down complex goals into actionable plans.
+
+    Attributes
+    ----------
+    max_plan_depth : int
+        Maximum planning depth
+    max_plan_tasks : int
+        Maximum tasks per plan
+
+    Methods
+    -------
+    execute_task(task)
+        Create execution plan for task goal
+
+    Notes
+    -----
+    Integrates with TaskPlanner for plan generation.
+    """
+
+    def __init__(
+        self,
+        config: AgentConfig | dict[str, Any],
+        max_plan_depth: int = {{ planner_agent.maxDepth | default(value="5") }},
+        max_plan_tasks: int = {{ planner_agent.maxTasks | default(value="50") }},
+    ) -> None:
+        """
+        Initialize planner agent.
+
+        Parameters
+        ----------
+        config : AgentConfig | dict[str, Any]
+            Agent configuration
+        max_plan_depth : int
+            Maximum planning depth
+        max_plan_tasks : int
+            Maximum tasks per plan
+        """
+        super().__init__(config)
+
+        self.max_plan_depth = max_plan_depth
+        self.max_plan_tasks = max_plan_tasks
+
+        # Add planning capability
+        if "planning" not in self.config.capabilities:
+            self.config.capabilities.append("planning")
+
+    async def execute_task(self, task: dict[str, Any]) -> dict[str, Any]:
+        """
+        Execute planning task.
+
+        Parameters
+        ----------
+        task : dict[str, Any]
+            Task with 'goal' key
+
+        Returns
+        -------
+        dict[str, Any]
+            Execution plan
+
+        Raises
+        ------
+        ValueError
+            If task missing required fields
+        """
+        with span(
+            "planner_agent.execute_task",
+            attributes={"agent_id": self.id, "task": task.get("id", "")},
+        ):
+            # Validate input
+            if "goal" not in task:
+                raise ValueError("Task must have 'goal' field")
+
+            goal = task["goal"]
+            context = task.get("context", {})
+
+            # TODO: Integrate with actual TaskPlanner
+            # from agi.planner import TaskPlanner
+            # planner = TaskPlanner(max_depth=self.max_plan_depth)
+            # plan = planner.create_plan(goal, context)
+
+            # Placeholder implementation
+            plan = {
+                "goal": goal,
+                "tasks": [
+                    {
+                        "id": "task_0001",
+                        "description": f"Implement {goal}",
+                        "dependencies": [],
+                    }
+                ],
+                "context": context,
+                "estimated_duration": 300,
+            }
+
+            return {
+                "success": True,
+                "plan": plan,
+                "agent_id": self.id,
+            }

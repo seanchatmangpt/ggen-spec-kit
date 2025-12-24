@@ -1,0 +1,445 @@
+{# AGI Exceptions Template - Generates AGI exception classes from RDF #}
+{# Constitutional equation: agi/exceptions.py = μ(agi-schema.ttl) #}
+{# This template implements μ₃ EMIT stage of the constitutional equation #}
+
+{%- set exceptions = sparql_results | first -%}
+
+"""
+agi.exceptions - AGI Exception Classes
+{{ "=" | repeat(count=50) }}
+
+Custom exception classes for AGI system errors.
+
+This module provides a hierarchy of exceptions for different failure modes
+in the AGI system, enabling precise error handling and recovery.
+
+Auto-generated from: ontology/agi-schema.ttl
+Constitutional equation: exceptions.py = μ(agi-schema.ttl)
+DO NOT EDIT MANUALLY - Edit the RDF source instead.
+
+Examples
+--------
+    >>> from agi.exceptions import PlanningError, TaskExecutionError
+    >>> try:
+    ...     planner.create_plan(goal)
+    ... except PlanningError as e:
+    ...     logger.error(f"Planning failed: {e}")
+
+See Also
+--------
+- :mod:`agi.planner` : Planning engine that raises PlanningError
+- :mod:`agi.agents.base` : Agents that raise AgentError
+"""
+
+from __future__ import annotations
+
+from typing import Any, Optional
+
+
+# ============================================================================
+# Base Exception
+# ============================================================================
+
+class AGIError(Exception):
+    """
+    Base exception for all AGI system errors.
+
+    This is the root of the AGI exception hierarchy. All AGI-specific
+    exceptions inherit from this class.
+
+    Attributes
+    ----------
+    message : str
+        Error message
+    context : dict[str, Any]
+        Additional error context
+    cause : Optional[Exception]
+        Original exception that caused this error
+    """
+
+    def __init__(
+        self,
+        message: str,
+        context: Optional[dict[str, Any]] = None,
+        cause: Optional[Exception] = None,
+    ) -> None:
+        """
+        Initialize AGI error.
+
+        Parameters
+        ----------
+        message : str
+            Error message
+        context : dict[str, Any], optional
+            Additional error context
+        cause : Exception, optional
+            Underlying exception
+        """
+        super().__init__(message)
+        self.message = message
+        self.context = context or {}
+        self.cause = cause
+
+    def __str__(self) -> str:
+        """Format error message with context."""
+        parts = [self.message]
+
+        if self.context:
+            ctx_str = ", ".join(f"{k}={v}" for k, v in self.context.items())
+            parts.append(f"[{ctx_str}]")
+
+        if self.cause:
+            parts.append(f"Caused by: {self.cause}")
+
+        return " ".join(parts)
+
+
+# ============================================================================
+# Planning Exceptions
+# ============================================================================
+
+class PlanningError(AGIError):
+    """
+    Raised when planning operation fails.
+
+    This exception indicates failure in task decomposition, plan generation,
+    or plan validation.
+
+    Examples
+    --------
+    >>> raise PlanningError(
+    ...     "Goal too complex",
+    ...     context={"goal": "impossible task", "depth": 10}
+    ... )
+    """
+    pass
+
+
+class PlanValidationError(PlanningError):
+    """
+    Raised when plan validation fails.
+
+    Indicates issues like circular dependencies, invalid constraints,
+    or resource conflicts in generated plan.
+    """
+    pass
+
+
+class GoalDecompositionError(PlanningError):
+    """
+    Raised when goal cannot be decomposed.
+
+    Indicates the goal is too vague, contradictory, or outside
+    the system's capabilities.
+    """
+    pass
+
+
+# ============================================================================
+# Reasoning Exceptions
+# ============================================================================
+
+class ReasoningError(AGIError):
+    """
+    Raised when reasoning operation fails.
+
+    This exception indicates failure in logical inference, premise validation,
+    or conclusion derivation.
+
+    Examples
+    --------
+    >>> raise ReasoningError(
+    ...     "Contradictory premises",
+    ...     context={"premises": ["A", "not A"]}
+    ... )
+    """
+    pass
+
+
+class PremiseValidationError(ReasoningError):
+    """
+    Raised when premise validation fails.
+
+    Indicates contradictory, malformed, or insufficient premises
+    for reasoning.
+    """
+    pass
+
+
+class InferenceError(ReasoningError):
+    """
+    Raised when inference fails.
+
+    Indicates inability to derive conclusions from given premises,
+    possibly due to missing inference rules.
+    """
+    pass
+
+
+# ============================================================================
+# Code Synthesis Exceptions
+# ============================================================================
+
+class SynthesisError(AGIError):
+    """
+    Raised when code synthesis fails.
+
+    This exception indicates failure in code generation, template expansion,
+    or specification parsing.
+
+    Examples
+    --------
+    >>> raise SynthesisError(
+    ...     "Unsupported language",
+    ...     context={"language": "cobol"}
+    ... )
+    """
+    pass
+
+
+class SpecificationError(SynthesisError):
+    """
+    Raised when specification is invalid.
+
+    Indicates ambiguous, contradictory, or incomplete code specification.
+    """
+    pass
+
+
+class CodeGenerationError(SynthesisError):
+    """
+    Raised when code generation fails.
+
+    Indicates failure in the actual code generation process,
+    possibly due to template errors or unsupported features.
+    """
+    pass
+
+
+class CodeValidationError(SynthesisError):
+    """
+    Raised when generated code validation fails.
+
+    Indicates generated code doesn't meet specification requirements
+    or fails safety checks.
+    """
+    pass
+
+
+# ============================================================================
+# Agent Exceptions
+# ============================================================================
+
+class AgentError(AGIError):
+    """
+    Raised when agent operation fails.
+
+    This exception indicates failure in agent initialization, execution,
+    or state management.
+
+    Examples
+    --------
+    >>> raise AgentError(
+    ...     "Agent at capacity",
+    ...     context={"agent_id": "agent_001", "current_tasks": 5}
+    ... )
+    """
+    pass
+
+
+class AgentInitializationError(AgentError):
+    """
+    Raised when agent initialization fails.
+
+    Indicates problems during agent setup, resource allocation,
+    or capability registration.
+    """
+    pass
+
+
+class TaskExecutionError(AgentError):
+    """
+    Raised when task execution fails.
+
+    Indicates failure during task execution by an agent,
+    including timeouts and resource errors.
+    """
+    pass
+
+
+class AgentCommunicationError(AgentError):
+    """
+    Raised when inter-agent communication fails.
+
+    Indicates message delivery failures, protocol errors,
+    or communication timeouts.
+    """
+    pass
+
+
+# ============================================================================
+# Orchestration Exceptions
+# ============================================================================
+
+class OrchestrationError(AGIError):
+    """
+    Raised when orchestration fails.
+
+    This exception indicates failure in multi-agent coordination,
+    task distribution, or workflow execution.
+
+    Examples
+    --------
+    >>> raise OrchestrationError(
+    ...     "No available agents",
+    ...     context={"required_capability": "planning"}
+    ... )
+    """
+    pass
+
+
+class WorkflowError(OrchestrationError):
+    """
+    Raised when workflow execution fails.
+
+    Indicates errors in workflow definition, step execution,
+    or dependency resolution.
+    """
+    pass
+
+
+class ResourceAllocationError(OrchestrationError):
+    """
+    Raised when resource allocation fails.
+
+    Indicates insufficient resources for orchestration,
+    including agent availability or computational resources.
+    """
+    pass
+
+
+# ============================================================================
+# Decision-Making Exceptions
+# ============================================================================
+
+class DecisionError(AGIError):
+    """
+    Raised when decision-making fails.
+
+    This exception indicates failure in option evaluation,
+    criterion application, or decision selection.
+
+    Examples
+    --------
+    >>> raise DecisionError(
+    ...     "No valid options",
+    ...     context={"constraints": {"budget": 1000}}
+    ... )
+    """
+    pass
+
+
+class CriterionError(DecisionError):
+    """
+    Raised when decision criteria are invalid.
+
+    Indicates contradictory, missing, or malformed decision criteria.
+    """
+    pass
+
+
+class OptionEvaluationError(DecisionError):
+    """
+    Raised when option evaluation fails.
+
+    Indicates inability to evaluate options against criteria,
+    possibly due to missing data.
+    """
+    pass
+
+
+# ============================================================================
+# Configuration Exceptions
+# ============================================================================
+
+class ConfigurationError(AGIError):
+    """
+    Raised when configuration is invalid.
+
+    This exception indicates problems in system configuration,
+    parameter validation, or settings.
+
+    Examples
+    --------
+    >>> raise ConfigurationError(
+    ...     "Invalid timeout value",
+    ...     context={"timeout": -1}
+    ... )
+    """
+    pass
+
+
+class ValidationError(AGIError):
+    """
+    Raised when validation fails.
+
+    Generic validation error for input validation, constraint checking,
+    or data verification failures.
+    """
+    pass
+
+
+# ============================================================================
+# Timeout Exceptions
+# ============================================================================
+
+class TimeoutError(AGIError):
+    """
+    Raised when operation times out.
+
+    This exception indicates an operation exceeded its time limit,
+    applicable to task execution, reasoning, or planning.
+
+    Examples
+    --------
+    >>> raise TimeoutError(
+    ...     "Task execution timeout",
+    ...     context={"timeout_seconds": 300, "elapsed": 350}
+    ... )
+    """
+    pass
+
+
+# ============================================================================
+# Exception Utilities
+# ============================================================================
+
+def format_exception_chain(error: Exception) -> str:
+    """
+    Format exception chain for logging.
+
+    Parameters
+    ----------
+    error : Exception
+        Error to format
+
+    Returns
+    -------
+    str
+        Formatted exception chain
+
+    Examples
+    --------
+    >>> try:
+    ...     raise ValueError("inner")
+    ... except Exception as e:
+    ...     outer = AGIError("outer", cause=e)
+    ...     print(format_exception_chain(outer))
+    """
+    parts = [str(error)]
+
+    if isinstance(error, AGIError) and error.cause:
+        parts.append("\nCaused by:")
+        parts.append(format_exception_chain(error.cause))
+
+    return "\n".join(parts)

@@ -1,0 +1,51 @@
+PREFIX reasoning: <http://spec-kit.io/agi/reasoning#>
+PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
+PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
+
+SELECT DISTINCT
+  ?chain
+  ?chainName
+  ?reasoningType
+  ?step
+  ?stepIndex
+  ?premise
+  ?premiseStatement
+  ?premiseConfidence
+  ?conclusion
+  ?conclusionStatement
+  ?conclusionConfidence
+  ?criterion
+  ?criterionName
+  ?criterionWeight
+
+WHERE {
+  # Reasoning chains
+  ?chain a reasoning:ReasoningChain ;
+         reasoning:reasoningType ?reasoningType .
+
+  # Steps within chain
+  ?chain reasoning:hasStep ?step .
+  OPTIONAL { ?step rdf:value ?stepIndex }
+
+  # Premises and conclusions
+  OPTIONAL {
+    ?step reasoning:hasPremise ?premise .
+    ?premise reasoning:premiseStatement ?premiseStatement ;
+             reasoning:premiseConfidence ?premiseConfidence .
+  }
+
+  OPTIONAL {
+    ?step reasoning:producesConclusion ?conclusion .
+    ?conclusion reasoning:conclusionStatement ?conclusionStatement ;
+               reasoning:conclusionConfidence ?conclusionConfidence .
+  }
+
+  # Decision criteria
+  OPTIONAL {
+    ?context a reasoning:DecisionContext ;
+             reasoning:hasCriterion ?criterion .
+    ?criterion reasoning:criterionName ?criterionName ;
+              reasoning:criterionWeight ?criterionWeight .
+  }
+}
+ORDER BY ?chainName ?stepIndex ?criterionName
