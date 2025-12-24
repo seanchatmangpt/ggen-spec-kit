@@ -622,12 +622,20 @@ RDF graphs can be complex and high-dimensional. By embedding RDF entities into h
 Each RDF entity URI maps deterministically to a 10,000-dimensional vector:
 
 \begin{lstlisting}[language=Python]
-def transform_entity(self, entity_uri: str) -> Vector:
+import hashlib, random, math
+
+def transform_entity(self, entity_uri: str) -> list[float]:
     """Transform RDF entity to deterministic semantic vector."""
     hash_obj = hashlib.sha256(entity_uri.encode())
-    np.random.seed(int.from_bytes(hash_obj.digest()[:4], "big") % (2**31))
-    vector = np.random.randn(10000).astype(np.float64)
-    return vector / np.linalg.norm(vector)  # Normalize to unit vector
+    seed = int.from_bytes(hash_obj.digest()[:4], "big") % (2**31)
+    random.seed(seed)
+
+    # Generate 10,000-dimensional vector using standard library
+    vector = [random.gauss(0, 1) for _ in range(10000)]
+
+    # Normalize to unit vector
+    norm = math.sqrt(sum(x**2 for x in vector))
+    return [x / norm for x in vector]
 \end{lstlisting}
 
 \textbf{Properties}:
