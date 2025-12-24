@@ -1,0 +1,1326 @@
+# 30. Human-Readable Artifact
+
+★★
+
+*Machines generate, but humans read. Human-readable artifacts are designed for human consumption—clear, well-structured, and helpful even when generated. This is the bridge between automated transformation and human understanding.*
+
+---
+
+## The Readability Imperative
+
+Generation is not an excuse for illegibility. A generated Python file will be read by developers—when debugging, when extending, when understanding. A generated Markdown document will be read by users—when learning, when referencing, when troubleshooting. If generation produces unreadable output, you've saved writing time but created reading time multiplied by every reader.
+
+```
+The economics of readability:
+
+  Writing time saved:     1 hour (you don't write the file)
+  Reading time created:   30 minutes × N readers
+
+  If N = 1:   Net savings = 30 minutes
+  If N = 10:  Net loss = 4 hours
+  If N = 100: Net loss = 49 hours
+```
+
+The generated file is read far more often than it's written. Optimizing for generation speed while ignoring reading experience is a false economy. Human-readable artifacts acknowledge this reality: the artifact exists to serve its human readers, regardless of its mechanical origin.
+
+---
+
+## The Readability Problem
+
+**The fundamental challenge: Generated artifacts that ignore human readers create frustration. Humans must understand, debug, and extend generated code. Yet generation processes often produce minimal, cryptic, or poorly structured output.**
+
+Let us examine what makes artifacts unreadable:
+
+### The Minimized Mess
+
+Templates optimized for brevity:
+
+```python
+# Generated: cryptic and dense
+def v(f,o=None,s=False):r=ops.validate.execute(file=f,output=o,strict=s);_d(r)
+```
+
+versus templates designed for clarity:
+
+```python
+# Generated: clear and comprehensible
+def validate(
+    file: Path,
+    output: Optional[Path] = None,
+    strict: bool = False
+) -> None:
+    """Validate an RDF file against SHACL shapes."""
+    result = ops.validate.execute(file=file, output=output, strict=strict)
+    _display_result(result)
+```
+
+The same functionality, vastly different readability.
+
+### The Mystery Origin
+
+Generated files with no provenance:
+
+```python
+# What is this file?
+# Where did it come from?
+# Can I edit it?
+# What happens if I do?
+
+def validate(file: Path) -> None:
+    ...
+```
+
+Readers waste time discovering that this file is generated, shouldn't be edited, and how to actually make changes.
+
+### The Formatting Chaos
+
+Inconsistent structure:
+
+```python
+def validate(file:Path)->None:
+  result=ops.validate.execute(file=file)
+  _display_result(result)
+
+def check( file : Path ) -> None :
+    result = ops.check.execute( file = file )
+    _display_result( result )
+```
+
+Different formatting for similar code confuses readers and violates expectations.
+
+### The Comment Desert
+
+No explanation of generated logic:
+
+```python
+def validate(file: Path) -> None:
+    if file.suffix not in ['.ttl', '.rdf', '.jsonld']:
+        raise ValueError("Invalid")
+    result = ops.validate.execute(file=file)
+    for item in result.get('violations', []):
+        if item.get('severity') == 'Violation':
+            sys.exit(1)
+    _display_result(result)
+```
+
+Why these suffixes? What's the exit code logic? Readers must reverse-engineer intent from implementation.
+
+---
+
+## The Forces
+
+Several tensions shape human-readable artifact design:
+
+### Force: Generation Efficiency vs. Reading Clarity
+
+*Simple templates generate quickly. Readable output requires template complexity.*
+
+Minimal templates are fast to write and maintain. But they produce minimal output—cryptic variable names, no comments, no structure.
+
+**Resolution:** Invest template complexity where it pays off. Variable names, structural comments, and provenance headers have high return on investment. Every reader benefits.
+
+### Force: DRY vs. Explicit
+
+*DRY (Don't Repeat Yourself) minimizes redundancy. Explicit code aids understanding.*
+
+```python
+# DRY: no repetition, but less clear
+VALID_EXTS = ['.ttl', '.rdf', '.jsonld']
+
+# Explicit: repetition, but clear
+# Accepts Turtle (.ttl), RDF/XML (.rdf), and JSON-LD (.jsonld) files
+```
+
+**Resolution:** Be explicit where clarity matters. Comments can explain without violating DRY. Generated code can afford more verbosity than hand-written code.
+
+### Force: Consistency vs. Convention
+
+*Consistency within generated code matters. But conventions of the target language matter more.*
+
+You might have consistent templates that don't follow Python conventions:
+
+```python
+# Consistent but unconventional
+def Validate_Command(File_Path: path) -> none:
+```
+
+**Resolution:** Follow target language conventions. Python files should look like idiomatic Python. Markdown should follow standard Markdown practices.
+
+### Force: Provenance vs. Noise
+
+*Provenance information explains origin. Too much provenance becomes noise.*
+
+```python
+# Too much provenance
+"""
+AUTO-GENERATED by ggen v5.0.2
+From specification: ontology/cli-commands.ttl#validate
+Using template: templates/command.py.tera
+At timestamp: 2025-01-15T10:30:00.000000Z
+On machine: build-server-7
+By user: jenkins
+Pipeline run: #12847
+Git commit: a1b2c3d4e5f6
+Parent commit: f6e5d4c3b2a1
+Branch: main
+...
+"""
+```
+
+**Resolution:** Include essential provenance: source, template, how to modify. Omit operational details that don't help readers.
+
+### Force: Comments vs. Self-Documentation
+
+*Comments explain code. But good code should be self-documenting.*
+
+Generated code can be more verbose than hand-written code. Use that freedom:
+
+```python
+# Instead of: # Check file
+# Write: # Validate the input file exists and has an allowed extension
+
+# Instead of: v = validate()
+# Write: validation_result = perform_validation()
+```
+
+**Resolution:** Use descriptive names that reduce comment need. Add comments for non-obvious logic, especially generated logic.
+
+---
+
+## Therefore
+
+**Design templates to produce human-readable output with clear structure, helpful comments, explicit provenance, and consistent formatting. The generated artifact should read as if a human wrote it thoughtfully.**
+
+The human-readable artifact has several components:
+
+```
+┌─────────────────────────────────────────────────────────────────┐
+│  HUMAN-READABLE ARTIFACT                                         │
+│                                                                  │
+│  ┌────────────────────────────────────────────────────────────┐ │
+│  │ PROVENANCE HEADER                                          │ │
+│  │ ├── Warning: auto-generated, do not edit                   │ │
+│  │ ├── Source: where this came from                           │ │
+│  │ ├── Template: how it was generated                         │ │
+│  │ ├── Timestamp: when it was generated                       │ │
+│  │ └── Instructions: how to make changes                      │ │
+│  └────────────────────────────────────────────────────────────┘ │
+│                                                                  │
+│  ┌────────────────────────────────────────────────────────────┐ │
+│  │ CLEAR STRUCTURE                                            │ │
+│  │ ├── Section separators with descriptive headers            │ │
+│  │ ├── Logical grouping of related elements                   │ │
+│  │ ├── Consistent ordering (imports, constants, functions)    │ │
+│  │ └── Visual hierarchy through indentation and spacing       │ │
+│  └────────────────────────────────────────────────────────────┘ │
+│                                                                  │
+│  ┌────────────────────────────────────────────────────────────┐ │
+│  │ HELPFUL COMMENTS                                           │ │
+│  │ ├── Section comments explaining purpose                    │ │
+│  │ ├── Logic comments explaining non-obvious behavior         │ │
+│  │ ├── Reference comments linking to documentation            │ │
+│  │ └── TODO comments for known limitations                    │ │
+│  └────────────────────────────────────────────────────────────┘ │
+│                                                                  │
+│  ┌────────────────────────────────────────────────────────────┐ │
+│  │ CONSISTENT FORMATTING                                      │ │
+│  │ ├── Follow target language conventions                     │ │
+│  │ ├── Consistent spacing and alignment                       │ │
+│  │ ├── Reasonable line lengths (80-100 characters)            │ │
+│  │ └── Canonical formatting (via canonicalization stage)      │ │
+│  └────────────────────────────────────────────────────────────┘ │
+│                                                                  │
+└─────────────────────────────────────────────────────────────────┘
+```
+
+---
+
+## Provenance Header Design
+
+### The Essential Elements
+
+Every generated file should declare its origin:
+
+```python
+"""Validate RDF files against SHACL shapes.
+
+⚠️  AUTO-GENERATED FILE - DO NOT EDIT MANUALLY  ⚠️
+
+This file was generated from RDF specifications.
+Source: ontology/cli-commands.ttl
+Template: templates/command.py.tera
+Generated: 2025-01-15T10:30:00Z (ggen v5.0.2)
+
+To modify this file:
+1. Edit the source specification (ontology/cli-commands.ttl)
+2. Run: ggen sync
+3. Commit both source and generated files together
+
+See: docs/RDF_WORKFLOW_GUIDE.md for details
+"""
+```
+
+### Header Template
+
+```jinja2
+{# templates/partials/python_header.tera #}
+"""{{ description }}
+
+⚠️  AUTO-GENERATED FILE - DO NOT EDIT MANUALLY  ⚠️
+
+This file was generated from RDF specifications.
+Source: {{ source_file }}
+Template: {{ template_file }}
+Generated: {{ timestamp }} (ggen v{{ version }})
+
+To modify this file:
+1. Edit the source specification ({{ source_file }})
+2. Run: ggen sync
+3. Commit both source and generated files together
+
+See: {{ docs_link }} for details
+"""
+```
+
+### Language-Specific Headers
+
+**Markdown:**
+
+```markdown
+<!--
+⚠️ AUTO-GENERATED FILE - DO NOT EDIT MANUALLY ⚠️
+
+Source: memory/philosophy.ttl
+Template: templates/docs.md.tera
+Generated: 2025-01-15T10:30:00Z
+
+To update: Edit source, run `ggen sync`
+-->
+
+# Philosophy of Specification-Driven Development
+
+> **Generated Documentation** - This page is generated from
+> [philosophy.ttl](../memory/philosophy.ttl). To update, edit the source
+> and run `ggen sync`.
+```
+
+**YAML:**
+
+```yaml
+# ⚠️ AUTO-GENERATED FILE - DO NOT EDIT MANUALLY ⚠️
+#
+# Source: ontology/api-schema.ttl
+# Template: templates/openapi.yaml.tera
+# Generated: 2025-01-15T10:30:00Z
+#
+# To update: Edit source, run `ggen sync`
+
+openapi: 3.0.0
+info:
+  title: API Specification
+```
+
+**JSON:**
+
+```json
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$comment": "AUTO-GENERATED - Source: ontology/data-shapes.ttl - Run ggen sync to update",
+  "title": "Data Schema"
+}
+```
+
+**HTML:**
+
+```html
+<!DOCTYPE html>
+<!--
+⚠️ AUTO-GENERATED FILE - DO NOT EDIT MANUALLY ⚠️
+
+Source: memory/documentation.ttl
+Template: templates/docs.html.tera
+Generated: 2025-01-15T10:30:00Z
+-->
+<html>
+```
+
+---
+
+## Clear Code Structure
+
+### Section Organization
+
+```python
+"""Command implementation for 'validate'.
+
+⚠️ AUTO-GENERATED FILE - DO NOT EDIT MANUALLY ⚠️
+[provenance details...]
+"""
+
+# ═══════════════════════════════════════════════════════════════════════════════
+# IMPORTS
+# ═══════════════════════════════════════════════════════════════════════════════
+
+# Standard library
+from pathlib import Path
+from typing import Optional
+
+# Third-party
+import typer
+from rich.console import Console
+
+# Local application
+from specify_cli.core.instrumentation import instrument_command
+from specify_cli import ops
+
+# ═══════════════════════════════════════════════════════════════════════════════
+# CONSTANTS
+# ═══════════════════════════════════════════════════════════════════════════════
+
+# Supported file extensions for RDF validation
+VALID_EXTENSIONS = ['.ttl', '.rdf', '.jsonld', '.n3', '.nt']
+
+# Exit codes (Unix convention: 0 = success, non-zero = error)
+EXIT_SUCCESS = 0
+EXIT_VALIDATION_ERROR = 1
+EXIT_FILE_ERROR = 2
+
+# ═══════════════════════════════════════════════════════════════════════════════
+# COMMAND DEFINITION
+# ═══════════════════════════════════════════════════════════════════════════════
+
+app = typer.Typer(help="Validate RDF files against SHACL shapes")
+console = Console()
+
+
+@app.command()
+@instrument_command("validate")
+def validate(
+    file: Path = typer.Argument(
+        ...,
+        help="Path to the RDF file to validate",
+        exists=True,
+        readable=True,
+    ),
+    shapes: Optional[Path] = typer.Option(
+        None,
+        "--shapes", "-s",
+        help="Path to custom SHACL shapes file",
+    ),
+    output: Optional[Path] = typer.Option(
+        None,
+        "--output", "-o",
+        help="Write validation report to file instead of stdout",
+    ),
+    strict: bool = typer.Option(
+        False,
+        "--strict",
+        help="Treat warnings as errors (exit non-zero on any issue)",
+    ),
+) -> None:
+    """Validate RDF files against SHACL shapes.
+
+    Validates the structure and content of RDF files using SHACL (Shapes
+    Constraint Language). Reports any constraint violations found.
+
+    Examples:
+        # Basic validation
+        specify validate ontology.ttl
+
+        # Validation with custom shapes
+        specify validate data.ttl --shapes custom-shapes.ttl
+
+        # Strict mode (fail on warnings too)
+        specify validate --strict schema.ttl
+
+        # Write report to file
+        specify validate data.ttl --output report.json
+
+    Exit Codes:
+        0: Validation passed (no violations, or only warnings in non-strict mode)
+        1: Validation failed (violations found)
+        2: File error (file not found, not readable, invalid format)
+    """
+    # Validate file extension
+    if file.suffix.lower() not in VALID_EXTENSIONS:
+        console.print(
+            f"[red]Error:[/red] Unsupported file type '{file.suffix}'. "
+            f"Expected one of: {', '.join(VALID_EXTENSIONS)}"
+        )
+        raise typer.Exit(EXIT_FILE_ERROR)
+
+    # Execute validation operation
+    result = ops.validate.execute(
+        file=file,
+        shapes=shapes,
+        output=output,
+        strict=strict,
+    )
+
+    # Display results
+    _display_validation_result(result, strict=strict)
+
+
+# ═══════════════════════════════════════════════════════════════════════════════
+# HELPER FUNCTIONS
+# ═══════════════════════════════════════════════════════════════════════════════
+
+def _display_validation_result(result: dict, strict: bool = False) -> None:
+    """Display validation results with appropriate formatting.
+
+    Args:
+        result: Validation result dictionary from ops.validate.execute()
+        strict: If True, treat warnings as errors
+    """
+    violations = result.get('violations', [])
+    warnings = result.get('warnings', [])
+
+    # Display violations
+    for violation in violations:
+        console.print(f"[red]✗[/red] {violation['message']}")
+        if violation.get('focus_node'):
+            console.print(f"  Focus: {violation['focus_node']}")
+        if violation.get('path'):
+            console.print(f"  Path: {violation['path']}")
+
+    # Display warnings
+    for warning in warnings:
+        console.print(f"[yellow]⚠[/yellow] {warning['message']}")
+
+    # Summary and exit code
+    if violations:
+        console.print(f"\n[red]Validation failed:[/red] {len(violations)} violation(s)")
+        raise typer.Exit(EXIT_VALIDATION_ERROR)
+    elif warnings and strict:
+        console.print(f"\n[yellow]Validation failed (strict mode):[/yellow] {len(warnings)} warning(s)")
+        raise typer.Exit(EXIT_VALIDATION_ERROR)
+    else:
+        console.print("[green]✓ Validation passed[/green]")
+        raise typer.Exit(EXIT_SUCCESS)
+```
+
+### Structural Elements
+
+**Section separators:**
+
+```python
+# ═══════════════════════════════════════════════════════════════════════════════
+# SECTION NAME
+# ═══════════════════════════════════════════════════════════════════════════════
+```
+
+**Subsection separators:**
+
+```python
+# ─────────────────────────────────────────────────────────────────────────────
+# Subsection Name
+# ─────────────────────────────────────────────────────────────────────────────
+```
+
+**Grouping related elements:**
+
+```python
+# Exit codes (grouped with explanation)
+EXIT_SUCCESS = 0           # Operation completed successfully
+EXIT_VALIDATION_ERROR = 1  # Validation found violations
+EXIT_FILE_ERROR = 2        # File not found or not readable
+EXIT_CONFIG_ERROR = 3      # Configuration invalid
+
+# File extensions (grouped by format family)
+RDF_EXTENSIONS = ['.ttl', '.rdf', '.n3', '.nt']    # RDF formats
+JSON_EXTENSIONS = ['.json', '.jsonld']             # JSON-based formats
+ALL_EXTENSIONS = RDF_EXTENSIONS + JSON_EXTENSIONS  # All supported
+```
+
+---
+
+## Helpful Documentation
+
+### Generated Markdown Documentation
+
+```markdown
+# validate
+
+Validate RDF files against SHACL shapes.
+
+> **Generated Documentation** - This page is generated from
+> [cli-commands.ttl](../ontology/cli-commands.ttl).
+> To update, edit the source and run `ggen sync`.
+
+## Overview
+
+The `validate` command checks RDF files for conformance to SHACL shape
+constraints. It's the primary tool for ensuring your specifications meet
+structural and semantic requirements.
+
+## Usage
+
+```bash
+specify validate <file> [options]
+```
+
+## Arguments
+
+| Argument | Type | Required | Description |
+|----------|------|----------|-------------|
+| `file` | Path | Yes | Path to the RDF file to validate |
+
+## Options
+
+| Option | Short | Type | Default | Description |
+|--------|-------|------|---------|-------------|
+| `--shapes` | `-s` | Path | None | Path to custom SHACL shapes file |
+| `--output` | `-o` | Path | None | Write validation report to file |
+| `--strict` | | bool | false | Treat warnings as errors |
+| `--help` | `-h` | | | Show help message |
+
+## Examples
+
+### Basic Validation
+
+Validate a single RDF file against default shapes:
+
+```bash
+specify validate ontology.ttl
+```
+
+Output:
+```
+✓ Validation passed
+```
+
+### Validation with Custom Shapes
+
+Use project-specific SHACL shapes:
+
+```bash
+specify validate data.ttl --shapes project-shapes.ttl
+```
+
+### Strict Mode
+
+Fail on any issues, including warnings:
+
+```bash
+specify validate --strict schema.ttl
+```
+
+### Output to File
+
+Write detailed validation report:
+
+```bash
+specify validate data.ttl --output report.json
+```
+
+## Exit Codes
+
+| Code | Meaning |
+|------|---------|
+| 0 | Validation passed |
+| 1 | Validation failed (violations found) |
+| 2 | File error (not found, not readable, invalid format) |
+
+## Why This Command Exists
+
+Validation is the foundation of specification-driven development. Every
+specification must be validated before transformation to ensure:
+
+1. **Structural correctness**: Required properties are present
+2. **Type conformance**: Values have expected types
+3. **Cardinality constraints**: Exactly the right number of values
+4. **Custom constraints**: Domain-specific rules are satisfied
+
+Without validation, the transformation pipeline might:
+- Generate incorrect code from malformed specifications
+- Fail cryptically during template rendering
+- Produce artifacts that don't match expectations
+
+By validating first, problems are caught early with clear error messages.
+
+## Common Issues
+
+### "Unsupported file type"
+
+The file extension isn't recognized. Rename the file or use one of:
+`.ttl`, `.rdf`, `.jsonld`, `.n3`, `.nt`
+
+### "Shape not found"
+
+The shapes file doesn't define shapes for your specification type.
+Check that your shapes file matches your specification vocabulary.
+
+### "Validation failed: N violation(s)"
+
+Your specification violates one or more SHACL constraints.
+Review each violation message and fix the source specification.
+
+## See Also
+
+- [check](./check.md) - Quick validation status check
+- [SHACL Shapes Reference](../reference/shapes.md)
+- [RDF Workflow Guide](../guides/rdf-workflow.md)
+
+---
+
+*Last generated: 2025-01-15T10:30:00Z from cli-commands.ttl*
+```
+
+### Comment Standards
+
+**Section comments:**
+
+```python
+# ═══════════════════════════════════════════════════════════════════════════════
+# VALIDATION LOGIC
+#
+# This section implements the core validation algorithm:
+# 1. Load the RDF graph from the input file
+# 2. Load SHACL shapes (default or custom)
+# 3. Execute SHACL validation
+# 4. Collect and categorize results
+# ═══════════════════════════════════════════════════════════════════════════════
+```
+
+**Logic comments:**
+
+```python
+def validate(file: Path) -> dict:
+    # Load the RDF graph
+    # Note: rdflib auto-detects format from extension
+    graph = Graph()
+    graph.parse(file)
+
+    # Load shapes - prefer project shapes, fall back to defaults
+    # Project shapes allow customization; defaults provide baseline
+    shapes_graph = _load_shapes(shapes_file)
+
+    # Execute SHACL validation
+    # The validate() function returns (conforms, graph, text)
+    # We only need the results graph for detailed analysis
+    conforms, results_graph, _ = shacl_validate(graph, shapes_graph)
+
+    # Extract violations from results graph
+    # SHACL results are expressed as RDF; we query them with SPARQL
+    violations = _extract_violations(results_graph)
+
+    return {
+        'conforms': conforms,
+        'violations': violations,
+    }
+```
+
+**Reference comments:**
+
+```python
+# SHACL severity levels (see https://www.w3.org/TR/shacl/#severity)
+SEVERITY_VIOLATION = SH.Violation   # Must fix: data is non-conformant
+SEVERITY_WARNING = SH.Warning       # Should fix: best practice violation
+SEVERITY_INFO = SH.Info             # May fix: informational message
+```
+
+---
+
+## Configuration
+
+### Template Configuration
+
+```toml
+# ggen.toml
+
+[readability]
+# Include provenance headers in generated files
+provenance_header = true
+
+# Maximum line length for generated code
+max_line_length = 100
+
+# Include section separators
+section_separators = true
+
+# Include docstrings/documentation
+include_docstrings = true
+
+# Comment style for explanations
+comment_style = "descriptive"  # descriptive | minimal | none
+
+[readability.python]
+# Follow PEP 8 conventions
+pep8_compliant = true
+
+# Include type hints
+type_hints = true
+
+# Docstring format
+docstring_format = "numpy"  # numpy | google | sphinx
+
+[readability.markdown]
+# Include table of contents for long documents
+auto_toc = true
+
+# Include "generated" notice
+generated_notice = "banner"  # banner | footer | both | none
+
+# Link style
+link_style = "reference"  # inline | reference
+```
+
+### Template Helpers
+
+```jinja2
+{# templates/helpers/readability.tera #}
+
+{# Generate section separator #}
+{% macro section(name) %}
+# ═══════════════════════════════════════════════════════════════════════════════
+# {{ name | upper }}
+# ═══════════════════════════════════════════════════════════════════════════════
+{% endmacro %}
+
+{# Generate subsection separator #}
+{% macro subsection(name) %}
+# ─────────────────────────────────────────────────────────────────────────────
+# {{ name }}
+# ─────────────────────────────────────────────────────────────────────────────
+{% endmacro %}
+
+{# Generate docstring #}
+{% macro docstring(description, args=[], returns=none, examples=[]) %}
+"""{{ description }}
+
+{% if args %}
+Args:
+{% for arg in args %}
+    {{ arg.name }}: {{ arg.description }}
+{% endfor %}
+{% endif %}
+
+{% if returns %}
+Returns:
+    {{ returns }}
+{% endif %}
+
+{% if examples %}
+Examples:
+{% for example in examples %}
+    {{ example }}
+{% endfor %}
+{% endif %}
+"""
+{% endmacro %}
+
+{# Generate comment block #}
+{% macro comment_block(lines) %}
+{% for line in lines %}
+# {{ line }}
+{% endfor %}
+{% endmacro %}
+```
+
+---
+
+## Case Study: The Documentation Transformation
+
+*A team transforms cryptic generated docs into genuinely useful documentation.*
+
+### The Situation
+
+The InfraOps team generated CLI documentation from their specification. The output:
+
+```markdown
+# mycli
+
+## Commands
+
+### deploy
+Deploy.
+
+Args: target, env
+
+### rollback
+Rollback.
+
+Args: version
+```
+
+Users complained: "The docs are useless. They just repeat the command names."
+
+### The Analysis
+
+The template was minimal:
+
+```jinja2
+# {{ cli.name }}
+
+## Commands
+
+{% for cmd in commands %}
+### {{ cmd.name }}
+{{ cmd.description }}
+
+Args: {{ cmd.args | join(", ") }}
+{% endfor %}
+```
+
+And the specification was equally minimal:
+
+```turtle
+:deploy
+    a :Command ;
+    :description "Deploy." ;
+    :hasArg [ :name "target" ], [ :name "env" ] .
+```
+
+The problem was twofold:
+1. **Thin specification**: Not enough information to generate useful docs
+2. **Thin template**: Didn't structure what information existed
+
+### The Transformation
+
+**Step 1: Enrich the specification**
+
+```turtle
+:deploy
+    a :Command ;
+    rdfs:label "deploy" ;
+    :synopsis "Deploy an application to a target environment" ;
+    :description """
+        Deploys the specified application to the target environment.
+
+        The deployment process:
+        1. Validates the application configuration
+        2. Builds the deployment artifact
+        3. Pushes to the target environment
+        4. Runs health checks
+        5. Updates traffic routing
+
+        If any step fails, the deployment is automatically rolled back.
+    """ ;
+    :hasArg [
+        a :Argument ;
+        :name "target" ;
+        :type "string" ;
+        :required true ;
+        :description "The deployment target (e.g., 'production', 'staging')" ;
+        :example "production"
+    ] ;
+    :hasArg [
+        a :Argument ;
+        :name "env" ;
+        :type "string" ;
+        :required false ;
+        :default "config/default.yaml" ;
+        :description "Path to environment configuration file" ;
+        :example "config/prod.yaml"
+    ] ;
+    :hasExample [
+        :command "mycli deploy production" ;
+        :description "Deploy to production with default config"
+    ] ;
+    :hasExample [
+        :command "mycli deploy staging --env config/staging.yaml" ;
+        :description "Deploy to staging with custom configuration"
+    ] ;
+    :relatedTo :rollback ;
+    :seeAlso <https://docs.example.com/deployment-guide> .
+```
+
+**Step 2: Create a comprehensive template**
+
+```jinja2
+{# templates/cli-docs.md.tera #}
+
+# {{ cli.name }}
+
+{{ cli.synopsis }}
+
+> **Generated Documentation** - This page is generated from
+> [{{ source_file }}]({{ source_path }}).
+> To update, edit the source and run `ggen sync`.
+
+## Overview
+
+{{ cli.description | trim }}
+
+## Commands
+
+{% for cmd in commands %}
+---
+
+### {{ cmd.name }}
+
+{{ cmd.synopsis }}
+
+{{ cmd.description | trim }}
+
+#### Usage
+
+```bash
+{{ cli.name }} {{ cmd.name }}{% for arg in cmd.args %} {% if not arg.required %}[{% endif %}<{{ arg.name }}>{% if not arg.required %}]{% endif %}{% endfor %}{% for opt in cmd.options %} [{{ opt.flag }}]{% endfor %}
+```
+
+{% if cmd.args %}
+#### Arguments
+
+| Argument | Type | Required | Default | Description |
+|----------|------|----------|---------|-------------|
+{% for arg in cmd.args %}
+| `{{ arg.name }}` | {{ arg.type }} | {{ arg.required | yesno("Yes", "No") }} | {{ arg.default | default("-") }} | {{ arg.description }} |
+{% endfor %}
+{% endif %}
+
+{% if cmd.options %}
+#### Options
+
+| Option | Type | Default | Description |
+|--------|------|---------|-------------|
+{% for opt in cmd.options %}
+| `{{ opt.flag }}` | {{ opt.type }} | {{ opt.default | default("-") }} | {{ opt.description }} |
+{% endfor %}
+{% endif %}
+
+{% if cmd.examples %}
+#### Examples
+
+{% for example in cmd.examples %}
+**{{ example.description }}:**
+
+```bash
+{{ example.command }}
+```
+
+{% if example.output %}
+Output:
+```
+{{ example.output }}
+```
+{% endif %}
+
+{% endfor %}
+{% endif %}
+
+{% if cmd.related %}
+#### See Also
+
+{% for related in cmd.related %}
+- [{{ related.name }}](#{{ related.name | slugify }}){% if related.description %} - {{ related.description }}{% endif %}
+
+{% endfor %}
+{% endif %}
+
+{% endfor %}
+
+---
+
+## Additional Resources
+
+{% for link in cli.external_links %}
+- [{{ link.title }}]({{ link.url }})
+{% endfor %}
+
+---
+
+*Generated: {{ timestamp }} | Source: {{ source_file }}*
+```
+
+### The Results
+
+The new generated documentation:
+
+```markdown
+# mycli
+
+Manage application deployments and infrastructure
+
+> **Generated Documentation** - This page is generated from
+> [infrastructure.ttl](../ontology/infrastructure.ttl).
+> To update, edit the source and run `ggen sync`.
+
+## Overview
+
+The mycli tool provides commands for deploying applications, managing
+rollbacks, and monitoring infrastructure health. It integrates with
+your CI/CD pipeline and supports multiple deployment targets.
+
+## Commands
+
+---
+
+### deploy
+
+Deploy an application to a target environment
+
+The deployment process:
+1. Validates the application configuration
+2. Builds the deployment artifact
+3. Pushes to the target environment
+4. Runs health checks
+5. Updates traffic routing
+
+If any step fails, the deployment is automatically rolled back.
+
+#### Usage
+
+```bash
+mycli deploy <target> [<env>]
+```
+
+#### Arguments
+
+| Argument | Type | Required | Default | Description |
+|----------|------|----------|---------|-------------|
+| `target` | string | Yes | - | The deployment target (e.g., 'production', 'staging') |
+| `env` | string | No | config/default.yaml | Path to environment configuration file |
+
+#### Examples
+
+**Deploy to production with default config:**
+
+```bash
+mycli deploy production
+```
+
+**Deploy to staging with custom configuration:**
+
+```bash
+mycli deploy staging --env config/staging.yaml
+```
+
+#### See Also
+
+- [rollback](#rollback) - Revert a deployment
+
+---
+```
+
+User satisfaction improved dramatically.
+
+---
+
+## Anti-Patterns
+
+### Anti-Pattern: The Minimizer
+
+*"Less template code means less maintenance."*
+
+```jinja2
+{# Minimal template #}
+{% for x in xs %}{{x.n}}({{x.as|join(",")}}){% endfor %}
+```
+
+Produces unreadable output. Template maintenance is rare; artifact reading is constant.
+
+**Resolution:** Invest in template readability. The output is read far more than the template.
+
+### Anti-Pattern: The Over-Commenter
+
+*"Every line needs a comment."*
+
+```python
+# Import Path from pathlib
+from pathlib import Path  # Path for file paths
+
+# Define function validate
+def validate(  # Function definition
+    file: Path  # The file parameter
+) -> None:  # Returns nothing
+    # Call execute
+    result = execute(file)  # Execute with file
+```
+
+Comments that repeat the code add noise without value.
+
+**Resolution:** Comment why, not what. Explain non-obvious logic, not obvious syntax.
+
+### Anti-Pattern: The Provenance Novel
+
+*"Include every detail about generation."*
+
+Fifty lines of provenance header overwhelm the actual content.
+
+**Resolution:** Essential provenance only: source, template, modification instructions.
+
+### Anti-Pattern: The Convention Ignorer
+
+*"Our templates, our rules."*
+
+```python
+# Not Python convention
+def ValidateFile(FilePath):
+    Return ops.validate.Execute(File=FilePath)
+```
+
+**Resolution:** Follow target language conventions. Generated Python should look like idiomatic Python.
+
+### Anti-Pattern: The Structure Avoider
+
+*"Flat is better than nested, right?"*
+
+All code at the same level with no sections, no separators, no grouping.
+
+**Resolution:** Structure aids navigation. Sections and separators guide readers through the file.
+
+---
+
+## Implementation Checklist
+
+### Provenance Headers
+
+- [ ] Design provenance header format
+- [ ] Include in all generated files
+- [ ] Show source file reference
+- [ ] Show template reference
+- [ ] Show generation timestamp
+- [ ] Include modification instructions
+- [ ] Link to documentation
+
+### Code Structure
+
+- [ ] Define section separator style
+- [ ] Organize imports consistently
+- [ ] Group related constants
+- [ ] Group related functions
+- [ ] Add visual hierarchy
+
+### Comments and Documentation
+
+- [ ] Generate docstrings
+- [ ] Add section comments
+- [ ] Explain non-obvious logic
+- [ ] Include references
+- [ ] Generate markdown docs
+
+### Formatting
+
+- [ ] Follow language conventions
+- [ ] Consistent spacing
+- [ ] Reasonable line lengths
+- [ ] Run through canonicalization
+
+### Quality Verification
+
+- [ ] Review generated output manually
+- [ ] Get feedback from artifact consumers
+- [ ] Iterate on template design
+- [ ] Test with real readers
+
+---
+
+## Exercises
+
+### Exercise 1: Provenance Header
+
+Design a provenance header for your technology stack. Include:
+- Warning about manual edits
+- Source file reference
+- Generation timestamp
+- Modification instructions
+
+### Exercise 2: Section Structure
+
+Take an existing template and add:
+- Section separators
+- Logical grouping
+- Consistent ordering
+
+Compare before and after readability.
+
+### Exercise 3: Documentation Template
+
+Create a documentation template that generates:
+- Command usage
+- Arguments table
+- Options table
+- Examples section
+- Related commands
+
+### Exercise 4: Reader Feedback
+
+Show generated output to someone unfamiliar with it. Ask:
+1. Can you understand what this file does?
+2. Can you tell this is generated?
+3. Do you know how to make changes?
+4. What would make this clearer?
+
+Use feedback to improve templates.
+
+---
+
+## Resulting Context
+
+After implementing this pattern, you have:
+
+- **Readable generated code:** Developers can understand, debug, and extend
+- **Clear provenance:** Readers know what files are generated and how to change them
+- **Consistent structure:** All generated files follow predictable patterns
+- **Helpful documentation:** Generated docs are genuinely useful
+- **Reduced confusion:** No more "who wrote this and can I edit it?"
+
+Human-readable artifacts bridge the gap between automated generation and human comprehension. The artifacts serve their purpose: being read and understood by the humans who work with them.
+
+---
+
+## Code References
+
+The following spec-kit source files implement human-readable artifact concepts:
+
+| Reference | Description |
+|-----------|-------------|
+| `templates/command.tera:7-32` | Generated file header with provenance and instructions |
+| `templates/command.tera:116-131` | Human-readable docstrings in generated code |
+| `ontology/cli-commands.ttl:36` | rdfs:comment with human-readable descriptions |
+| `ontology/spec-kit-schema.ttl:22-30` | rdfs:label and rdfs:comment for readability |
+
+---
+
+## Related Patterns
+
+- **Product of:** **[24. Template Emission](./template-emission.md)** — Templates produce the output
+- **Formatted by:** **[25. Canonicalization](./canonicalization.md)** — Consistent formatting
+- **Supports:** **[18. Narrative Specification](../specification/narrative-specification.md)** — Narrative flows through
+- **Enables:** **[45. Living Documentation](../evolution/living-documentation.md)** — Readable docs that stay current
+- **Verified by:** **[35. Drift Detection](../verification/drift-detection.md)** — Detect unauthorized edits
+
+---
+
+## Part IV Transition
+
+You've completed the Transformation Patterns. You now understand how to:
+
+- Apply the **[Constitutional Equation](./constitutional-equation.md)**: spec.md = μ(feature.ttl)
+- **[Normalize](./normalization-stage.md)** specifications through SHACL validation
+- **[Extract](./extraction-query.md)** data with SPARQL queries
+- **[Emit](./template-emission.md)** artifacts through template rendering
+- **[Canonicalize](./canonicalization.md)** for consistent formatting
+- Generate **[Receipts](./receipt-generation.md)** for cryptographic verification
+- Ensure **[Idempotent](./idempotent-transform.md)** transformations
+- Optimize with **[Partial Regeneration](./partial-regeneration.md)**
+- Generate **[Multi-Target](./multi-target-emission.md)** outputs
+- Produce **[Human-Readable Artifacts](./human-readable-artifact.md)**
+
+The transformation pipeline is complete. But how do you know it works correctly? How do you ensure consistency over time? How do you catch errors before they reach production?
+
+Turn to **[Part IV: Verification Patterns](../verification/test-before-code.md)** to ensure your capabilities are correct, consistent, and trustworthy.
+
+---
+
+## Philosophical Note
+
+> *"Programs must be written for people to read, and only incidentally for machines to execute."*
+> — Harold Abelson, Structure and Interpretation of Computer Programs
+
+This principle applies doubly to generated code. Generated artifacts are created by machines, but they're read by humans—humans who debug them, extend them, understand them. The generation process must respect this humanity.
+
+When you design templates, imagine the reader:
+- They're tired, it's late, something is broken
+- They open a generated file trying to understand the bug
+- They need to quickly grasp structure, find the relevant section, understand the logic
+- They need to know if they can edit this file or must edit elsewhere
+
+Your template choices directly impact their experience. Choose readability.
+
+---
+
+**This completes Part III: Transformation Patterns.**
+
+**Next:** Begin Part IV with **[31. Test-Before-Code](../verification/test-before-code.md)** to learn how specifications drive test generation.
