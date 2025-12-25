@@ -49,7 +49,7 @@ from __future__ import annotations
 import asyncio
 import logging
 from collections.abc import AsyncIterator, Callable
-from typing import TYPE_CHECKING, Any, TypeVar
+from typing import TYPE_CHECKING, Any, Generic, TypeVar
 
 from specify_cli.core.telemetry import metric_counter
 
@@ -280,7 +280,7 @@ class AsyncStream:
 # ============================================================================
 
 
-class AsyncQueue:
+class AsyncQueue(Generic[T]):
     """
     Async queue with backpressure handling.
 
@@ -293,8 +293,8 @@ class AsyncQueue:
 
     Examples
     --------
-    >>> queue = AsyncQueue(maxsize=10)
-    >>> await queue.put("item1")
+    >>> queue = AsyncQueue[int](maxsize=10)
+    >>> await queue.put(42)
     >>> item = await queue.get()
     """
 

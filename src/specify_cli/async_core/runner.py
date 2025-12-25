@@ -294,7 +294,7 @@ class TaskScheduler:
         await self._queue.put(scheduled)
 
         if self.enable_metrics:
-            metric_counter("async.scheduler.submitted")(1, {"priority": priority.name})  # type: ignore[call-arg]
+            metric_counter("async.scheduler.submitted")(1, priority=priority.name)
 
         return await result_future
 

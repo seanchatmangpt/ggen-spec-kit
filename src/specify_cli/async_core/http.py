@@ -408,7 +408,7 @@ class AsyncHTTPClient:
                 # Record metrics
                 duration = time.time() - start_time
                 if self.enable_metrics:
-                    metric_counter("async.http.request.success")(1, {"method": method})  # type: ignore[call-arg]
+                    metric_counter("async.http.request.success")(1, method=method)
                     metric_histogram("async.http.request.duration")(duration)
 
                 return response  # type: ignore[no-any-return]
@@ -416,7 +416,7 @@ class AsyncHTTPClient:
             except Exception:
                 duration = time.time() - start_time
                 if self.enable_metrics:
-                    metric_counter("async.http.request.error")(1, {"method": method})  # type: ignore[call-arg]
+                    metric_counter("async.http.request.error")(1, method=method)
                     metric_histogram("async.http.request.duration")(duration)
                 raise
 
