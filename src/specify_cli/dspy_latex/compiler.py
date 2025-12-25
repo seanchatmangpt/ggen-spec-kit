@@ -61,7 +61,6 @@ import re
 import shutil
 import subprocess
 import time
-from collections.abc import Callable
 from dataclasses import dataclass, field
 from datetime import UTC, datetime
 from enum import Enum
@@ -73,7 +72,7 @@ from specify_cli.core.process import run, which
 from specify_cli.core.telemetry import metric_counter, metric_histogram, span
 
 if TYPE_CHECKING:
-    pass
+    from collections.abc import Callable
 
 # Try to import DSPy for AI-powered error diagnosis
 try:
@@ -645,8 +644,8 @@ class PreprocessStage(CompilationStage):
     μ₂ PREPROCESS: Macro expansion and conditional processing.
 
     Handles:
-    - \input and \include file resolution
-    - Conditional compilation (\if...\fi)
+    - \\input and \\include file resolution
+    - Conditional compilation (\\if...\fi)
     - Macro expansion (basic)
     - Bibliography file detection
     """
@@ -678,7 +677,7 @@ class PreprocessStage(CompilationStage):
             return content
 
     def _resolve_includes(self, content: str, context: dict[str, Any]) -> str:
-        """Resolve \input{file} commands (for dependency tracking)."""
+        r"""Resolve \input{file} commands (for dependency tracking)."""
         input_pattern = re.compile(r"\\input\{([^}]+)\}")
         includes = []
 
@@ -994,9 +993,8 @@ class OptimizeStage(CompilationStage):
                     f"({100 * (1 - compressed_size / original_size):.1f}% reduction)"
                 )
                 return compressed_size
-            else:
-                compressed_path.unlink()
-                return original_size
+            compressed_path.unlink()
+            return original_size
 
         except subprocess.CalledProcessError as e:
             _log.warning(f"PDF compression failed: {e}")
@@ -1665,7 +1663,7 @@ class PDFCompiler:
         return CompilationResult(
             success=cached["success"],
             pdf_path=Path(cached["pdf_path"]) if cached.get("pdf_path") else None,
-            input_file=Path(""),  # Not stored in cache
+            input_file=Path(),  # Not stored in cache
             backend=self.backend,
             total_duration=cached["total_duration"],
             stage_results={},

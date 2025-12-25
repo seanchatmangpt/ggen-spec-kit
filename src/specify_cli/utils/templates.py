@@ -21,7 +21,7 @@ console = Console()
 def handle_vscode_settings(sub_item, dest_file, rel_path, verbose=False, tracker=None) -> None:
     """Handle merging or copying of .vscode/settings.json files."""
 
-    def log(message, color="green"):
+    def log(message, color="green") -> None:
         if verbose and not tracker:
             console.print(f"[{color}]{message}[/] {rel_path}")
 
@@ -46,7 +46,7 @@ def handle_vscode_settings(sub_item, dest_file, rel_path, verbose=False, tracker
 
 def merge_json_files(
     existing_path: Path, new_content: dict[str, Any], verbose: bool = False
-) -> dict:
+) -> dict[str, Any]:
     """Merge new JSON content into existing JSON file.
 
     Performs a deep merge where:
@@ -70,7 +70,7 @@ def merge_json_files(
         # If file doesn't exist or is invalid, just use new content
         return new_content
 
-    def deep_merge(base: dict[str, Any], update: dict[str, Any]) -> dict:
+    def deep_merge(base: dict[str, Any], update: dict[str, Any]) -> dict[str, Any]:
         """Recursively merge update dict into base dict."""
         result = base.copy()
         for key, value in update.items():
@@ -257,7 +257,7 @@ def download_and_extract_template(
 
         if not is_current_dir and project_path.exists():
             shutil.rmtree(project_path)
-        raise typer.Exit(1)
+        raise typer.Exit(1) from None
     else:
         if tracker:
             tracker.complete("extract")

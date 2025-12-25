@@ -13,13 +13,13 @@ console = Console()
 class BannerGroup(TyperGroup):
     """Custom group that shows banner before help."""
 
-    def format_help(self, ctx, formatter):
+    def format_help(self, ctx, formatter) -> None:
         # Show banner before help
         show_banner()
         super().format_help(ctx, formatter)
 
 
-def show_banner():
+def show_banner() -> None:
     """Display the ASCII art banner."""
     banner_lines = BANNER.strip().split("\n")
     colors = ["bright_blue", "blue", "cyan", "bright_cyan", "white", "bright_white"]

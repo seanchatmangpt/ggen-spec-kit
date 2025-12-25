@@ -134,7 +134,7 @@ def version(
     except Exception as e:
         console.print()
         colour(f"[red]Error getting version:[/red] {e}", "red")
-        raise typer.Exit(1)
+        raise typer.Exit(1) from None
 
 
 # Standalone version callback for main app

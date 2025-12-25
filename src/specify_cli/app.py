@@ -54,8 +54,6 @@ See Also
 - :mod:`specify_cli.runtime` : Runtime execution
 """
 
-from __future__ import annotations
-
 import sys
 
 import typer

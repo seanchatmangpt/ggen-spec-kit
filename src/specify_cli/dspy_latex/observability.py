@@ -832,7 +832,7 @@ class MetricsAnalyzer:
 
         success_rate = successful / total
         # Map to 0-1 scale with threshold at 0.95
-        return min(success_rate / self.thresholds.min_success_rate, 1.0)
+        return float(min(success_rate / self.thresholds.min_success_rate, 1.0))
 
     def _calculate_performance_score(self) -> float:
         """Calculate performance score based on duration."""

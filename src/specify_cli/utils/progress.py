@@ -192,6 +192,6 @@ def select_with_arrows(
 
     if selected_key is None:
         console.print("\n[red]Selection failed.[/red]")
-        raise typer.Exit(1)
+        raise typer.Exit(1) from None
 
     return selected_key

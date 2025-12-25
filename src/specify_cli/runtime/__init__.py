@@ -52,6 +52,15 @@ See Also
 
 from __future__ import annotations
 
+# DSPy LaTeX operations
+from .dspy_latex import (
+    collect_observability_metrics,
+    run_dspy_compiler,
+    run_dspy_optimizer,
+    run_dspy_processor,
+    verify_dspy_installation,
+)
+
 # ggen wrapper
 from .ggen import (
     GgenError,
@@ -80,7 +89,6 @@ from .github import (
     format_rate_limit_error,
     github_auth_headers,
     github_token,
-    parse_rate_limit_headers,
 )
 
 # JTBD operations
@@ -136,6 +144,8 @@ __all__ = [
     "check_required_tools",
     # Tools
     "check_tool",
+    # DSPy LaTeX
+    "collect_observability_metrics",
     "commit",
     "download_asset",
     "ensure_executable_scripts",
@@ -165,8 +175,11 @@ __all__ = [
     "load_satisfaction_records",
     "load_time_to_outcome_records",
     "merge_json_files",
-    "parse_rate_limit_headers",
+    "parse_rate_limit_error",
     "query_jtbd_sparql",
+    "run_dspy_compiler",
+    "run_dspy_optimizer",
+    "run_dspy_processor",
     "save_job_completion",
     "save_outcome_achievement",
     "save_painpoint_resolution",
@@ -174,5 +187,6 @@ __all__ = [
     "save_time_to_outcome",
     "sync_jtbd_to_rdf",
     "sync_specs",
+    "verify_dspy_installation",
     "which_tool",
 ]

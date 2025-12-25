@@ -209,12 +209,6 @@ __all__ = [
     "SPECKIT_OUTCOMES",
     "EmbeddingMetadata",
     "EmbeddingStore",
-    # Observability (OTEL instrumentation)
-    "record_search_latency",
-    "record_vector_stats",
-    "track_embedding_operation",
-    "track_similarity_search",
-    "track_validation_check",
     # Prioritization - Data Structures
     "Feature",
     "FeaturePriority",
@@ -304,12 +298,15 @@ __all__ = [
     "prioritize_tasks",
     "quantify_outcome_value",
     "quick_wins",
-    "rank_features_by_gain",
     # Prioritization - Job-Outcome
     "rank_by_objective",
+    "rank_features_by_gain",
     "rank_jobs_by_frequency",
     "rank_outcomes_by_importance",
     "recommend_next_tasks",
+    # Observability (OTEL instrumentation)
+    "record_search_latency",
+    "record_vector_stats",
     "redundancy_measure",
     # Prioritization - Adaptive
     "reprioritize_based_on_progress",
@@ -319,6 +316,9 @@ __all__ = [
     "suggest_parallel_work",
     "suggest_task_ordering",
     "top_n_features",
+    "track_embedding_operation",
+    "track_similarity_search",
+    "track_validation_check",
     "uncertainty_reduction_rate",
     "wasserstein_distance",
 ]

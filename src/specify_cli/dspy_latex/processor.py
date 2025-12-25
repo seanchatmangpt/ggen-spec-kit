@@ -279,7 +279,7 @@ class LaTeXDocument:
     def __post_init__(self) -> None:
         """Calculate cache key after initialization."""
         if not self.cache_key:
-            self.cache_key = hashlib.md5(self.content.encode()).hexdigest()
+            self.cache_key = hashlib.md5(self.content.encode(), usedforsecurity=False).hexdigest()
 
     @property
     def chapters(self) -> list[LaTeXStructure]:
@@ -919,7 +919,7 @@ class LaTeXParser:
             start_time = time.perf_counter()
 
             # Check cache
-            cache_key = hashlib.md5(content.encode()).hexdigest()
+            cache_key = hashlib.md5(content.encode(), usedforsecurity=False).hexdigest()
             if cache_key in self._cache:
                 metric_counter("latex.parse.cache_hit")(1)
                 return self._cache[cache_key]
@@ -928,7 +928,7 @@ class LaTeXParser:
 
             # Create document
             doc = LaTeXDocument(
-                source_file=source_file or Path(""),
+                source_file=source_file or Path(),
                 content=content,
                 cache_key=cache_key,
             )
@@ -1181,17 +1181,16 @@ class LaTeXProcessor:
         errors: list[LaTeXError] = []
 
         for ref in doc.cross_references:
-            if ref.type in ["ref", "eqref", "pageref"]:
-                if ref.target not in doc.labels:
-                    errors.append(
-                        LaTeXError(
-                            line=ref.line,
-                            column=0,
-                            message=f"Undefined reference: {ref.target}",
-                            severity=ErrorSeverity.WARNING,
-                            suggestion=f"Add \\label{{{ref.target}}} to the referenced element",
-                        )
+            if ref.type in ["ref", "eqref", "pageref"] and ref.target not in doc.labels:
+                errors.append(
+                    LaTeXError(
+                        line=ref.line,
+                        column=0,
+                        message=f"Undefined reference: {ref.target}",
+                        severity=ErrorSeverity.WARNING,
+                        suggestion=f"Add \\label{{{ref.target}}} to the referenced element",
                     )
+                )
 
         return errors
 
@@ -1293,9 +1292,8 @@ class LaTeXProcessor:
             )
 
             missing = getattr(result, "missing_packages", "")
-            packages = [p.strip() for p in missing.split(",") if p.strip()]
+            return [p.strip() for p in missing.split(",") if p.strip()]
 
-            return packages
 
         except Exception as e:
             record_exception(e)

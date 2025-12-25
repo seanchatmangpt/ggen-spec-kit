@@ -243,7 +243,7 @@ def calculate_feature_entropy(feature_spec: Feature | dict[str, Any]) -> float:
 
     # Combine entropies (weighted average)
     if entropies:
-        return sum(entropies) / len(entropies)
+        return float(sum(entropies)) / len(entropies)
     return 0.0
 
 
@@ -301,7 +301,7 @@ def estimate_implementation_complexity(feature: Feature | dict[str, Any]) -> flo
     total_weight = sum(weights)
     complexity_score = weighted_sum / total_weight
 
-    return min(complexity_score, 100.0)
+    return float(min(complexity_score, 100.0))
 
 
 def measure_specification_quality(spec: dict[str, Any]) -> float:
@@ -363,7 +363,7 @@ def measure_specification_quality(spec: dict[str, Any]) -> float:
 
     # Average quality factors
     if quality_factors:
-        return sum(quality_factors) / len(quality_factors)
+        return float(sum(quality_factors)) / len(quality_factors)
     return 0.0
 
 
@@ -451,7 +451,7 @@ def mutual_info_with_quality(feature: Feature | dict[str, Any]) -> float:
 
     # Average factors
     if factors:
-        return sum(factors) / len(factors)
+        return float(sum(factors) / len(factors))
     return 0.5
 
 
@@ -503,7 +503,7 @@ def mutual_info_with_performance(feature: Feature | dict[str, Any]) -> float:
     factors.append(complexity_factor)
 
     if factors:
-        return sum(factors) / len(factors)
+        return float(sum(factors) / len(factors))
     return 0.3
 
 
@@ -555,7 +555,7 @@ def mutual_info_with_reliability(feature: Feature | dict[str, Any]) -> float:
     factors.append(impact_factor)
 
     if factors:
-        return sum(factors) / len(factors)
+        return float(sum(factors) / len(factors))
     return 0.4
 
 
@@ -674,7 +674,7 @@ def calculate_information_gain(
         # Default: use feature entropy
         information_gain = calculate_feature_entropy(feature)
 
-    return min(information_gain, 1.0)
+    return float(min(information_gain, 1.0))
 
 
 def rank_features_by_gain(
@@ -721,7 +721,7 @@ def rank_features_by_gain(
 
 def select_features_maximizing_info(
     feature_set: list[Feature | dict[str, Any]], k: int = 5, objective: str = "quality"
-) -> list[Feature | dict[str, Any]]:
+) -> list[Feature | Task | dict[str, Any]]:
     """Select top-k features that maximize total information gain.
 
     Uses greedy selection to avoid redundancy while maximizing information.
@@ -1052,8 +1052,8 @@ def slack_time_analysis(
     task_map = {}
     dependencies = []
 
-    for task in tasks:
-        if isinstance(task, Task):
+    for task_item in tasks:
+        if isinstance(task_item, Task):
             task_id = task.id
             task_deps = task.dependencies
             task_map[task_id] = task
@@ -1153,7 +1153,7 @@ def entropy_reduction_per_task(task: Task | dict[str, Any]) -> float:
     # Complex tasks also reduce more entropy
     entropy_reduction = uncertainty * 0.5 + impact * 0.3 + complexity * 0.2
 
-    return min(entropy_reduction, 1.0)
+    return float(min(entropy_reduction, 1.0))
 
 
 def mutual_information_with_goals(task: Task | dict[str, Any], goals: list[str]) -> float:
@@ -1194,7 +1194,7 @@ def mutual_information_with_goals(task: Task | dict[str, Any], goals: list[str])
 
     # Average overlap across goals
     if goals:
-        return min(total_overlap / len(goals), 1.0)
+        return float(min(total_overlap / len(goals), 1.0))
     return 0.0
 
 
@@ -1243,7 +1243,7 @@ def criticality_score(task: Task | dict[str, Any]) -> float:
 
     # Average factors
     if factors:
-        return sum(factors) / len(factors)
+        return float(sum(factors) / len(factors))
     return 50.0
 
 
@@ -1277,7 +1277,7 @@ def uncertainty_reduction_rate(task: Task | dict[str, Any]) -> float:
         effort = 1.0
 
     # Rate = entropy reduction / effort
-    return entropy_reduction / effort
+    return float(entropy_reduction / effort)
 
 
 # ============================================================================
@@ -1414,8 +1414,8 @@ def suggest_task_ordering(tasks: list[Task | dict[str, Any]]) -> list[str]:
     graph: dict[str, list[str]] = defaultdict(list)
     in_degree: dict[str, int] = defaultdict(int)
 
-    for task in tasks:
-        if isinstance(task, Task):
+    for task_item in tasks:
+        if isinstance(task_item, Task):
             task_id = task.id
             task_deps = task.dependencies
         else:
@@ -1482,8 +1482,8 @@ def predict_effort_impact(
     """
     # Build task map
     task_map = {}
-    for task in tasks:
-        if isinstance(task, Task):
+    for task_item in tasks:
+        if isinstance(task_item, Task):
             task_map[task.id] = task
         else:
             task_map[task.get("id", "")] = task
@@ -1607,7 +1607,7 @@ def quantify_outcome_value(outcome: dict[str, Any]) -> float:
     # Normalize to 0-100 scale (assume max importance = 10, max gap = 10)
     value = (importance * satisfaction_gap) / 100 * 100
 
-    return min(value, 100.0)
+    return float(min(value, 100.0))
 
 
 def maximize_job_coverage(budget: float, features: list[dict[str, Any]]) -> list[dict[str, Any]]:
@@ -1684,7 +1684,7 @@ def opportunity_score(job: dict[str, Any], painpoint: dict[str, Any]) -> float:
 
     # Opportunity formula
     satisfaction_gap = max(10 - satisfaction, 0)
-    return importance * satisfaction_gap * (market_size / 100)
+    return float(importance * satisfaction_gap * (market_size / 100))
 
 
 def addressable_market_size(job: dict[str, Any]) -> float:
@@ -1707,7 +1707,7 @@ def addressable_market_size(job: dict[str, Any]) -> float:
     total_market = job.get("total_market", 0)
     addressable_percentage = job.get("addressable_percentage", 1.0)
 
-    return total_market * addressable_percentage
+    return float(total_market * addressable_percentage)
 
 
 def competition_analysis(feature: dict[str, Any]) -> float:
@@ -1747,7 +1747,7 @@ def competition_analysis(feature: dict[str, Any]) -> float:
     # Combined advantage
     advantage = rarity * 0.6 + quality_advantage * 0.4
 
-    return min(advantage, 1.0)
+    return float(min(advantage, 1.0))
 
 
 def market_timing_analysis(feature: dict[str, Any]) -> float:
@@ -1782,7 +1782,7 @@ def market_timing_analysis(feature: dict[str, Any]) -> float:
     # Combine factors
     timing_score = maturity_score * 0.4 + trend_score * 0.3 + urgency * 0.3
 
-    return min(timing_score, 1.0)
+    return float(min(timing_score, 1.0))
 
 
 # ============================================================================
@@ -1953,7 +1953,7 @@ def information_density(spec: str | dict[str, Any]) -> float:
     # Combine metrics
     density = compression_density * 0.4 + unique_ratio * 0.3 + char_entropy * 0.3
 
-    return min(density, 1.0)
+    return float(min(density, 1.0))
 
 
 def spec_completeness_likelihood(spec: dict[str, Any]) -> float:
@@ -2050,7 +2050,7 @@ def edge_case_coverage_estimate(spec: dict[str, Any]) -> float:
     edge_case_count = sum(1 for keyword in edge_case_keywords if keyword in all_text)
 
     # Estimate coverage (assume 10 edge case mentions = 100% coverage)
-    return min(edge_case_count / 10, 1.0) * 100
+    return float(min(edge_case_count / 10, 1.0)) * 100
 
 
 # ============================================================================
@@ -2236,8 +2236,8 @@ def suggest_parallel_work(tasks: list[Task | dict[str, Any]]) -> list[list[str]]
     """
     # Build dependency levels
     task_map = {}
-    for task in tasks:
-        if isinstance(task, Task):
+    for task_item in tasks:
+        if isinstance(task_item, Task):
             task_map[task.id] = task
         else:
             task_map[task.get("id", "")] = task

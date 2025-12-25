@@ -193,7 +193,7 @@ def sync(  # noqa: PLR0912, PLR0915 - CLI command with user-facing output format
                 border_style="red",
             )
         )
-        raise typer.Exit(1)
+        raise typer.Exit(1) from None
 
     # Show ggen version if verbose
     if verbose:

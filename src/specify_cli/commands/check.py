@@ -160,7 +160,7 @@ def check(
             colour(f"[red]✗ {counts['required_missing']} required tool(s) missing[/red]", "red")
             console.print()
             console.print("[yellow]Please install missing required tools to use Specify.[/yellow]")
-            raise typer.Exit(1)
+            raise typer.Exit(1) from None
         console.print()
         colour("[green]✓ All required tools are available[/green]", "green")
 
@@ -191,4 +191,4 @@ def check(
     except Exception as e:
         console.print()
         colour(f"[red]Error checking tools:[/red] {e}", "red")
-        raise typer.Exit(1)
+        raise typer.Exit(1) from None

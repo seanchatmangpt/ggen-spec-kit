@@ -32,52 +32,52 @@ See Also
 from __future__ import annotations
 
 from specify_cli.dspy_latex.optimizer import (
+    # Concrete strategies
+    BibliographyOptimizationStrategy,
     CompilationRecord,
     CompilationStatus,
+    CrossReferenceValidationStrategy,
     DocumentComplexity,
     DocumentType,
+    EquationSimplificationStrategy,
+    FloatPlacementStrategy,
+    GraphicsPathStrategy,
     LaTeXOptimizer,
+    MacroExpansionStrategy,
     OptimizationLevel,
     OptimizationMetrics,
     OptimizationResult,
     OptimizationStrategy,
+    PackageConsolidationStrategy,
     PerformancePredictor,
     StrategyLearner,
     StrategyPerformance,
-    # Concrete strategies
-    BibliographyOptimizationStrategy,
-    CrossReferenceValidationStrategy,
-    EquationSimplificationStrategy,
-    FloatPlacementStrategy,
-    GraphicsPathStrategy,
-    MacroExpansionStrategy,
-    PackageConsolidationStrategy,
 )
 
 __all__ = [
-    # Main optimizer
-    "LaTeXOptimizer",
+    "BibliographyOptimizationStrategy",
+    "CompilationRecord",
+    "CompilationStatus",
+    "CrossReferenceValidationStrategy",
     # Data classes
     "DocumentComplexity",
-    "CompilationRecord",
-    "OptimizationResult",
-    "StrategyPerformance",
-    "OptimizationMetrics",
     # Enums
     "DocumentType",
+    # Concrete strategies
+    "EquationSimplificationStrategy",
+    "FloatPlacementStrategy",
+    "GraphicsPathStrategy",
+    # Main optimizer
+    "LaTeXOptimizer",
+    "MacroExpansionStrategy",
     "OptimizationLevel",
-    "CompilationStatus",
+    "OptimizationMetrics",
+    "OptimizationResult",
+    # Base class
+    "OptimizationStrategy",
+    "PackageConsolidationStrategy",
     # ML components
     "PerformancePredictor",
     "StrategyLearner",
-    # Base class
-    "OptimizationStrategy",
-    # Concrete strategies
-    "EquationSimplificationStrategy",
-    "PackageConsolidationStrategy",
-    "MacroExpansionStrategy",
-    "BibliographyOptimizationStrategy",
-    "FloatPlacementStrategy",
-    "GraphicsPathStrategy",
-    "CrossReferenceValidationStrategy",
+    "StrategyPerformance",
 ]

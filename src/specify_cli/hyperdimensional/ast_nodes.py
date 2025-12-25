@@ -152,7 +152,7 @@ class SimilarityNode(ASTNode):
     @property
     def threshold(self) -> float:
         """Get distance threshold."""
-        return self.parameters.get("distance", self.parameters.get("within_distance", 0.3))
+        return float(self.parameters.get("distance", self.parameters.get("within_distance", 0.3)))
 
     @property
     def top_k(self) -> int | None:
@@ -162,7 +162,7 @@ class SimilarityNode(ASTNode):
     @property
     def metric(self) -> str:
         """Get similarity metric."""
-        return self.parameters.get("metric", "cosine")
+        return str(self.parameters.get("metric", "cosine"))
 
     def __repr__(self) -> str:
         """String representation."""

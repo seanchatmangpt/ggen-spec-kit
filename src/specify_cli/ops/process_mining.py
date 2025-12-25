@@ -41,7 +41,7 @@ def load_event_log(
     if suffix == ".xes":
         return pm4py.read_xes(str(file_path))
     if suffix == ".csv":
-        import pandas as pd
+        import pandas as pd  # type: ignore[import-untyped]
 
         df = pd.read_csv(file_path)
         # Format as event log
@@ -207,7 +207,7 @@ def conform_trace(
 
     # Calculate F1 score
     f1_score = (
-        2 * fitness_val * precision / (fitness_val + precision)
+        2 * float(fitness_val if fitness_val is not None else 0) * precision / (float(fitness_val if fitness_val is not None else 0) + precision)
         if (fitness_val + precision) > 0
         else 0
     )

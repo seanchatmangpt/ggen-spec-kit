@@ -46,13 +46,15 @@ from __future__ import annotations
 import csv
 import json
 from datetime import UTC, datetime
-from pathlib import Path
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
 from specify_cli.core.config import get_config
 from specify_cli.core.instrumentation import add_span_event
 from specify_cli.core.shell import timed
 from specify_cli.core.telemetry import metric_counter, metric_histogram, span
+
+if TYPE_CHECKING:
+    from pathlib import Path
 
 __all__ = [
     "JTBDError",

@@ -20,10 +20,10 @@ Install dependencies via:
 
 from __future__ import annotations
 
-import subprocess
+import contextlib
 import time
 from pathlib import Path
-from typing import TYPE_CHECKING, Any
+from typing import TYPE_CHECKING
 
 from specify_cli.core.dod_types import DoDGate
 from specify_cli.core.instrumentation import add_span_attributes, add_span_event
@@ -81,7 +81,7 @@ def check_type_safety() -> DoDGate:
         Gate result with type checking details.
     """
     with span("dod.check.type_safety"):
-        start_time = time.time()
+        time.time()
         gate = DoDGate(
             name="Type Safety (mypy)",
             category="Code Quality",
@@ -309,7 +309,7 @@ def check_test_coverage() -> DoDGate:
                 "--cov-report=term-missing",
                 "-q",
             ]
-            success, output, duration = _run_tool(cmd, tool_name="pytest")
+            _success, output, duration = _run_tool(cmd, tool_name="pytest")
 
             # Parse coverage percentage from output
             coverage_pct = 0.0
@@ -317,10 +317,8 @@ def check_test_coverage() -> DoDGate:
                 if "TOTAL" in line:
                     parts = line.split()
                     if len(parts) > 1:
-                        try:
+                        with contextlib.suppress(ValueError):
                             coverage_pct = float(parts[-1].rstrip("%"))
-                        except ValueError:
-                            pass
 
             gate.details = {
                 "tool": "pytest",

@@ -24,6 +24,7 @@
 - [📽️ Video Overview](#️-video-overview)
 - [🤖 Supported AI Agents](#-supported-ai-agents)
 - [🔧 Specify CLI Reference](#-specify-cli-reference)
+- [🧬 DSPy LaTeX Integration](#-dspy-latex-integration)
 - [📚 Core Philosophy](#-core-philosophy)
 - [🌟 Development Phases](#-development-phases)
 - [🎯 Experimental Goals](#-experimental-goals)
@@ -188,6 +189,7 @@ The `specify` command supports the following options:
 | `check` | Check for installed tools (`git`, `ggen`, `claude`, `gemini`, `cursor`, `windsurf`, `uv`)                                                              |
 | `version` | Show version and build information                                                                                                                      |
 | `wf` (Workflow) | SPIFF BPMN workflow management, validation, and project discovery                                                                                       |
+| `latex` (Planned) | LaTeX compilation and optimization with AI-powered error recovery and cognitive optimization                                                            |
 
 ### `specify init` Arguments & Options
 
@@ -301,6 +303,42 @@ Additional commands for enhanced quality and validation:
 | Variable          | Description                                                                                                                                                                                                                                                                                            |
 | ----------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
 | `SPECIFY_FEATURE` | Override feature detection for non-Git repositories. Set to the feature directory name (e.g., `001-photo-albums`) to work on a specific feature when not using Git branches.<br/>\*\*Must be set in the context of the agent you're working with prior to using `/speckit.plan` or follow-up commands. |
+
+## 🧬 DSPy LaTeX Integration
+
+Spec-kit includes a sophisticated LaTeX compilation and optimization system with cognitive intelligence:
+
+### Features
+
+- **Multi-Stage PDF Compilation** - 5-stage pipeline (μ₁→μ₂→μ₃→μ₄→μ₅) with autonomous error recovery
+- **Cognitive Optimization** - 7 ML-powered strategies with three-stage architecture (Ψ₁→Ψ₂→Ψ₃)
+- **Document Analysis** - Intelligent parsing, structure extraction, and validation
+- **Incremental Compilation** - Smart caching for 60x faster rebuilds
+- **Full Observability** - Comprehensive OpenTelemetry instrumentation
+
+### Quick Start
+
+```python
+from pathlib import Path
+from specify_cli.dspy_latex import PDFCompiler, LaTeXOptimizer
+
+# Compile LaTeX to PDF
+compiler = PDFCompiler(enable_recovery=True)
+result = compiler.compile(Path("thesis.tex"))
+
+if result.success:
+    print(f"✓ PDF: {result.pdf_path}")
+    print(f"Time: {result.total_duration:.2f}s")
+
+# Optimize LaTeX source
+optimizer = LaTeXOptimizer()
+latex_content = Path("paper.tex").read_text()
+optimized, metrics = optimizer.optimize(latex_content)
+
+print(f"Optimizations: {metrics.successful_optimizations}")
+```
+
+**Learn more:** [DSPy LaTeX Integration Guide](./docs/DSPY_LATEX_INTEGRATION.md)
 
 ## 📚 Core Philosophy
 

@@ -231,11 +231,11 @@ def recommend_edge_case_tests(spec: str) -> list[RepairSuggestion]:
                     description="Test empty/null inputs",
                     rationale="Specification mentions input handling. Test boundary conditions.",
                     code_example="""
-def test_empty_input():
+def test_empty_input() -> None:
     result = process_input("")
     assert result.error == "Input cannot be empty"
 
-def test_null_input():
+def test_null_input() -> None:
     result = process_input(None)
     assert result.error == "Input cannot be null"
                 """.strip(),
@@ -250,7 +250,7 @@ def test_null_input():
                     description="Test very long inputs",
                     rationale="Test maximum input length handling.",
                     code_example="""
-def test_max_length_input():
+def test_max_length_input() -> None:
     long_input = "x" * 10000
     result = process_input(long_input)
     assert result.error == "Input exceeds maximum length"
@@ -268,15 +268,15 @@ def test_max_length_input():
                     description="Test boundary values",
                     rationale="Specification involves numeric values. Test min/max boundaries.",
                     code_example="""
-def test_zero_value():
+def test_zero_value() -> None:
     result = calculate(0)
     assert result >= 0
 
-def test_negative_value():
+def test_negative_value() -> None:
     result = calculate(-1)
     assert result.error == "Value must be positive"
 
-def test_max_value():
+def test_max_value() -> None:
     result = calculate(sys.maxsize)
     # Should handle gracefully
                 """.strip(),
@@ -293,11 +293,11 @@ def test_max_value():
                     description="Test empty collections",
                     rationale="Test behavior with empty lists/arrays.",
                     code_example="""
-def test_empty_list():
+def test_empty_list() -> None:
     result = process_items([])
     assert result == []  # or appropriate default
 
-def test_single_item():
+def test_single_item() -> None:
     result = process_items([item])
     assert len(result) == 1
                 """.strip(),
@@ -334,7 +334,7 @@ async def test_concurrent_access():
                     description="Test network failures",
                     rationale="Test behavior when external dependencies fail.",
                     code_example="""
-def test_network_timeout():
+def test_network_timeout() -> None:
     with mock.patch('httpx.get', side_effect=TimeoutError):
         result = call_api()
         assert result.error == "Request timeout"

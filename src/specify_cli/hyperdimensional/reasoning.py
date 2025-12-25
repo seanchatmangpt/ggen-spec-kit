@@ -598,7 +598,7 @@ def check_constraint_satisfaction(
         vector_db: Optional vector database for semantic constraint checking
 
     Returns:
-        Tuple of (all_satisfied: bool, violations: list)
+        Tuple of (all_satisfied: bool, violations: List[Any])
 
     Example:
         >>> design = {"architecture": "microservices", "data": "eventual_consistency"}

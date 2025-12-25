@@ -27,7 +27,7 @@ __all__ = [
 # Lazy imports - SpiffWorkflow is optional
 _spiff_available = False
 try:
-    import spiff
+    import spiff  # noqa: F401 - Used for availability check
 
     _spiff_available = True
 except ImportError:

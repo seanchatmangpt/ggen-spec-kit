@@ -21,7 +21,7 @@ import json
 import re
 import time
 from abc import ABC, abstractmethod
-from collections import Counter, defaultdict
+from collections import Counter
 from dataclasses import dataclass, field
 from datetime import datetime
 from enum import Enum
@@ -291,7 +291,6 @@ class OptimizationStrategy(ABC):
         str
             Optimized LaTeX content
         """
-        pass
 
     @abstractmethod
     def analyze(self, latex_content: str) -> dict[str, Any]:
@@ -308,7 +307,6 @@ class OptimizationStrategy(ABC):
         dict[str, Any]
             Analysis results including potential changes
         """
-        pass
 
     def record_performance(self, improvement: float) -> None:
         """Record performance improvement for learning."""
@@ -346,13 +344,12 @@ class EquationSimplificationStrategy(OptimizationStrategy):
 
         # Simplify nested fractions using \dfrac where appropriate
         # This is a conservative change
-        content = re.sub(
+        return re.sub(
             r"\\frac\{\\frac\{([^}]+)\}\{([^}]+)\}\}",
             r"\\dfrac{\\frac{\1}{\2}}",
             content,
         )
 
-        return content
 
     def analyze(self, latex_content: str) -> dict[str, Any]:
         """Analyze equation simplification opportunities."""
@@ -489,9 +486,8 @@ class MacroExpansionStrategy(OptimizationStrategy):
                 if num_args:
                     # For now, skip parameterized macros (more complex)
                     continue
-                else:
-                    # Simple replacement
-                    content = re.sub(rf"\\{macro_name}\b", macro_body, content)
+                # Simple replacement
+                content = re.sub(rf"\\{macro_name}\b", macro_body, content)
 
         return content
 
@@ -578,13 +574,12 @@ class FloatPlacementStrategy(OptimizationStrategy):
         )
 
         # [t] -> [tbp] for better placement
-        content = re.sub(
+        return re.sub(
             r"\\begin\{(figure|table)\}\[t\]",
             r"\\begin{\1}[tbp]",
             content,
         )
 
-        return content
 
     def analyze(self, latex_content: str) -> dict[str, Any]:
         """Analyze float placement optimization opportunities."""
@@ -625,7 +620,7 @@ class GraphicsPathStrategy(OptimizationStrategy):
 
             for gfile in graphics_files:
                 path = Path(gfile).parent
-                if path != Path("."):
+                if path != Path():
                     paths.add(str(path))
 
             if paths:
@@ -648,7 +643,7 @@ class GraphicsPathStrategy(OptimizationStrategy):
         paths = set()
         for gfile in graphics_files:
             path = Path(gfile).parent
-            if path != Path("."):
+            if path != Path():
                 paths.add(str(path))
 
         return {
@@ -675,7 +670,7 @@ class CrossReferenceValidationStrategy(OptimizationStrategy):
         content = latex_content
 
         # Find all labels
-        labels = set(re.findall(r"\\label\{([^}]+)\}", content))
+        set(re.findall(r"\\label\{([^}]+)\}", content))
 
         # Find all references
         refs = re.findall(r"\\ref\{([^}]+)\}", content)
@@ -859,8 +854,8 @@ class StrategyLearner:
                     }
                     self.strategy_performance[strategy_name] = perf
 
-            except Exception as e:
-                print(f"Warning: Could not load history: {e}")
+            except Exception:
+                pass
 
     def save_history(self) -> None:
         """Save compilation history to disk."""
@@ -988,7 +983,6 @@ class StrategyLearner:
         # Prepare training data for predictor
         # This would require storing complexity info with each record
         # For now, we'll train when we have enough data
-        pass
 
 
 # ============================================================================
@@ -1341,7 +1335,7 @@ class LaTeXOptimizer:
                 metric_histogram("latex_optimizer.optimization_time")(elapsed)
                 metric_counter("latex_optimizer.optimizations_applied")(1)
 
-                result = OptimizationResult(
+                return OptimizationResult(
                     success=True,
                     original_content=latex_content,
                     optimized_content=optimized_content,
@@ -1353,7 +1347,6 @@ class LaTeXOptimizer:
                     validation_passed=validation_passed,
                 )
 
-                return result
 
             except Exception as e:
                 metric_counter("latex_optimizer.optimization_failed")(1)
@@ -1409,11 +1402,7 @@ class LaTeXOptimizer:
 
         failed_checks = [name for passed, name in checks if not passed]
 
-        if failed_checks:
-            print(f"Validation failed: {', '.join(failed_checks)}")
-            return False
-
-        return True
+        return not failed_checks
 
     def optimize(
         self, latex_content: str, max_iterations: int = 3
@@ -1483,9 +1472,8 @@ class LaTeXOptimizer:
 # ============================================================================
 
 
-def example_basic_usage():
+def example_basic_usage() -> None:
     """Example: Basic optimization usage."""
-    print("=== Example: Basic LaTeX Optimization ===\n")
 
     # Sample LaTeX document
     latex_doc = r"""
@@ -1519,41 +1507,19 @@ More math: \begin{equation}
     )
 
     # Analyze complexity (Ψ₁)
-    print("1. Analyzing document complexity (Ψ₁ Perception)...")
     complexity = optimizer.analyze_complexity(latex_doc)
-    print(f"   - Document type: {complexity.document_type.value}")
-    print(f"   - Complexity score: {complexity.complexity_score:.1f}")
-    print(f"   - Equations: {complexity.equation_count}")
-    print(f"   - Figures: {complexity.figure_count}")
-    print(f"   - Packages: {complexity.package_count}")
-    print(f"   - Redundant packages: {complexity.redundant_packages}")
-    print()
 
     # Select strategies (Ψ₂)
-    print("2. Selecting optimization strategies (Ψ₂ Reasoning)...")
-    strategies = optimizer.select_strategies(complexity)
-    print(f"   Selected strategies: {', '.join(strategies)}")
-    print()
+    optimizer.select_strategies(complexity)
 
     # Apply optimizations (Ψ₃)
-    print("3. Applying optimizations (Ψ₃ Generation)...")
-    optimized, metrics = optimizer.optimize(latex_doc, max_iterations=3)
-
-    print(f"   - Total optimizations: {metrics.total_optimizations}")
-    print(f"   - Successful: {metrics.successful_optimizations}")
-    print(f"   - Failed: {metrics.failed_optimizations}")
-    print(f"   - Strategies used: {metrics.strategies_used}")
-    print()
-
-    print("4. Optimized LaTeX:")
-    print("=" * 70)
-    print(optimized)
-    print("=" * 70)
+    _optimized, _metrics = optimizer.optimize(latex_doc, max_iterations=3)
 
 
-def example_ml_learning():
+
+
+def example_ml_learning() -> None:
     """Example: Machine learning from compilation history."""
-    print("\n=== Example: ML-Based Optimization Learning ===\n")
 
     # Create optimizer with ML enabled
     optimizer = LaTeXOptimizer(
@@ -1562,7 +1528,6 @@ def example_ml_learning():
     )
 
     # Simulate compilation history
-    print("1. Simulating compilation history...")
 
     sample_docs = [
         (DocumentType.ARTICLE, "equation_simplification", True),
@@ -1574,7 +1539,7 @@ def example_ml_learning():
 
     for doc_type, strategy, success in sample_docs:
         # Create synthetic complexity
-        complexity = DocumentComplexity(
+        DocumentComplexity(
             total_lines=100,
             equation_count=10 if doc_type == DocumentType.ARTICLE else 50,
             package_count=15,
@@ -1594,48 +1559,32 @@ def example_ml_learning():
         if optimizer.learner:
             optimizer.learner.record_compilation(record)
 
-    print(f"   Recorded {len(sample_docs)} compilation attempts")
-    print()
 
     # Get strategy rankings
-    print("2. Getting learned strategy rankings...")
     if optimizer.learner:
         rankings = optimizer.learner.get_strategy_ranking(
             DocumentType.ARTICLE, OptimizationLevel.MODERATE
         )
-        print("   Strategy rankings for ARTICLE documents:")
-        for strategy_name, score in rankings[:5]:
-            print(f"     - {strategy_name}: {score:.3f}")
-    print()
+        for _strategy_name, _score in rankings[:5]:
+            pass
 
 
-def example_autonomic_properties():
+def example_autonomic_properties() -> None:
     """Example: Demonstrate autonomic computing properties."""
-    print("\n=== Example: Autonomic Computing Properties ===\n")
 
     optimizer = LaTeXOptimizer(optimization_level=OptimizationLevel.AGGRESSIVE)
 
     # Self-configuration: Adapts to document type
-    print("1. Self-Configuration (adapts to document type):")
     article_doc = r"\documentclass{article}\begin{document}Test\end{document}"
     book_doc = r"\documentclass{book}\begin{document}\chapter{Test}Test\end{document}"
 
-    article_complexity = optimizer.analyze_complexity(article_doc)
-    book_complexity = optimizer.analyze_complexity(book_doc)
+    optimizer.analyze_complexity(article_doc)
+    optimizer.analyze_complexity(book_doc)
 
-    print(f"   - Article detected as: {article_complexity.document_type.value}")
-    print(f"   - Book detected as: {book_complexity.document_type.value}")
-    print()
 
     # Self-optimization: Learns best strategies
-    print("2. Self-Optimization (learns from history):")
-    print("   - Tracks strategy performance over time")
-    print("   - Adjusts rankings based on success rates")
-    print("   - Favors recent successful strategies")
-    print()
 
     # Self-healing: Proposes fixes
-    print("3. Self-Healing (proposes fixes):")
     broken_doc = r"""
 \documentclass{article}
 \usepackage{epsfig}  % Obsolete package
@@ -1644,26 +1593,19 @@ def example_autonomic_properties():
 \end{document}
 """
     complexity = optimizer.analyze_complexity(broken_doc)
-    strategies = optimizer.select_strategies(complexity)
-    print(f"   - Detected issues, proposing: {', '.join(strategies)}")
-    print()
+    optimizer.select_strategies(complexity)
 
     # Self-protection: Validates changes
-    print("4. Self-Protection (validates changes):")
     test_content = r"\documentclass{article}\begin{document}Test\end{document}"
     broken_content = r"\documentclass{article}Test\end{document}"  # Missing begin
 
-    valid = optimizer._validate_optimization(test_content, test_content)
-    invalid = optimizer._validate_optimization(test_content, broken_content)
-
-    print(f"   - Valid optimization: {valid}")
-    print(f"   - Invalid optimization (broken structure): {invalid}")
-    print()
+    optimizer._validate_optimization(test_content, test_content)
+    optimizer._validate_optimization(test_content, broken_content)
 
 
-def example_comprehensive():
+
+def example_comprehensive() -> None:
     """Comprehensive example with all features."""
-    print("\n=== Comprehensive Example ===\n")
 
     # Complex thesis document
     thesis_doc = r"""
@@ -1713,30 +1655,16 @@ C & D
 \end{document}
 """
 
-    print("Creating optimizer with ML enabled...")
     optimizer = LaTeXOptimizer(
         optimization_level=OptimizationLevel.AGGRESSIVE,
         enable_ml=True,
     )
 
-    print("\nRunning full optimization pipeline (Ψ₁ → Ψ₂ → Ψ₃)...\n")
-    optimized_content, metrics = optimizer.optimize(thesis_doc, max_iterations=5)
+    _optimized_content, metrics = optimizer.optimize(thesis_doc, max_iterations=5)
 
-    print("=" * 70)
-    print("OPTIMIZATION RESULTS")
-    print("=" * 70)
-    print(f"Total optimizations attempted: {metrics.total_optimizations}")
-    print(f"Successful: {metrics.successful_optimizations}")
-    print(f"Failed: {metrics.failed_optimizations}")
-    print(f"\nStrategies used:")
-    for strategy, count in metrics.strategies_used.items():
-        print(f"  - {strategy}: {count} times")
+    for _strategy, _count in metrics.strategies_used.items():
+        pass
 
-    print("\n" + "=" * 70)
-    print("OPTIMIZED DOCUMENT")
-    print("=" * 70)
-    print(optimized_content)
-    print("=" * 70)
 
 
 if __name__ == "__main__":
@@ -1746,12 +1674,3 @@ if __name__ == "__main__":
     example_autonomic_properties()
     example_comprehensive()
 
-    print("\n✓ All examples completed successfully!")
-    print("\nKey Features Demonstrated:")
-    print("  Ψ₁ Perception: Document complexity analysis")
-    print("  Ψ₂ Reasoning: Strategy selection with ML")
-    print("  Ψ₃ Generation: Adaptive transformations")
-    print("  Self-configuration: Document type adaptation")
-    print("  Self-optimization: Learning from history")
-    print("  Self-healing: Error detection and fixing")
-    print("  Self-protection: Validation before applying changes")

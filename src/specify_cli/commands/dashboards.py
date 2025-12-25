@@ -34,8 +34,8 @@ from specify_cli.core.telemetry import span
 
 # Lazy imports for heavy dependencies
 try:
-    import numpy as np
-    from numpy.typing import NDArray
+    import numpy as np  # noqa: F401 - Used later in the file
+    from numpy.typing import NDArray  # noqa: F401 - Used for type hints
 
     NUMPY_AVAILABLE = True
 except ImportError:
@@ -121,7 +121,7 @@ def show_semantic_space(
     """
     with span("commands.dashboard.show_semantic_space", method=method, dimensions=dimensions):
         if not check_dependencies():
-            raise typer.Exit(1)
+            raise typer.Exit(1) from None
 
         from specify_cli.hyperdimensional.dashboards import DashboardFramework
 
@@ -146,7 +146,7 @@ def show_semantic_space(
             )
         else:
             console.print(f"[red]Invalid dimensions: {dimensions}. Use 2 or 3.[/red]")
-            raise typer.Exit(1)
+            raise typer.Exit(1) from None
 
         # Display results
         console.print(f"\n[bold]{viz.title}[/bold]")
@@ -177,7 +177,7 @@ def analyze_quality(
     """
     with span("commands.dashboard.analyze_quality"):
         if not check_dependencies():
-            raise typer.Exit(1)
+            raise typer.Exit(1) from None
 
         from specify_cli.hyperdimensional.export import ExportManager
 
@@ -216,7 +216,7 @@ def analyze_quality(
 
         if output:
             if output.suffix == ".html":
-                html = exporter.export_to_html(report, output)
+                exporter.export_to_html(report, output)
                 console.print(f"[green]HTML report saved to {output}[/green]")
             else:
                 exporter.export_to_json(report.to_dict(), output)
@@ -237,7 +237,7 @@ def recommend_features(
     """
     with span("commands.dashboard.recommend_features", job=job, top_k=top_k):
         if not check_dependencies():
-            raise typer.Exit(1)
+            raise typer.Exit(1) from None
 
         from specify_cli.hyperdimensional.search import SemanticSearchDashboard
 
@@ -289,7 +289,7 @@ def monitor_system(
     """
     with span("commands.dashboard.monitor_system", watch=watch):
         if not check_dependencies():
-            raise typer.Exit(1)
+            raise typer.Exit(1) from None
 
         from specify_cli.hyperdimensional.monitoring import MonitoringSystem
 
@@ -349,7 +349,7 @@ def export_report(
     """
     with span("commands.dashboard.export_report", report_type=report_type, format=format):
         if not check_dependencies():
-            raise typer.Exit(1)
+            raise typer.Exit(1) from None
 
         from specify_cli.hyperdimensional.export import ExportManager
 
@@ -380,7 +380,7 @@ def export_report(
             exporter.export_to_json(report.to_dict(), output)
         else:
             console.print(f"[red]Unsupported format: {format}[/red]")
-            raise typer.Exit(1)
+            raise typer.Exit(1) from None
 
         console.print(f"[green]Report exported to {output}[/green]")
 
@@ -396,7 +396,7 @@ def repl() -> None:
     """
     with span("commands.dashboard.repl"):
         if not check_dependencies():
-            raise typer.Exit(1)
+            raise typer.Exit(1) from None
 
         console.print("[yellow]Interactive REPL not yet fully implemented.[/yellow]")
         console.print("[dim]Use other dashboard commands for now.[/dim]")

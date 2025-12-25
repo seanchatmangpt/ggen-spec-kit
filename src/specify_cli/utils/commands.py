@@ -3,6 +3,7 @@
 import shutil
 import subprocess
 from pathlib import Path
+from typing import Any
 
 from rich.console import Console
 
@@ -13,7 +14,7 @@ CLAUDE_LOCAL_PATH = Path.home() / ".claude" / "local" / "claude"
 
 
 def run_command(
-    cmd: list[str], check_return: bool = True, capture: bool = False, shell: bool = False
+    cmd: list[str], check_return: bool = True, capture: bool = False
 ) -> str | None:
     """Run a shell command and optionally capture output.
 
@@ -21,18 +22,21 @@ def run_command(
         cmd: Command and arguments as a list
         check_return: Whether to raise exception on non-zero exit code
         capture: Whether to capture and return stdout
-        shell: Whether to run command through shell
 
     Returns:
         Captured stdout if capture=True, otherwise None
+
+    Security:
+        This function intentionally does NOT support shell=True to prevent
+        shell injection vulnerabilities. Commands must be passed as lists.
     """
     try:
         if capture:
             result = subprocess.run(
-                cmd, check=check_return, capture_output=True, text=True, shell=shell
+                cmd, check=check_return, capture_output=True, text=True
             )
             return result.stdout.strip()
-        subprocess.run(cmd, check=check_return, shell=shell)
+        subprocess.run(cmd, check=check_return)
         return None
     except subprocess.CalledProcessError as e:
         if check_return:
@@ -44,7 +48,7 @@ def run_command(
         return None
 
 
-def check_tool(tool: str, tracker=None) -> bool:
+def check_tool(tool: str, tracker: Any = None) -> bool:
     """Check if a tool is installed. Optionally update tracker.
 
     Args:

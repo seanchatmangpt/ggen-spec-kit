@@ -29,9 +29,8 @@ See Also
 - :mod:`pm4py` : Process mining library
 """
 
-from __future__ import annotations
-
 from pathlib import Path
+from typing import TYPE_CHECKING
 
 import typer
 from rich.console import Console
@@ -188,17 +187,17 @@ def discover(
 
     except FileNotFoundError as e:
         colour(f"[red]✗ File not found:[/red] {e}", "red")
-        raise typer.Exit(1)
+        raise typer.Exit(1) from None
     except ValueError as e:
         colour(f"[red]✗ Invalid input:[/red] {e}", "red")
-        raise typer.Exit(1)
+        raise typer.Exit(1) from None
     except Exception as e:
         colour(f"[red]✗ Error during discovery:[/red] {e}", "red")
         if verbose:
             import traceback
 
             console.print(traceback.format_exc())
-        raise typer.Exit(1)
+        raise typer.Exit(1) from None
 
 
 @app.command("conform")
@@ -334,17 +333,17 @@ def conform(
 
     except FileNotFoundError as e:
         colour(f"[red]✗ File not found:[/red] {e}", "red")
-        raise typer.Exit(1)
+        raise typer.Exit(1) from None
     except ValueError as e:
         colour(f"[red]✗ Invalid input:[/red] {e}", "red")
-        raise typer.Exit(1)
+        raise typer.Exit(1) from None
     except Exception as e:
         colour(f"[red]✗ Error during conformance checking:[/red] {e}", "red")
         if verbose:
             import traceback
 
             console.print(traceback.format_exc())
-        raise typer.Exit(1)
+        raise typer.Exit(1) from None
 
 
 @app.command("stats")
@@ -462,17 +461,17 @@ def stats(
 
     except FileNotFoundError as e:
         colour(f"[red]✗ File not found:[/red] {e}", "red")
-        raise typer.Exit(1)
+        raise typer.Exit(1) from None
     except ValueError as e:
         colour(f"[red]✗ Invalid input:[/red] {e}", "red")
-        raise typer.Exit(1)
+        raise typer.Exit(1) from None
     except Exception as e:
         colour(f"[red]✗ Error extracting statistics:[/red] {e}", "red")
         if verbose:
             import traceback
 
             console.print(traceback.format_exc())
-        raise typer.Exit(1)
+        raise typer.Exit(1) from None
 
 
 @app.command("filter")
@@ -626,17 +625,17 @@ def filter_log(
 
     except FileNotFoundError as e:
         colour(f"[red]✗ File not found:[/red] {e}", "red")
-        raise typer.Exit(1)
+        raise typer.Exit(1) from None
     except ValueError as e:
         colour(f"[red]✗ Invalid input:[/red] {e}", "red")
-        raise typer.Exit(1)
+        raise typer.Exit(1) from None
     except Exception as e:
         colour(f"[red]✗ Error during filtering:[/red] {e}", "red")
         if verbose:
             import traceback
 
             console.print(traceback.format_exc())
-        raise typer.Exit(1)
+        raise typer.Exit(1) from None
 
 
 @app.command("sample")
@@ -714,7 +713,7 @@ def sample(
         # Validate parameters
         if num_traces is None and num_events is None:
             colour("[red]✗ Must specify either --num-traces or --num-events[/red]", "red")
-            raise typer.Exit(1)
+            raise typer.Exit(1) from None
 
         # Default output file
         if output_file is None:
@@ -787,14 +786,14 @@ def sample(
 
     except FileNotFoundError as e:
         colour(f"[red]✗ File not found:[/red] {e}", "red")
-        raise typer.Exit(1)
+        raise typer.Exit(1) from None
     except ValueError as e:
         colour(f"[red]✗ Invalid input:[/red] {e}", "red")
-        raise typer.Exit(1)
+        raise typer.Exit(1) from None
     except Exception as e:
         colour(f"[red]✗ Error during sampling:[/red] {e}", "red")
         if verbose:
             import traceback
 
             console.print(traceback.format_exc())
-        raise typer.Exit(1)
+        raise typer.Exit(1) from None

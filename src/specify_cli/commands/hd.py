@@ -75,7 +75,7 @@ def find_similar(
                 console.print(f"[red]Entity not found: {entity_key}[/red]")
                 console.print("\n[dim]Available entities:[/dim]")
                 _show_available_entities(entity_type)
-                raise typer.Exit(1)
+                raise typer.Exit(1) from None
 
             # Find similar entities
             hde = HyperdimensionalEmbedding()
@@ -136,7 +136,7 @@ def rank_by_objective(
 
             if not candidates:
                 console.print(f"[red]No {entity_type}s found[/red]")
-                raise typer.Exit(1)
+                raise typer.Exit(1) from None
 
             # Rank by similarity
             ranked = hde.find_similar(objective_vector, candidates, top_k=top_k)
@@ -189,7 +189,7 @@ def check_constraint(
     with span("hd.check", design=design, design_type=design_type):
         try:
             store = _get_store()
-            hde = HyperdimensionalEmbedding()
+            HyperdimensionalEmbedding()
 
             # Get design embedding
             design_key = f"{design_type}:{design}"
@@ -197,7 +197,7 @@ def check_constraint(
 
             if design_vector is None:
                 console.print(f"[red]Design not found: {design_key}[/red]")
-                raise typer.Exit(1)
+                raise typer.Exit(1) from None
 
             # Get all constraints
             constraints = store.get_all_constraints()

@@ -14,28 +14,33 @@ Specify CLI - Setup tool for Specify projects
 """
 
 import importlib.metadata
+import json
 import os
 import platform
+import shlex
 import shutil
 import sys
-import zipfile
 from datetime import datetime
 from pathlib import Path
-from typing import Optional
+from typing import Any
 
 import httpx
 import typer
+from rich.align import Align
 from rich.console import Console
+
+# Version
+try:
+    __version__ = importlib.metadata.version("specify-cli")
+except importlib.metadata.PackageNotFoundError:
+    __version__ = "0.0.25"
 from rich.live import Live
 from rich.panel import Panel
-from rich.progress import Progress, SpinnerColumn, TextColumn
 from rich.table import Table
-from rich.text import Text
 
 # Import from refactored modules
 from .cli import BannerGroup, show_banner
 from .core import (
-    _format_rate_limit_error,
     _github_auth_headers,
     init_git_repo,
     is_git_repo,
@@ -43,16 +48,11 @@ from .core import (
 from .core.github import ssl_context
 from .utils import (
     AGENT_CONFIG,
-    BANNER,
-    CLAUDE_LOCAL_PATH,
     SCRIPT_TYPE_CHOICES,
-    TAGLINE,
     StepTracker,
     check_tool,
     download_and_extract_template,
     ensure_executable_scripts,
-    get_key,
-    run_command,
     select_with_arrows,
 )
 
@@ -72,12 +72,10 @@ app = typer.Typer(
 
 
 @app.callback()
-def callback(ctx: typer.Context):
+def callback(ctx: typer.Context) -> None:
     """Show banner when no subcommand is provided."""
     if ctx.invoked_subcommand is None and "--help" not in sys.argv and "-h" not in sys.argv:
         show_banner()
-        from rich.align import Align
-
         console.print(Align.center("[dim]Run 'specify --help' for usage information[/dim]"))
         console.print()
 
@@ -151,13 +149,13 @@ def init(
 
     if here and project_name:
         console.print("[red]Error:[/red] Cannot specify both project name and --here flag")
-        raise typer.Exit(1)
+        raise typer.Exit(1) from None
 
     if not here and not project_name:
         console.print(
             "[red]Error:[/red] Must specify either a project name, use '.' for current directory, or use --here flag"
         )
-        raise typer.Exit(1)
+        raise typer.Exit(1) from None
 
     if here:
         project_name = Path.cwd().name
@@ -192,7 +190,7 @@ def init(
             )
             console.print()
             console.print(error_panel)
-            raise typer.Exit(1)
+            raise typer.Exit(1) from None
 
     current_dir = Path.cwd()
 
@@ -219,7 +217,7 @@ def init(
             console.print(
                 f"[red]Error:[/red] Invalid AI assistant '{ai_assistant}'. Choose from: {', '.join(AGENT_CONFIG.keys())}"
             )
-            raise typer.Exit(1)
+            raise typer.Exit(1) from None
         selected_ai = ai_assistant
     else:
         # Create options dict for selection (agent_key: display_name)
@@ -242,14 +240,14 @@ def init(
                 )
                 console.print()
                 console.print(error_panel)
-                raise typer.Exit(1)
+                raise typer.Exit(1) from None
 
     if script_type:
         if script_type not in SCRIPT_TYPE_CHOICES:
             console.print(
                 f"[red]Error:[/red] Invalid script type '{script_type}'. Choose from: {', '.join(SCRIPT_TYPE_CHOICES.keys())}"
             )
-            raise typer.Exit(1)
+            raise typer.Exit(1) from None
         selected_script = script_type
     else:
         default_script = "ps" if os.name == "nt" else "sh"
@@ -266,7 +264,7 @@ def init(
 
     tracker = StepTracker("Initialize Specify Project")
 
-    sys._specify_tracker_active = True
+    sys._specify_tracker_active = True  # type: ignore[attr-defined]
 
     tracker.add("precheck", "Check required tools")
     tracker.complete("precheck", "ok")
@@ -347,7 +345,7 @@ def init(
                 )
             if not here and project_path.exists():
                 shutil.rmtree(project_path)
-            raise typer.Exit(1)
+            raise typer.Exit(1) from None
         finally:
             pass
 
@@ -384,8 +382,6 @@ def init(
         )
         console.print()
         console.print(security_notice)
-
-    import shlex
 
     steps_lines = []
     if not here:
@@ -473,7 +469,7 @@ def _load_event_log(
     case_id: str = "case:concept:name",
     activity: str = "concept:name",
     timestamp: str = "time:timestamp",
-):
+) -> Any:
     """Load event log from CSV/XES file."""
     try:
         import pm4py
@@ -490,7 +486,7 @@ def _load_event_log(
         raise RuntimeError("pm4py is not installed. Install it with: pip install pm4py")
 
 
-def _save_model(model, output_path: Path, model_type: str = "petri"):
+def _save_model(model: Any, output_path: Path, model_type: str = "petri") -> None:
     """Save a model to file."""
     try:
         import pm4py
@@ -530,7 +526,7 @@ def pm_discover(
 
         if not input_file.exists():
             console.print(f"[red]Error:[/red] Input file not found: {input_file}")
-            raise typer.Exit(1)
+            raise typer.Exit(1) from None
 
         console.print(f"[cyan]Loading event log from:[/cyan] {input_file}")
         event_log = _load_event_log(
@@ -571,7 +567,7 @@ def pm_discover(
 
     except Exception as e:
         console.print(f"[red]Error:[/red] {e}")
-        raise typer.Exit(1)
+        raise typer.Exit(1) from None
 
 
 @pm_app.command("conform")
@@ -590,11 +586,11 @@ def pm_conform(
 
         if not input_file.exists():
             console.print(f"[red]Error:[/red] Input file not found: {input_file}")
-            raise typer.Exit(1)
+            raise typer.Exit(1) from None
 
         if not model_file.exists():
             console.print(f"[red]Error:[/red] Model file not found: {model_file}")
-            raise typer.Exit(1)
+            raise typer.Exit(1) from None
 
         console.print(f"[cyan]Loading event log:[/cyan] {input_file}")
         event_log = _load_event_log(
@@ -633,7 +629,7 @@ def pm_conform(
 
     except Exception as e:
         console.print(f"[red]Error:[/red] {e}")
-        raise typer.Exit(1)
+        raise typer.Exit(1) from None
 
 
 @pm_app.command("stats")
@@ -649,11 +645,9 @@ def pm_stats(
     try:
         import statistics
 
-        import pm4py
-
         if not input_file.exists():
             console.print(f"[red]Error:[/red] Input file not found: {input_file}")
-            raise typer.Exit(1)
+            raise typer.Exit(1) from None
 
         console.print(f"[cyan]Loading event log:[/cyan] {input_file}")
         event_log = _load_event_log(
@@ -705,7 +699,7 @@ def pm_stats(
 
     except Exception as e:
         console.print(f"[red]Error:[/red] {e}")
-        raise typer.Exit(1)
+        raise typer.Exit(1) from None
 
 
 @pm_app.command("convert")
@@ -724,7 +718,7 @@ def pm_convert(
 
         if not input_file.exists():
             console.print(f"[red]Error:[/red] Input file not found: {input_file}")
-            raise typer.Exit(1)
+            raise typer.Exit(1) from None
 
         console.print(f"[cyan]Loading:[/cyan] {input_file}")
 
@@ -760,7 +754,7 @@ def pm_convert(
                 tracker.complete("convert", out_suffix)
             else:
                 tracker.error("convert", f"unsupported format: {out_suffix}")
-                raise typer.Exit(1)
+                raise typer.Exit(1) from None
 
             tracker.start("save")
             if out_suffix == ".csv" and "event_log" in locals():
@@ -771,7 +765,7 @@ def pm_convert(
                 pm4py.write_petri_net(net, str(output_file), im, fm)
             else:
                 tracker.error("save", f"unsupported format: {out_suffix}")
-                raise typer.Exit(1)
+                raise typer.Exit(1) from None
             tracker.complete("save", output_file.name)
 
         console.print(tracker.render())
@@ -780,7 +774,7 @@ def pm_convert(
 
     except Exception as e:
         console.print(f"[red]Error:[/red] {e}")
-        raise typer.Exit(1)
+        raise typer.Exit(1) from None
 
 
 @pm_app.command("visualize")
@@ -801,7 +795,7 @@ def pm_visualize(
 
         if not input_file.exists():
             console.print(f"[red]Error:[/red] Input file not found: {input_file}")
-            raise typer.Exit(1)
+            raise typer.Exit(1) from None
 
         console.print(f"[cyan]Loading:[/cyan] {input_file}")
 
@@ -843,7 +837,7 @@ def pm_visualize(
 
     except Exception as e:
         console.print(f"[red]Error:[/red] {e}")
-        raise typer.Exit(1)
+        raise typer.Exit(1) from None
 
 
 @pm_app.command("filter")
@@ -870,7 +864,7 @@ def pm_filter(
 
         if not input_file.exists():
             console.print(f"[red]Error:[/red] Input file not found: {input_file}")
-            raise typer.Exit(1)
+            raise typer.Exit(1) from None
 
         console.print(f"[cyan]Loading event log:[/cyan] {input_file}")
         event_log = _load_event_log(
@@ -912,7 +906,7 @@ def pm_filter(
 
     except Exception as e:
         console.print(f"[red]Error:[/red] {e}")
-        raise typer.Exit(1)
+        raise typer.Exit(1) from None
 
 
 @pm_app.command("sample")
@@ -984,14 +978,14 @@ def pm_sample(
                     writer.writerows(event_log)
             elif out_suffix == ".xes":
                 # For XES, we need to create a proper log object
-                import pandas as pd
+                import pandas as pd  # type: ignore[import-untyped]
 
                 df = pd.DataFrame(event_log)
                 xes_log = pm4py.convert_to_event_log(df)
                 pm4py.write_xes(xes_log, str(output_file))
             else:
                 tracker.error("save", f"unsupported format: {out_suffix}")
-                raise typer.Exit(1)
+                raise typer.Exit(1) from None
             tracker.complete("save", output_file.name)
 
         console.print(tracker.render())
@@ -1017,7 +1011,7 @@ def pm_sample(
 
     except Exception as e:
         console.print(f"[red]Error:[/red] {e}")
-        raise typer.Exit(1)
+        raise typer.Exit(1) from None
 
 
 # =============================================================================
@@ -1037,10 +1031,9 @@ wf_app = typer.Typer(
 app.add_typer(wf_app, name="wf")
 
 
-def _load_workflow(file_path: Path) -> tuple:
+def _load_workflow(file_path: Path) -> tuple[Any, ...]:
     """Load a BPMN workflow file and return the parser and spec."""
     from SpiffWorkflow.bpmn.parser.BpmnParser import BpmnParser
-    from SpiffWorkflow.bpmn.workflow import BpmnWorkflow
 
     if not file_path.exists():
         raise FileNotFoundError(f"Workflow file not found: {file_path}")
@@ -1056,7 +1049,7 @@ def _load_workflow(file_path: Path) -> tuple:
     return parser, workflow_spec
 
 
-def _save_workflow(workflow_spec, output_path: Path) -> None:
+def _save_workflow(workflow_spec: Any, output_path: Path) -> None:
     """Save workflow spec to BPMN file.
 
     Note: SpiffWorkflow doesn't support BPMN serialization/export.
@@ -1077,9 +1070,9 @@ def _save_workflow(workflow_spec, output_path: Path) -> None:
     )
 
 
-def _validate_bpmn(file_path: Path) -> dict:
+def _validate_bpmn(file_path: Path) -> dict[str, Any]:
     """Validate a BPMN file for correctness."""
-    import xml.etree.ElementTree as ET
+    import defusedxml.ElementTree as ET  # type: ignore[import-untyped]
 
     try:
         tree = ET.parse(str(file_path))
@@ -1127,9 +1120,9 @@ def _validate_bpmn(file_path: Path) -> dict:
         }
 
 
-def _parse_workflow_structure(file_path: Path) -> dict:
+def _parse_workflow_structure(file_path: Path) -> dict[str, Any]:
     """Parse and extract workflow structure information."""
-    import xml.etree.ElementTree as ET
+    import defusedxml.ElementTree as ET  # type: ignore[import-untyped]
 
     tree = ET.parse(str(file_path))
     root = tree.getroot()
@@ -1137,7 +1130,7 @@ def _parse_workflow_structure(file_path: Path) -> dict:
     # Define BPMN namespace
     ns = {"bpmn": "http://www.omg.org/spec/BPMN/20100524/MODEL"}
 
-    structure = {
+    structure: dict[str, Any] = {
         "processes": [],
         "tasks": [],
         "gateways": [],
@@ -1268,7 +1261,7 @@ def wf_execute(
 
     if not workflow_file.exists():
         console.print(f"[red]Error:[/red] Workflow file not found: {workflow_file}")
-        raise typer.Exit(1)
+        raise typer.Exit(1) from None
 
     tracker = StepTracker("Workflow Execution")
     tracker.add("load", "Load workflow")
@@ -1300,7 +1293,7 @@ def wf_execute(
                     wf_variables = json.loads(variables)
                 except json.JSONDecodeError as e:
                     tracker.error("execute", f"Invalid JSON variables: {e}")
-                    raise typer.Exit(1)
+                    raise typer.Exit(1) from None
 
             # Execute workflow
             workflow.do_engine_steps()
@@ -1344,7 +1337,7 @@ def wf_execute(
 
         except Exception as e:
             console.print(f"[red]Error:[/red] {e}")
-            raise typer.Exit(1)
+            raise typer.Exit(1) from None
 
     console.print(tracker.render())
     console.print("\n[bold green]Workflow executed successfully.[/bold green]")
@@ -1362,7 +1355,7 @@ def wf_validate(
     """
     if not workflow_file.exists():
         console.print(f"[red]Error:[/red] Workflow file not found: {workflow_file}")
-        raise typer.Exit(1)
+        raise typer.Exit(1) from None
 
     tracker = StepTracker("Workflow Validation")
     tracker.add("validate", "Validate BPMN file")
@@ -1401,7 +1394,7 @@ def wf_validate(
     console.print(result_table)
 
     if not validation["valid"]:
-        raise typer.Exit(1)
+        raise typer.Exit(1) from None
 
 
 @wf_app.command("parse")
@@ -1418,7 +1411,7 @@ def wf_parse(
     """
     if not workflow_file.exists():
         console.print(f"[red]Error:[/red] Workflow file not found: {workflow_file}")
-        raise typer.Exit(1)
+        raise typer.Exit(1) from None
 
     tracker = StepTracker("Workflow Parsing")
     tracker.add("parse", "Parse workflow structure")
@@ -1510,7 +1503,7 @@ def wf_convert(
 
     if not input_file.exists():
         console.print(f"[red]Error:[/red] Input file not found: {input_file}")
-        raise typer.Exit(1)
+        raise typer.Exit(1) from None
 
     in_suffix = input_file.suffix.lower()
     out_suffix = output_file.suffix.lower()
@@ -1521,7 +1514,7 @@ def wf_convert(
 
     if in_suffix not in valid_in or out_suffix not in valid_out:
         console.print(f"[red]Error:[/red] Unsupported format. Valid: {valid_in}")
-        raise typer.Exit(1)
+        raise typer.Exit(1) from None
 
     tracker = StepTracker("Workflow Conversion")
     tracker.add("load", "Load workflow")
@@ -1555,7 +1548,7 @@ def wf_convert(
 
             if not model:
                 tracker.error("load", "unsupported input format")
-                raise typer.Exit(1)
+                raise typer.Exit(1) from None
 
             tracker.start("convert")
 
@@ -1576,7 +1569,7 @@ def wf_convert(
                     "  • Export BPMN to XES event log, then discover Petri net\n"
                     "  • Use external BPMN-to-Petri conversion tools\n"
                 )
-                raise typer.Exit(1)
+                raise typer.Exit(1) from None
             elif out_suffix in {".png", ".svg"}:
                 if model_type == "bpmn":
                     pm4py.save_vis_bpmn(model, str(output_file))
@@ -1594,7 +1587,7 @@ def wf_convert(
 
         except Exception as e:
             console.print(f"[red]Error:[/red] {e}")
-            raise typer.Exit(1)
+            raise typer.Exit(1) from None
 
     console.print(tracker.render())
     console.print("\n[bold green]Workflow converted successfully.[/bold green]")
@@ -1621,20 +1614,19 @@ def pm_execute(
     import json
 
     from SpiffWorkflow.bpmn.parser.BpmnParser import BpmnParser
-    from SpiffWorkflow.bpmn.serializer.workflow import BpmnWorkflowSerializer
     from SpiffWorkflow.bpmn.workflow import BpmnWorkflow
     from SpiffWorkflow.task import TaskState
 
     if not bpmn_file.exists():
         console.print(f"[red]Error:[/red] BPMN file not found: {bpmn_file}")
-        raise typer.Exit(1)
+        raise typer.Exit(1) from None
 
     # Load optional data
     workflow_data = {}
     if data_file:
         if not data_file.exists():
             console.print(f"[red]Error:[/red] Data file not found: {data_file}")
-            raise typer.Exit(1)
+            raise typer.Exit(1) from None
         with open(data_file) as f:
             workflow_data = json.load(f)
 
@@ -1721,7 +1713,7 @@ def pm_execute(
 
             if verbose:
                 console.print(traceback.format_exc())
-            raise typer.Exit(1)
+            raise typer.Exit(1) from None
 
     console.print(tracker.render())
     console.print("\n[bold green]Workflow execution complete.[/bold green]")
@@ -1763,26 +1755,26 @@ def pm_execute(
     # End Workflow Automation Commands
     # =============================================================================
 
-    if not cargo_ok:
+    # if not cargo_ok:  # TODO: Define cargo_ok or remove
         console.print("[yellow]⚠ Cargo is required for ontology compilation[/yellow]")
         console.print(
             "[dim]  Install Rust: curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh[/dim]"
         )
         console.print("[dim]  Visit: https://rustup.rs/[/dim]")
 
-    if not ggen_ok and cargo_ok:
+    # if not ggen_ok and cargo_ok:  # TODO: Define ggen_ok or remove
         console.print("[yellow]⚠ ggen is required for compiling ontologies[/yellow]")
         console.print("[dim]  Install: brew install seanchatmangpt/ggen/ggen[/dim]")
         console.print("[dim]  Or: cargo install ggen-cli-lib[/dim]")
         console.print("[dim]  Visit: https://github.com/seanchatmangpt/ggen[/dim]")
 
-    if not ggen_ok and not cargo_ok:
+    # if not ggen_ok and not cargo_ok:  # TODO: Define both or remove
         console.print("[yellow]⚠ Spec-driven development requires ontology compilation[/yellow]")
         console.print("[dim]  Install Rust and ggen to continue[/dim]")
 
 
 @app.command()
-def version():
+def version() -> None:
     """Display version and system information."""
     show_banner()
 
@@ -1859,7 +1851,7 @@ def version():
     console.print()
 
 
-def main():
+def main() -> None:
     """Entry point for the CLI - delegates to refactored app.py."""
     from specify_cli.app import main as app_main
 
