@@ -1529,4 +1529,965 @@ $\mu_5$ (Receipt) & 5ms & 5\% \\
 \textit{Scaling}: Linear with command count; Quadratic with argument count (due to formatting)
 \end{table}
 
+\chapter{Autonomic Design Patterns for Code Generation}
+
+\section{Introduction to Autonomic Patterns}
+
+Autonomic computing systems exhibit self-managing capabilities: self-configuration, self-optimization, self-healing, and self-protection. When applied to RDF-first code generation, these principles enable transformation pipelines that adapt to failures, optimize performance, and maintain consistency without manual intervention.
+
+This appendix catalogs six design patterns for building autonomic code generation systems based on the constitutional equation $\texttt{spec.md} = \mu(\texttt{feature.ttl})$. Each pattern addresses a specific challenge in making the transformation pipeline robust, adaptive, and intelligent.
+
+\textbf{Pattern Language Overview}:
+\begin{itemize}
+    \item \textbf{Self-Healing Transformation}: Automatic recovery from generation failures
+    \item \textbf{Adaptive Template Selection}: Context-aware template choice
+    \item \textbf{Federated Code Generation}: Multi-agent collaboration across ontologies
+    \item \textbf{Continuous Learning Transformation}: Feedback-driven improvement
+    \item \textbf{Semantic Integrity Guardian}: Autonomous consistency validation
+    \item \textbf{Multi-Language Orchestrator}: Cross-language coordination
+\end{itemize}
+
+% ========================================================================
+\section{Pattern: Self-Healing Transformation}
+
+\subsection{Intent and Motivation}
+
+\textbf{Intent}: Automatically detect and recover from code generation failures by maintaining fallback strategies, validating outputs, and retrying transformations with adjusted parameters.
+
+\textbf{Motivation}: Code generation can fail at multiple stages:
+\begin{itemize}
+    \item SHACL validation failures due to malformed RDF
+    \item SPARQL query timeouts on large graphs
+    \item Template rendering errors from missing variables
+    \item Formatter crashes on syntactically invalid code
+    \item Receipt hash mismatches indicating corruption
+\end{itemize}
+
+Traditional systems fail completely when any stage fails. A self-healing transformation pipeline isolates failures, attempts recovery strategies, and gracefully degrades when recovery is impossible.
+
+\subsection{Participants and Structure}
+
+\textbf{Participants}:
+\begin{enumerate}
+    \item \textbf{TransformationMonitor}: Observes each stage $\mu_i$ for failures
+    \item \textbf{FailureDetector}: Classifies failure types (transient vs. permanent)
+    \item \textbf{RecoveryStrategist}: Maintains fallback strategies per failure type
+    \item \textbf{ValidationOracle}: Verifies output correctness post-recovery
+    \item \textbf{TelemetryLogger}: Records all failures and recoveries for analysis
+\end{enumerate}
+
+\textbf{Structure}:
+\begin{lstlisting}[language=Python]
+class SelfHealingTransformation:
+    def __init__(self):
+        self.strategies = {
+            SHACLValidationError: [
+                self.relax_constraints,
+                self.partial_validation,
+                self.skip_validation
+            ],
+            SPARQLTimeoutError: [
+                self.simplify_query,
+                self.partition_graph,
+                self.use_cached_results
+            ],
+            TemplateRenderError: [
+                self.provide_defaults,
+                self.use_fallback_template,
+                self.generate_stub
+            ]
+        }
+
+    def transform(self, ontology: RDF) -> CodeArtifacts:
+        for stage in [mu_1, mu_2, mu_3, mu_4, mu_5]:
+            try:
+                result = stage(ontology)
+                if not self.validate(result):
+                    result = self.heal(stage, result)
+            except Exception as e:
+                result = self.recover(stage, e, ontology)
+            ontology = result
+        return ontology
+\end{lstlisting}
+
+\subsection{Collaboration Diagram}
+
+\textbf{Normal Flow}:
+\begin{enumerate}
+    \item User invokes transformation: $\mu(\texttt{feature.ttl})$
+    \item TransformationMonitor wraps each stage with try-catch
+    \item Stage executes successfully
+    \item ValidationOracle confirms correctness
+    \item Proceed to next stage
+\end{enumerate}
+
+\textbf{Failure Flow}:
+\begin{enumerate}
+    \item Stage $\mu_i$ raises exception $E$
+    \item FailureDetector classifies $E$ (transient/permanent, type)
+    \item RecoveryStrategist selects strategy list for $E$ type
+    \item Attempt first recovery strategy
+    \item ValidationOracle checks recovered output
+    \item If valid: log recovery and continue
+    \item If invalid: try next strategy
+    \item If all strategies fail: graceful degradation (emit stub + warning)
+\end{enumerate}
+
+\subsection{Implementation Considerations}
+
+\textbf{Recovery Strategy Design}:
+\begin{itemize}
+    \item \textbf{Progressive Relaxation}: Start with strict validation, progressively relax constraints
+    \item \textbf{Temporal Retry}: Retry transient failures with exponential backoff
+    \item \textbf{Spatial Partitioning}: Split large graphs into smaller chunks
+    \item \textbf{Semantic Defaults}: Use ontology metadata to infer missing values
+\end{itemize}
+
+\textbf{Validation Oracles}:
+\begin{lstlisting}[language=Python]
+def validate_generated_code(code: str, language: str) -> bool:
+    # Syntactic validation
+    if not parse_syntax(code, language):
+        return False
+
+    # Semantic validation (expected symbols present)
+    if not check_expected_symbols(code):
+        return False
+
+    # Consistency with RDF source
+    if not verify_rdf_alignment(code):
+        return False
+
+    return True
+\end{lstlisting}
+
+\textbf{Telemetry Integration}:
+\begin{itemize}
+    \item Record failure type, stage, recovery strategy used
+    \item Measure recovery success rate per strategy
+    \item Track mean time to recovery (MTTR)
+    \item Alert on repeated failures (indicates systemic issue)
+\end{itemize}
+
+\subsection{Known Uses and Variations}
+
+\textbf{Known Uses}:
+\begin{enumerate}
+    \item \textbf{spec-kit SHACL validation}: Relaxes shape constraints when strict validation fails
+    \item \textbf{ggen template fallbacks}: Uses generic template when specialized template is missing
+    \item \textbf{Formatter error handling}: Falls back to unformatted code if formatter crashes
+\end{enumerate}
+
+\textbf{Variations}:
+\begin{itemize}
+    \item \textbf{Predictive Healing}: Machine learning predicts likely failures before they occur
+    \item \textbf{Community-Sourced Strategies}: Crowdsource recovery strategies from user experiences
+    \item \textbf{A/B Recovery Testing}: Test multiple strategies in parallel, choose best
+\end{itemize}
+
+% ========================================================================
+\section{Pattern: Adaptive Template Selection}
+
+\subsection{Intent and Motivation}
+
+\textbf{Intent}: Dynamically select the most appropriate code generation template based on ontology context, target language constraints, and code quality metrics.
+
+\textbf{Motivation}: A single template cannot serve all contexts:
+\begin{itemize}
+    \item Simple data classes need minimal templates
+    \item Complex business logic needs full-featured templates
+    \item Performance-critical code needs optimized templates
+    \item Legacy systems need backward-compatible templates
+\end{itemize}
+
+Adaptive selection chooses templates that maximize code quality for the specific ontology being compiled.
+
+\subsection{Participants and Structure}
+
+\textbf{Participants}:
+\begin{enumerate}
+    \item \textbf{TemplateRegistry}: Catalog of available templates with metadata
+    \item \textbf{ContextAnalyzer}: Extracts features from RDF ontology
+    \item \textbf{SelectionPolicy}: Decision logic for template choice
+    \item \textbf{QualityPredictor}: Estimates code quality for template-ontology pairs
+    \item \textbf{PerformanceTracker}: Records actual quality metrics post-generation
+\end{enumerate}
+
+\textbf{Structure}:
+\begin{lstlisting}[language=Python]
+class AdaptiveTemplateSelector:
+    def select_template(self, ontology: RDF,
+                       language: str) -> Template:
+        # Extract ontology features
+        features = {
+            'complexity': self.measure_complexity(ontology),
+            'class_count': self.count_classes(ontology),
+            'property_depth': self.max_property_depth(ontology),
+            'inheritance_depth': self.max_inheritance(ontology)
+        }
+
+        # Get candidate templates
+        candidates = self.registry.get(language)
+
+        # Score each template
+        scores = []
+        for template in candidates:
+            quality = self.predictor.predict(
+                template, features
+            )
+            scores.append((template, quality))
+
+        # Select best template
+        return max(scores, key=lambda x: x[1])[0]
+\end{lstlisting}
+
+\subsection{Collaboration Diagram}
+
+\textbf{Selection Flow}:
+\begin{enumerate}
+    \item User initiates code generation for ontology $O$, target language $L$
+    \item ContextAnalyzer extracts structural features from $O$
+    \item TemplateRegistry returns all templates for $L$
+    \item For each template $T$:
+    \begin{itemize}
+        \item QualityPredictor estimates quality score $Q(T, O)$
+        \item Scores based on: cyclomatic complexity, type safety, maintainability
+    \end{itemize}
+    \item SelectionPolicy chooses $T^* = \arg\max_T Q(T, O)$
+    \item Template $T^*$ is used for $\mu_3$ (Emission stage)
+    \item PerformanceTracker records actual quality metrics
+    \item Feedback loop: Update QualityPredictor with actual metrics
+\end{enumerate}
+
+\subsection{Implementation Considerations}
+
+\textbf{Feature Extraction from RDF}:
+\begin{lstlisting}[language=SPARQL]
+# Complexity metric: count of SPARQL patterns needed
+SELECT (COUNT(*) as ?complexity) WHERE {
+  {
+    SELECT DISTINCT ?class WHERE {
+      ?class a rdfs:Class
+    }
+  } UNION {
+    SELECT DISTINCT ?prop WHERE {
+      ?prop a rdf:Property
+    }
+  } UNION {
+    SELECT ?constraint WHERE {
+      ?shape sh:property ?constraint
+    }
+  }
+}
+\end{lstlisting}
+
+\textbf{Quality Prediction Models}:
+\begin{itemize}
+    \item \textbf{Rule-Based}: If complexity $<$ 10, use simple template
+    \item \textbf{Regression-Based}: Linear model trained on historical data
+    \item \textbf{Neural-Based}: Deep learning model for complex feature interactions
+\end{itemize}
+
+\textbf{Template Metadata Schema}:
+\begin{lstlisting}[language=Turtle]
+:PythonDataclassTemplate
+  a :CodeTemplate ;
+  :targetLanguage "Python" ;
+  :optimizedFor :SimpleDataModels ;
+  :minComplexity 0 ;
+  :maxComplexity 20 ;
+  :avgCyclomaticComplexity 1.2 ;
+  :typeSafety "Full" .
+\end{lstlisting}
+
+\subsection{Known Uses and Variations}
+
+\textbf{Known Uses}:
+\begin{enumerate}
+    \item \textbf{spec-kit template selection}: Chooses between dataclass, Pydantic, attrs based on validation needs
+    \item \textbf{Protocol Buffer generators}: Selects optimization level based on message size
+    \item \textbf{ORM generators}: Chooses between active record, data mapper based on complexity
+\end{enumerate}
+
+\textbf{Variations}:
+\begin{itemize}
+    \item \textbf{Multi-Objective Optimization}: Balance code size, performance, readability
+    \item \textbf{User Preference Learning}: Adapt to developer style preferences over time
+    \item \textbf{A/B Template Testing}: Generate with multiple templates, measure quality in production
+\end{itemize}
+
+% ========================================================================
+\section{Pattern: Federated Code Generation}
+
+\subsection{Intent and Motivation}
+
+\textbf{Intent}: Coordinate multiple autonomous code generation agents working on different ontology modules, ensuring consistency across module boundaries while allowing parallel execution.
+
+\textbf{Motivation}: Large-scale systems have modular ontologies:
+\begin{itemize}
+    \item Core domain ontology (hundreds of classes)
+    \item API ontology (REST endpoints, GraphQL schemas)
+    \item Data access ontology (database schemas, ORM mappings)
+    \item UI ontology (component specifications)
+\end{itemize}
+
+Each module can be compiled independently, but interfaces between modules must remain consistent. Federated generation enables parallelism without sacrificing coherence.
+
+\subsection{Participants and Structure}
+
+\textbf{Participants}:
+\begin{enumerate}
+    \item \textbf{OntologyPartitioner}: Splits ontology into coherent modules
+    \item \textbf{GenerationAgent}: Autonomous agent responsible for one module
+    \item \textbf{CoordinationBroker}: Mediates communication between agents
+    \item \textbf{ConsistencyValidator}: Checks cross-module semantic alignment
+    \item \textbf{IntegrationAssembler}: Merges generated artifacts into coherent system
+\end{enumerate}
+
+\textbf{Structure}:
+\begin{lstlisting}[language=Python]
+class FederatedCodeGenerator:
+    def generate(self, ontology: RDF) -> CodeArtifacts:
+        # Partition ontology into modules
+        modules = self.partitioner.partition(ontology)
+
+        # Spawn generation agent per module
+        agents = []
+        for module in modules:
+            agent = GenerationAgent(
+                module=module,
+                broker=self.broker
+            )
+            agents.append(agent)
+
+        # Parallel generation
+        futures = [
+            agent.generate_async() for agent in agents
+        ]
+
+        # Collect results
+        artifacts = await gather(*futures)
+
+        # Validate consistency
+        if not self.validator.check(artifacts):
+            self.repair_inconsistencies(artifacts)
+
+        # Integrate into final system
+        return self.assembler.merge(artifacts)
+\end{lstlisting}
+
+\subsection{Collaboration Diagram}
+
+\textbf{Federated Generation Flow}:
+\begin{enumerate}
+    \item User provides monolithic ontology $O$
+    \item OntologyPartitioner decomposes $O$ into modules $\{M_1, M_2, \ldots, M_n\}$
+    \item CoordinationBroker establishes shared namespace registry
+    \item For each module $M_i$:
+    \begin{itemize}
+        \item Spawn GenerationAgent $A_i$
+        \item $A_i$ registers exported symbols with broker
+        \item $A_i$ queries broker for imported symbols
+        \item $A_i$ generates code for $M_i$ in parallel
+    \end{itemize}
+    \item ConsistencyValidator checks:
+    \begin{itemize}
+        \item All imported symbols are exported by some module
+        \item Type signatures match across module boundaries
+        \item No circular dependencies between modules
+    \end{itemize}
+    \item If inconsistencies found:
+    \begin{itemize}
+        \item Identify conflicting agents
+        \item Negotiate resolution (e.g., type widening, adapter generation)
+        \item Re-generate affected modules
+    \end{itemize}
+    \item IntegrationAssembler produces final codebase
+\end{enumerate}
+
+\subsection{Implementation Considerations}
+
+\textbf{Module Boundary Detection}:
+\begin{lstlisting}[language=SPARQL]
+# Find natural module boundaries (weak coupling)
+SELECT ?module (COUNT(?external_ref) as ?coupling) WHERE {
+  ?class a rdfs:Class ;
+         :inModule ?module .
+
+  OPTIONAL {
+    ?class rdfs:subClassOf ?parent .
+    ?parent :inModule ?other_module .
+    FILTER(?module != ?other_module)
+    BIND(?parent as ?external_ref)
+  }
+}
+GROUP BY ?module
+ORDER BY ?coupling
+\end{lstlisting}
+
+\textbf{Consistency Constraints}:
+\begin{itemize}
+    \item \textbf{Type Consistency}: Same RDF property generates same type across modules
+    \item \textbf{Naming Consistency}: Same class name generates same identifier
+    \item \textbf{Semantic Consistency}: Subclass relationships preserved in generated code
+\end{itemize}
+
+\textbf{Conflict Resolution Strategies}:
+\begin{enumerate}
+    \item \textbf{First-Come-First-Served}: First agent to register symbol wins
+    \item \textbf{Priority-Based}: Core modules have higher priority than periphery
+    \item \textbf{Negotiation-Based}: Agents propose, broker mediates consensus
+    \item \textbf{User-Guided}: Escalate conflicts to human decision
+\end{enumerate}
+
+\subsection{Known Uses and Variations}
+
+\textbf{Known Uses}:
+\begin{enumerate}
+    \item \textbf{Microservice generation}: Each service from separate ontology module
+    \item \textbf{Multi-tier architectures}: Frontend, backend, database from same ontology
+    \item \textbf{Plugin systems}: Core + plugins generated separately, linked at runtime
+\end{enumerate}
+
+\textbf{Variations}:
+\begin{itemize}
+    \item \textbf{Hierarchical Federation}: Tree of agents (root coordinates sub-agents)
+    \item \textbf{Peer-to-Peer Federation}: Agents negotiate directly without central broker
+    \item \textbf{Blockchain-Based Federation}: Immutable ledger of symbol registrations
+\end{itemize}
+
+% ========================================================================
+\section{Pattern: Continuous Learning Transformation}
+
+\subsection{Intent and Motivation}
+
+\textbf{Intent}: Improve code generation quality over time by learning from developer edits, code reviews, production metrics, and test failures.
+
+\textbf{Motivation}: Initial generated code is rarely optimal:
+\begin{itemize}
+    \item Developers manually refactor for performance
+    \item Code reviewers suggest idiomatic improvements
+    \item Production systems reveal inefficiencies
+    \item Tests uncover edge cases not in ontology
+\end{itemize}
+
+A learning transformation pipeline captures these improvements and incorporates them into future generations, creating a positive feedback loop.
+
+\subsection{Participants and Structure}
+
+\textbf{Participants}:
+\begin{enumerate}
+    \item \textbf{CodeChangeTracker}: Monitors edits to generated code
+    \item \textbf{EditClassifier}: Categorizes edits (refactoring, bug fix, style, feature)
+    \item \textbf{PatternExtractor}: Generalizes edits into reusable transformation rules
+    \item \textbf{RuleRanker}: Prioritizes learned rules by impact and frequency
+    \item \textbf{TemplateEvolver}: Integrates learned rules into templates
+\end{enumerate}
+
+\textbf{Structure}:
+\begin{lstlisting}[language=Python]
+class ContinuousLearningTransformer:
+    def observe_edit(self,
+                     before: str, after: str,
+                     context: RDF) -> None:
+        # Detect edit type
+        edit_type = self.classifier.classify(before, after)
+
+        # Extract pattern
+        pattern = self.extractor.generalize(
+            before, after, context
+        )
+
+        # Add to knowledge base
+        self.rules.add(pattern, weight=1.0)
+
+        # Periodically evolve templates
+        if self.should_evolve():
+            self.evolve_templates()
+
+    def evolve_templates(self) -> None:
+        # Get top-ranked rules
+        top_rules = self.ranker.get_top_k(k=20)
+
+        # Integrate into templates
+        for rule in top_rules:
+            self.template_evolver.apply(rule)
+
+        # Test new templates
+        quality = self.test_templates()
+
+        # Rollback if quality degrades
+        if quality < self.baseline:
+            self.rollback()
+\end{lstlisting}
+
+\subsection{Collaboration Diagram}
+
+\textbf{Learning Flow}:
+\begin{enumerate}
+    \item Code generated from ontology $O$: $C_0 = \mu(O)$
+    \item Developer edits $C_0 \to C_1$ (manual refactoring)
+    \item CodeChangeTracker detects diff: $\Delta = C_1 - C_0$
+    \item EditClassifier categorizes $\Delta$:
+    \begin{itemize}
+        \item Style change (e.g., variable naming)
+        \item Performance optimization (e.g., caching added)
+        \item Bug fix (e.g., null check added)
+        \item Feature addition (e.g., new method)
+    \end{itemize}
+    \item PatternExtractor generalizes $\Delta$ to rule:
+    \begin{itemize}
+        \item Pattern: ``If class has property $P$ of type $T$, add null check''
+        \item Condition: SPARQL query matching $O$
+        \item Transformation: Template modification
+    \end{itemize}
+    \item RuleRanker assigns score based on:
+    \begin{itemize}
+        \item Frequency: How often this pattern appears
+        \item Impact: How much improvement it provides
+        \item Generality: How many ontologies it applies to
+    \end{itemize}
+    \item TemplateEvolver periodically (e.g., weekly) integrates top rules
+    \item Next generation: $C_0' = \mu'(O)$ incorporates learned improvements
+\end{enumerate}
+
+\subsection{Implementation Considerations}
+
+\textbf{Pattern Generalization}:
+\begin{lstlisting}[language=Python]
+def generalize_edit(before: AST, after: AST,
+                   rdf: RDF) -> TransformationRule:
+    # Find syntactic diff
+    diff = ast_diff(before, after)
+
+    # Extract RDF context for changed code
+    context = query_rdf_context(rdf, diff.location)
+
+    # Create SPARQL condition
+    condition = create_sparql_pattern(context)
+
+    # Create template transformation
+    transformation = create_template_patch(diff)
+
+    return Rule(
+        condition=condition,
+        transformation=transformation,
+        confidence=compute_confidence(diff, context)
+    )
+\end{lstlisting}
+
+\textbf{Rule Ranking Metrics}:
+\begin{itemize}
+    \item \textbf{Frequency}: $f(r) = \frac{\text{occurrences of } r}{\text{total edits}}$
+    \item \textbf{Impact}: $i(r) = \Delta_{\text{quality}}$ (code quality improvement)
+    \item \textbf{Generality}: $g(r) = \frac{\text{ontologies matching } r}{\text{total ontologies}}$
+    \item \textbf{Combined Score}: $S(r) = \alpha f(r) + \beta i(r) + \gamma g(r)$
+\end{itemize}
+
+\textbf{Template Evolution Safety}:
+\begin{enumerate}
+    \item Apply rule to template in isolated sandbox
+    \item Generate test code from diverse ontologies
+    \item Run full test suite on generated code
+    \item Measure quality metrics (complexity, coverage, performance)
+    \item If all tests pass and quality improves: commit
+    \item If any test fails or quality degrades: rollback
+\end{enumerate}
+
+\subsection{Known Uses and Variations}
+
+\textbf{Known Uses}:
+\begin{enumerate}
+    \item \textbf{GitHub Copilot}: Learns from public code repositories
+    \item \textbf{IntelliJ IDEA inspections}: Learns from developer quick-fixes
+    \item \textbf{Pylint/ESLint rules}: Community-contributed rules from real issues
+\end{enumerate}
+
+\textbf{Variations}:
+\begin{itemize}
+    \item \textbf{Reinforcement Learning}: Reward function from test pass rate, review scores
+    \item \textbf{Active Learning}: System requests human feedback on ambiguous cases
+    \item \textbf{Transfer Learning}: Learn from one domain, apply to related domains
+    \item \textbf{Federated Learning}: Aggregate learnings across multiple organizations without sharing code
+\end{itemize}
+
+% ========================================================================
+\section{Pattern: Semantic Integrity Guardian}
+
+\subsection{Intent and Motivation}
+
+\textbf{Intent}: Continuously monitor and enforce semantic consistency between RDF ontology, generated code, tests, and documentation, autonomously detecting and repairing drift.
+
+\textbf{Motivation}: The constitutional equation $\texttt{spec.md} = \mu(\texttt{feature.ttl})$ requires that RDF remains the single source of truth. Violations occur when:
+\begin{itemize}
+    \item Developers manually edit generated files
+    \item Ontology updates without re-generating code
+    \item Templates change without re-compiling existing ontologies
+    \item External systems modify generated artifacts
+\end{itemize}
+
+A Semantic Integrity Guardian detects these violations and automatically restores consistency.
+
+\subsection{Participants and Structure}
+
+\textbf{Participants}:
+\begin{enumerate}
+    \item \textbf{IntegrityMonitor}: Watches filesystem for unauthorized edits
+    \item \textbf{DriftDetector}: Compares generated artifacts to canonical receipts
+    \item \textbf{SemanticValidator}: Verifies code-RDF alignment via reverse-engineering
+    \item \textbf{RepairPlanner}: Decides repair strategy (re-generate, merge, alert)
+    \item \textbf{ConflictResolver}: Handles cases where both RDF and code changed
+\end{enumerate}
+
+\textbf{Structure}:
+\begin{lstlisting}[language=Python]
+class SemanticIntegrityGuardian:
+    def monitor(self) -> None:
+        while True:
+            # Detect changes
+            changes = self.monitor.detect_changes()
+
+            for change in changes:
+                # Check if drift occurred
+                if self.has_drift(change):
+                    # Classify drift type
+                    drift_type = self.classify_drift(change)
+
+                    # Plan repair
+                    plan = self.planner.plan_repair(
+                        drift_type, change
+                    )
+
+                    # Execute repair
+                    self.execute_repair(plan)
+
+                    # Log for audit
+                    self.log_repair(change, plan)
+
+            sleep(self.check_interval)
+
+    def has_drift(self, change: FileChange) -> bool:
+        # Compare hash to receipt
+        current_hash = sha256(change.file)
+        expected_hash = self.receipt.get(change.file)
+        return current_hash != expected_hash
+\end{lstlisting}
+
+\subsection{Collaboration Diagram}
+
+\textbf{Drift Detection and Repair Flow}:
+\begin{enumerate}
+    \item IntegrityMonitor watches generated code directory
+    \item Developer manually edits \texttt{generated/api.py}
+    \item DriftDetector compares SHA256 hash to receipt
+    \item Hash mismatch detected: DRIFT EVENT
+    \item SemanticValidator reverse-engineers edited code to RDF
+    \item Compare reverse-engineered RDF to source ontology:
+    \begin{itemize}
+        \item If equivalent: developer improved formatting (safe)
+        \item If superset: developer added feature (needs ontology update)
+        \item If incompatible: developer broke contract (must revert)
+    \end{itemize}
+    \item RepairPlanner selects strategy:
+    \begin{itemize}
+        \item \textbf{Re-generate}: Overwrite manual edits (if incompatible)
+        \item \textbf{Merge}: Integrate improvements into ontology (if superset)
+        \item \textbf{Alert}: Notify developer of conflict (if uncertain)
+    \end{itemize}
+    \item ConflictResolver executes repair
+    \item Update receipt with new canonical hash
+    \item Log event to audit trail
+\end{enumerate}
+
+\subsection{Implementation Considerations}
+
+\textbf{Reverse Engineering Code to RDF}:
+\begin{lstlisting}[language=Python]
+def reverse_engineer(code: str,
+                    language: str) -> RDF:
+    # Parse code to AST
+    ast = parse(code, language)
+
+    # Extract semantic entities
+    classes = [n for n in ast if isinstance(n, ClassDef)]
+    properties = [p for c in classes
+                 for p in c.properties]
+
+    # Convert to RDF
+    rdf = RDF()
+    for cls in classes:
+        rdf.add((
+            cls.uri, RDF.type, RDFS.Class
+        ))
+        for prop in cls.properties:
+            rdf.add((
+                cls.uri, HAS_PROPERTY, prop.uri
+            ))
+
+    return rdf
+\end{lstlisting}
+
+\textbf{Drift Classification}:
+\begin{table}[h!]
+\centering
+\begin{tabular}{|l|l|l|}
+\hline
+\textbf{Drift Type} & \textbf{Cause} & \textbf{Repair Strategy} \\
+\hline
+Formatting only & Developer style & Accept (update receipt) \\
+Feature addition & Missing in ontology & Merge to ontology \\
+Bug fix & Template defect & Learn + re-generate \\
+Contract violation & Incompatible change & Revert to canonical \\
+Ontology outdated & Template evolved & Re-compile from RDF \\
+\hline
+\end{tabular}
+\end{table}
+
+\textbf{Conflict Resolution Policies}:
+\begin{itemize}
+    \item \textbf{RDF-First Policy}: Always prefer ontology truth (re-generate)
+    \item \textbf{Developer-First Policy}: Preserve manual edits (update ontology)
+    \item \textbf{Best-of-Both Policy}: Semantic merge (preserve both)
+    \item \textbf{Escalation Policy}: Human decision for complex conflicts
+\end{itemize}
+
+\subsection{Known Uses and Variations}
+
+\textbf{Known Uses}:
+\begin{enumerate}
+    \item \textbf{Prisma ORM}: Schema drift detection between database and schema files
+    \item \textbf{Terraform}: State file drift detection and reconciliation
+    \item \textbf{Kubernetes}: Desired state vs. actual state reconciliation loops
+\end{enumerate}
+
+\textbf{Variations}:
+\begin{itemize}
+    \item \textbf{Predictive Drift Prevention}: ML model predicts likely manual edits, pre-emptively updates ontology
+    \item \textbf{Collaborative Drift Resolution}: Multi-stakeholder voting on conflict resolution
+    \item \textbf{Version-Controlled Drift}: Maintain history of drift events, enable rollback
+\end{itemize}
+
+% ========================================================================
+\section{Pattern: Multi-Language Orchestrator}
+
+\subsection{Intent and Motivation}
+
+\textbf{Intent}: Coordinate simultaneous code generation across multiple programming languages from a single RDF ontology, ensuring semantic equivalence and API compatibility across all targets.
+
+\textbf{Motivation}: Modern systems are polyglot:
+\begin{itemize}
+    \item Backend in Python, frontend in TypeScript
+    \item Mobile apps in Kotlin/Swift, shared logic in Rust
+    \item CLI tools in Go, libraries in multiple languages
+    \item Microservices in different languages sharing contracts
+\end{itemize}
+
+Manually maintaining consistency across languages is error-prone. A Multi-Language Orchestrator generates all languages from one ontology, guaranteeing consistency.
+
+\subsection{Participants and Structure}
+
+\textbf{Participants}:
+\begin{enumerate}
+    \item \textbf{LanguageRegistry}: Catalog of supported target languages and their code generators
+    \item \textbf{SemanticNormalizer}: Extracts language-independent semantics from RDF
+    \item \textbf{IdiomAdapter}: Translates semantics into language-specific idioms
+    \item \textbf{CrossLanguageValidator}: Verifies API compatibility across languages
+    \item \textbf{DependencyResolver}: Manages cross-language dependencies (e.g., FFI, RPC)
+\end{enumerate}
+
+\textbf{Structure}:
+\begin{lstlisting}[language=Python]
+class MultiLanguageOrchestrator:
+    def generate_all(self, ontology: RDF,
+                    targets: List[str]) -> Dict[str, Code]:
+        # Extract language-independent semantics
+        semantics = self.normalizer.extract(ontology)
+
+        # Generate code for each target in parallel
+        results = {}
+        for language in targets:
+            adapter = self.registry.get_adapter(language)
+            code = adapter.generate(semantics)
+            results[language] = code
+
+        # Validate cross-language consistency
+        if not self.validator.check(results):
+            raise InconsistencyError(
+                self.validator.report_violations()
+            )
+
+        # Resolve cross-language dependencies
+        self.resolver.link(results)
+
+        return results
+\end{lstlisting}
+
+\subsection{Collaboration Diagram}
+
+\textbf{Multi-Language Generation Flow}:
+\begin{enumerate}
+    \item User specifies ontology $O$ and targets $\{L_1, L_2, \ldots, L_n\}$
+    \item SemanticNormalizer extracts abstract syntax:
+    \begin{itemize}
+        \item Data model (classes, properties, types)
+        \item Behavioral contracts (preconditions, postconditions)
+        \item API surface (methods, parameters, return types)
+    \end{itemize}
+    \item For each language $L_i$:
+    \begin{itemize}
+        \item IdiomAdapter maps abstract syntax to $L_i$ idioms
+        \item Example: Python uses duck typing, TypeScript uses interfaces
+        \item Execute transformation $\mu_{L_i}(O)$
+    \end{itemize}
+    \item CrossLanguageValidator checks:
+    \begin{itemize}
+        \item Type signatures are compatible (modulo type system differences)
+        \item Nullability semantics match
+        \item Error handling strategies are consistent
+        \item Serialization formats align (JSON, Protocol Buffers, etc.)
+    \end{itemize}
+    \item If validation passes: emit all language artifacts
+    \item DependencyResolver generates FFI/RPC bindings if needed
+    \item Update receipts for all languages
+\end{enumerate}
+
+\subsection{Implementation Considerations}
+
+\textbf{Semantic Normalization Example}:
+\begin{lstlisting}[language=SPARQL]
+# Extract abstract data model
+SELECT ?class ?property ?type ?required WHERE {
+  ?class a rdfs:Class .
+  ?class :hasProperty ?property .
+  ?property :hasType ?type .
+  ?property :required ?required .
+}
+\end{lstlisting}
+
+Language-specific rendering:
+\begin{table}[h!]
+\centering
+\small
+\begin{tabular}{|l|l|}
+\hline
+\textbf{Language} & \textbf{Idiom for Optional Property} \\
+\hline
+Python & \texttt{property: Optional[Type] = None} \\
+TypeScript & \texttt{property?: Type} \\
+Rust & \texttt{property: Option<Type>} \\
+Java & \texttt{@Nullable Type property} \\
+Go & \texttt{property *Type} \\
+\hline
+\end{tabular}
+\end{table}
+
+\textbf{Cross-Language Type Mapping}:
+\begin{lstlisting}[language=Python]
+TYPE_MAPPINGS = {
+    'xsd:string': {
+        'python': 'str',
+        'typescript': 'string',
+        'rust': 'String',
+        'java': 'String',
+        'go': 'string'
+    },
+    'xsd:integer': {
+        'python': 'int',
+        'typescript': 'number',
+        'rust': 'i64',
+        'java': 'Long',
+        'go': 'int64'
+    }
+}
+\end{lstlisting}
+
+\textbf{Consistency Validation Rules}:
+\begin{enumerate}
+    \item \textbf{Structural Isomorphism}: Same classes, properties across languages
+    \item \textbf{Behavioral Equivalence}: Same preconditions, postconditions
+    \item \textbf{Serialization Compatibility}: JSON schema matches across languages
+    \item \textbf{Error Taxonomy Alignment}: Same exception hierarchy semantics
+\end{enumerate}
+
+\subsection{Known Uses and Variations}
+
+\textbf{Known Uses}:
+\begin{enumerate}
+    \item \textbf{Protocol Buffers}: Generate Python, Java, C++, Go from .proto files
+    \item \textbf{GraphQL Code Generators}: Generate TypeScript, Python, Java from schema
+    \item \textbf{Apache Thrift}: Multi-language RPC from IDL
+    \item \textbf{OpenAPI Generators}: Generate client SDKs in 50+ languages
+\end{enumerate}
+
+\textbf{Variations}:
+\begin{itemize}
+    \item \textbf{Performance-Optimized Orchestration}: Generate specialized code for performance-critical paths
+    \item \textbf{Progressive Enhancement}: Generate minimal viable code, enrich iteratively
+    \item \textbf{Language-Family Clustering}: Group similar languages (C-family, ML-family) for shared templates
+    \item \textbf{Polyglot Test Generation}: Generate equivalent test suites in all languages
+\end{itemize}
+
+% ========================================================================
+\section{Pattern Integration and Interplay}
+
+The six autonomic patterns are not isolated; they compose and reinforce each other:
+
+\begin{itemize}
+    \item \textbf{Self-Healing + Continuous Learning}: Learning from successful repairs improves future recovery strategies
+    \item \textbf{Adaptive Template Selection + Multi-Language Orchestrator}: Select best template per language based on language-specific quality metrics
+    \item \textbf{Semantic Integrity Guardian + Federated Generation}: Guardian monitors consistency across federated agents
+    \item \textbf{Continuous Learning + Adaptive Selection}: Learned patterns influence template selection heuristics
+    \item \textbf{Federated Generation + Multi-Language Orchestrator}: Federate by language, or by domain module
+\end{itemize}
+
+\textbf{Unified Architecture}:
+\begin{lstlisting}[language=Python]
+class AutonomicCodeGenerationSystem:
+    def __init__(self):
+        self.orchestrator = MultiLanguageOrchestrator()
+        self.guardian = SemanticIntegrityGuardian()
+        self.learner = ContinuousLearningTransformer()
+        self.selector = AdaptiveTemplateSelector()
+        self.federation = FederatedCodeGenerator()
+        self.healer = SelfHealingTransformation()
+
+    def generate(self, ontology: RDF,
+                targets: List[str]) -> CodeArtifacts:
+        # Federate if large ontology
+        if self.is_large(ontology):
+            modules = self.federation.partition(ontology)
+        else:
+            modules = [ontology]
+
+        results = []
+        for module in modules:
+            # Select templates adaptively
+            templates = {
+                lang: self.selector.select(module, lang)
+                for lang in targets
+            }
+
+            # Generate with self-healing
+            code = self.healer.transform(
+                lambda: self.orchestrator.generate_all(
+                    module, targets, templates
+                )
+            )
+            results.append(code)
+
+        # Guardian monitors for drift
+        self.guardian.watch(results)
+
+        # Learner observes edits
+        self.learner.observe_repository()
+
+        return self.merge(results)
+\end{lstlisting}
+
+\section{Conclusion}
+
+These six autonomic design patterns provide a comprehensive toolkit for building intelligent, self-managing RDF-first code generation systems. By combining self-healing, adaptation, federation, learning, integrity monitoring, and multi-language orchestration, developers can create transformation pipelines that are robust, efficient, and continuously improving.
+
+The patterns align with the constitutional equation $\texttt{spec.md} = \mu(\texttt{feature.ttl})$ by ensuring that $\mu$ is not just deterministic, but also resilient, adaptive, and evolvable. Future code generation systems will exhibit autonomic properties, reducing manual intervention and enabling developers to focus on domain modeling rather than code maintenance.
+
 \end{document}

@@ -74,7 +74,7 @@ def check_spec_completeness(spec_text: str) -> float:
     score = math.log(word_count + 1) / math.log(expected_max + 1)
 
     # Cap at 1.0
-    return min(score, 1.0)
+    return float(min(score, 1.0))
 
 
 def check_code_fidelity(spec_text: str, code_text: str) -> float:
@@ -290,7 +290,7 @@ def estimate_edge_case_coverage(spec_text: str) -> float:
     mentions = sum(1 for keyword in edge_keywords if keyword in text_lower)
 
     # Score: 10% per keyword mentioned (cap at 100%)
-    return min(mentions * 10.0, 100.0)
+    return float(min(mentions * 10.0, 100.0))
 
 
 def identify_specification_gaps(spec_text: str) -> list[str]:

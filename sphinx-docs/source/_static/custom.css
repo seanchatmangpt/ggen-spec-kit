@@ -1,0 +1,141 @@
+/* Custom CSS for Specify CLI Documentation */
+
+/* Improve code block appearance */
+.highlight {
+    border-radius: 4px;
+    padding: 8px;
+    margin-bottom: 16px;
+}
+
+/* Better table styling */
+table.docutils {
+    border-collapse: collapse;
+    margin: 20px 0;
+}
+
+table.docutils th {
+    background-color: #2980b9;
+    color: white;
+    padding: 10px;
+}
+
+table.docutils td {
+    padding: 8px;
+    border: 1px solid #ddd;
+}
+
+/* Improve admonition styling */
+.admonition {
+    border-radius: 4px;
+    padding: 12px;
+    margin: 16px 0;
+}
+
+.admonition.note {
+    background-color: #e7f2fa;
+    border-left: 4px solid #2980b9;
+}
+
+.admonition.warning {
+    background-color: #fff4e6;
+    border-left: 4px solid #e67e22;
+}
+
+.admonition.tip {
+    background-color: #eafaf1;
+    border-left: 4px solid #27ae60;
+}
+
+/* Improve type hint display */
+.sig-param {
+    font-style: italic;
+}
+
+.sig-return-typehint {
+    color: #2980b9;
+}
+
+/* Code examples */
+.doctest {
+    background-color: #f8f8f8;
+    border-left: 3px solid #2980b9;
+    padding: 10px;
+    margin: 10px 0;
+}
+
+/* Architecture diagrams */
+.mermaid {
+    text-align: center;
+    margin: 20px 0;
+}
+
+/* Better section headers */
+h1 {
+    border-bottom: 3px solid #2980b9;
+    padding-bottom: 10px;
+}
+
+h2 {
+    border-bottom: 2px solid #95a5a6;
+    padding-bottom: 8px;
+}
+
+/* Improve navigation */
+.wy-nav-content {
+    max-width: 1200px;
+}
+
+/* Code copy button */
+.copybtn {
+    opacity: 0.3;
+    transition: opacity 0.2s;
+}
+
+.copybtn:hover {
+    opacity: 1;
+}
+
+/* API reference improvements */
+dl.py.class,
+dl.py.function,
+dl.py.method {
+    border-left: 3px solid #2980b9;
+    padding-left: 12px;
+    margin-bottom: 20px;
+}
+
+/* Performance metrics styling */
+.perf-metric {
+    display: inline-block;
+    background-color: #e8f5e9;
+    padding: 4px 8px;
+    border-radius: 4px;
+    margin: 2px;
+    font-family: monospace;
+    font-size: 0.9em;
+}
+
+/* Three-tier architecture badges */
+.layer-badge {
+    display: inline-block;
+    padding: 2px 8px;
+    border-radius: 3px;
+    font-size: 0.85em;
+    font-weight: bold;
+    margin-right: 4px;
+}
+
+.layer-badge.commands {
+    background-color: #e3f2fd;
+    color: #1976d2;
+}
+
+.layer-badge.ops {
+    background-color: #f3e5f5;
+    color: #7b1fa2;
+}
+
+.layer-badge.runtime {
+    background-color: #fff3e0;
+    color: #f57c00;
+}

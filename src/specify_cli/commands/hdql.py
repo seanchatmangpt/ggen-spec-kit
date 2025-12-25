@@ -6,13 +6,16 @@ This module provides the command-line interface for executing hyperdimensional q
 from __future__ import annotations
 
 import json
-from pathlib import Path
+from typing import TYPE_CHECKING
 
 import typer
 from rich.console import Console
 from rich.table import Table
 
 from specify_cli.core.telemetry import span
+
+if TYPE_CHECKING:
+    from pathlib import Path
 
 app = typer.Typer(help="Execute hyperdimensional queries (HDQL)")
 console = Console()

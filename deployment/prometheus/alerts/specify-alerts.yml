@@ -1,0 +1,153 @@
+# ==============================================================================
+# Prometheus alert rules for specify-cli
+# ==============================================================================
+
+groups:
+  - name: specify-cli-alerts
+    interval: 30s
+    rules:
+      # Instance down
+      - alert: SpecifyInstanceDown
+        expr: up{job="specify-cli"} == 0
+        for: 5m
+        labels:
+          severity: critical
+          component: specify-cli
+        annotations:
+          summary: "Specify CLI instance is down"
+          description: "Instance {{ $labels.instance }} has been down for more than 5 minutes."
+
+      # High error rate
+      - alert: SpecifyHighErrorRate
+        expr: rate(http_requests_total{job="specify-cli",status=~"5.."}[5m]) > 0.05
+        for: 5m
+        labels:
+          severity: warning
+          component: specify-cli
+        annotations:
+          summary: "High error rate detected"
+          description: "Error rate is {{ $value | humanizePercentage }} for instance {{ $labels.instance }}"
+
+      # High response time
+      - alert: SpecifyHighResponseTime
+        expr: histogram_quantile(0.95, rate(http_request_duration_seconds_bucket{job="specify-cli"}[5m])) > 1
+        for: 5m
+        labels:
+          severity: warning
+          component: specify-cli
+        annotations:
+          summary: "High response time detected"
+          description: "95th percentile response time is {{ $value }}s for instance {{ $labels.instance }}"
+
+      # High CPU usage
+      - alert: SpecifyHighCPU
+        expr: rate(process_cpu_seconds_total{job="specify-cli"}[5m]) * 100 > 80
+        for: 10m
+        labels:
+          severity: warning
+          component: specify-cli
+        annotations:
+          summary: "High CPU usage"
+          description: "CPU usage is {{ $value | humanize }}% for instance {{ $labels.instance }}"
+
+      # High memory usage
+      - alert: SpecifyHighMemory
+        expr: process_resident_memory_bytes{job="specify-cli"} / 1024 / 1024 / 1024 > 0.8
+        for: 5m
+        labels:
+          severity: warning
+          component: specify-cli
+        annotations:
+          summary: "High memory usage"
+          description: "Memory usage is {{ $value | humanize }}GB for instance {{ $labels.instance }}"
+
+      # Database connection issues
+      - alert: SpecifyDatabaseConnectionFailed
+        expr: database_connections_failed_total{job="specify-cli"} > 10
+        for: 5m
+        labels:
+          severity: critical
+          component: specify-cli
+        annotations:
+          summary: "Database connection failures"
+          description: "{{ $value }} database connection failures for instance {{ $labels.instance }}"
+
+      # Redis connection issues
+      - alert: SpecifyRedisConnectionFailed
+        expr: redis_connections_failed_total{job="specify-cli"} > 10
+        for: 5m
+        labels:
+          severity: warning
+          component: specify-cli
+        annotations:
+          summary: "Redis connection failures"
+          description: "{{ $value }} Redis connection failures for instance {{ $labels.instance }}"
+
+      # Low request rate (potential issue)
+      - alert: SpecifyLowRequestRate
+        expr: rate(http_requests_total{job="specify-cli"}[5m]) < 0.1
+        for: 10m
+        labels:
+          severity: info
+          component: specify-cli
+        annotations:
+          summary: "Low request rate"
+          description: "Request rate is {{ $value }} req/s for instance {{ $labels.instance }}"
+
+      # OpenTelemetry export failures
+      - alert: SpecifyOTELExportFailed
+        expr: rate(otel_exporter_errors_total{job="specify-cli"}[5m]) > 0.01
+        for: 5m
+        labels:
+          severity: warning
+          component: specify-cli
+        annotations:
+          summary: "OTEL export failures"
+          description: "OTEL exporter errors detected for instance {{ $labels.instance }}"
+
+  - name: infrastructure-alerts
+    interval: 30s
+    rules:
+      # PostgreSQL down
+      - alert: PostgreSQLDown
+        expr: up{job="postgresql"} == 0
+        for: 5m
+        labels:
+          severity: critical
+          component: database
+        annotations:
+          summary: "PostgreSQL is down"
+          description: "PostgreSQL instance {{ $labels.instance }} has been down for more than 5 minutes."
+
+      # Redis down
+      - alert: RedisDown
+        expr: up{job="redis"} == 0
+        for: 5m
+        labels:
+          severity: critical
+          component: cache
+        annotations:
+          summary: "Redis is down"
+          description: "Redis instance {{ $labels.instance }} has been down for more than 5 minutes."
+
+      # Disk space low
+      - alert: DiskSpaceLow
+        expr: (node_filesystem_avail_bytes / node_filesystem_size_bytes) * 100 < 10
+        for: 5m
+        labels:
+          severity: warning
+          component: infrastructure
+        annotations:
+          summary: "Disk space low"
+          description: "Disk space is below 10% on {{ $labels.instance }}"
+
+      # High node CPU
+      - alert: NodeHighCPU
+        expr: 100 - (avg by(instance) (irate(node_cpu_seconds_total{mode="idle"}[5m])) * 100) > 80
+        for: 10m
+        labels:
+          severity: warning
+          component: infrastructure
+        annotations:
+          summary: "High node CPU usage"
+          description: "Node CPU usage is {{ $value | humanize }}% on {{ $labels.instance }}"

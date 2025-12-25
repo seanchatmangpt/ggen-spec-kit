@@ -13,6 +13,7 @@ This module enables:
 
 from __future__ import annotations
 
+import shlex
 import subprocess
 import time
 from dataclasses import dataclass, field
@@ -57,10 +58,10 @@ except ImportError:
 
         return _no_op
 
-    def add_span_attributes(**kwargs):
+    def add_span_attributes(**kwargs) -> None:
         pass
 
-    def add_span_event(name, attributes=None):
+    def add_span_event(name, attributes=None) -> None:
         pass
 
 
@@ -256,10 +257,11 @@ def execute_otel_validation_workflow(
             test_results = {}
             for _i, cmd in enumerate(test_commands):
                 try:
+                    # Parse shell command into list to avoid shell=True
+                    cmd_list = shlex.split(cmd) if isinstance(cmd, str) else cmd
                     result_text = subprocess.run(
-                        cmd,
+                        cmd_list,
                         check=False,
-                        shell=True,
                         capture_output=True,
                         text=True,
                         timeout=timeout_seconds,

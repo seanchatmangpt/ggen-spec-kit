@@ -69,10 +69,10 @@ except ImportError:
 
         return _no_op
 
-    def add_span_attributes(**kwargs):
+    def add_span_attributes(**kwargs) -> None:
         pass
 
-    def add_span_event(name, attributes=None):
+    def add_span_event(name, attributes=None) -> None:
         pass
 
 

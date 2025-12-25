@@ -1,0 +1,43 @@
+---
+# ==============================================================================
+# ConfigMap for specify-cli application configuration
+# ==============================================================================
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: specify-config
+  namespace: specify
+  labels:
+    app.kubernetes.io/name: specify
+    app.kubernetes.io/component: configuration
+    app.kubernetes.io/part-of: specify-platform
+data:
+  # Application configuration
+  LOG_LEVEL: "INFO"
+  ENVIRONMENT: "production"
+  PYTHONUNBUFFERED: "1"
+
+  # OpenTelemetry configuration
+  OTEL_SERVICE_NAME: "specify-cli"
+  OTEL_EXPORTER_OTLP_PROTOCOL: "http/protobuf"
+  OTEL_TRACES_EXPORTER: "otlp"
+  OTEL_METRICS_EXPORTER: "otlp"
+  OTEL_LOGS_EXPORTER: "otlp"
+
+  # Database configuration (non-sensitive)
+  DATABASE_HOST: "postgres-service.specify.svc.cluster.local"
+  DATABASE_PORT: "5432"
+  DATABASE_NAME: "specify"
+
+  # Redis configuration
+  REDIS_HOST: "redis-service.specify.svc.cluster.local"
+  REDIS_PORT: "6379"
+
+  # Performance tuning
+  UV_CACHE_DIR: "/app/.cache/uv"
+  NUMBA_CACHE_DIR: "/app/.cache/numba"
+
+  # Feature flags
+  ENABLE_TELEMETRY: "true"
+  ENABLE_METRICS: "true"
+  ENABLE_TRACING: "true"

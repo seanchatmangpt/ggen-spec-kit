@@ -157,7 +157,7 @@ class SemanticSearchDashboard:
         import hashlib
 
         # Create deterministic vector from text hash
-        text_hash = hashlib.md5(text.encode()).digest()
+        text_hash = hashlib.md5(text.encode(), usedforsecurity=False).digest()
         embedding = np.frombuffer(text_hash, dtype=np.uint8).astype(np.float64)
 
         # Pad or truncate to fixed dimension

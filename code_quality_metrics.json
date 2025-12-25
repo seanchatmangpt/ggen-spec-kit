@@ -1,0 +1,1450 @@
+{
+  "timestamp": "1766647864.4405107",
+  "root_path": "/home/user/ggen-spec-kit",
+  "pattern": "src/**/*.py",
+  "metrics": {
+    "total_files": 159,
+    "total_functions": 672,
+    "total_classes": 300,
+    "docstring_coverage": 93.60119047619048,
+    "type_hint_coverage": 95.83333333333334,
+    "architecture_violations": 3,
+    "parse_errors": 0
+  },
+  "missing_docstrings": 43,
+  "missing_type_hints": 28,
+  "architecture_violations": 3,
+  "files": [
+    {
+      "path": "src/specify_cli/__init__.py",
+      "module": "src.specify_cli.__init__",
+      "layer": null,
+      "functions": 22,
+      "classes": 0,
+      "code_lines": 1436,
+      "complexity": 210
+    },
+    {
+      "path": "src/specify_cli/_dspy_optimize_impl.py",
+      "module": "src.specify_cli._dspy_optimize_impl",
+      "layer": null,
+      "functions": 2,
+      "classes": 3,
+      "code_lines": 310,
+      "complexity": 24
+    },
+    {
+      "path": "src/specify_cli/app.py",
+      "module": "src.specify_cli.app",
+      "layer": null,
+      "functions": 2,
+      "classes": 0,
+      "code_lines": 148,
+      "complexity": 5
+    },
+    {
+      "path": "src/specify_cli/cli/__init__.py",
+      "module": "src.specify_cli.cli.__init__",
+      "layer": null,
+      "functions": 0,
+      "classes": 0,
+      "code_lines": 3,
+      "complexity": 0
+    },
+    {
+      "path": "src/specify_cli/cli/groups.py",
+      "module": "src.specify_cli.cli.groups",
+      "layer": null,
+      "functions": 1,
+      "classes": 1,
+      "code_lines": 23,
+      "complexity": 2
+    },
+    {
+      "path": "src/specify_cli/commands/__init__.py",
+      "module": "src.specify_cli.commands.__init__",
+      "layer": "commands",
+      "functions": 0,
+      "classes": 0,
+      "code_lines": 87,
+      "complexity": 0
+    },
+    {
+      "path": "src/specify_cli/commands/build.py",
+      "module": "src.specify_cli.commands.build",
+      "layer": "commands",
+      "functions": 1,
+      "classes": 0,
+      "code_lines": 33,
+      "complexity": 3
+    },
+    {
+      "path": "src/specify_cli/commands/cache.py",
+      "module": "src.specify_cli.commands.cache",
+      "layer": "commands",
+      "functions": 2,
+      "classes": 0,
+      "code_lines": 48,
+      "complexity": 5
+    },
+    {
+      "path": "src/specify_cli/commands/check.py",
+      "module": "src.specify_cli.commands.check",
+      "layer": "commands",
+      "functions": 1,
+      "classes": 0,
+      "code_lines": 158,
+      "complexity": 17
+    },
+    {
+      "path": "src/specify_cli/commands/dashboards.py",
+      "module": "src.specify_cli.commands.dashboards",
+      "layer": "commands",
+      "functions": 8,
+      "classes": 0,
+      "code_lines": 302,
+      "complexity": 37
+    },
+    {
+      "path": "src/specify_cli/commands/deps.py",
+      "module": "src.specify_cli.commands.deps",
+      "layer": "commands",
+      "functions": 2,
+      "classes": 0,
+      "code_lines": 51,
+      "complexity": 6
+    },
+    {
+      "path": "src/specify_cli/commands/docs.py",
+      "module": "src.specify_cli.commands.docs",
+      "layer": "commands",
+      "functions": 1,
+      "classes": 0,
+      "code_lines": 37,
+      "complexity": 4
+    },
+    {
+      "path": "src/specify_cli/commands/dod.py",
+      "module": "src.specify_cli.commands.dod",
+      "layer": "commands",
+      "functions": 1,
+      "classes": 0,
+      "code_lines": 37,
+      "complexity": 3
+    },
+    {
+      "path": "src/specify_cli/commands/dspy_latex.py",
+      "module": "src.specify_cli.commands.dspy_latex",
+      "layer": "commands",
+      "functions": 8,
+      "classes": 0,
+      "code_lines": 750,
+      "complexity": 87
+    },
+    {
+      "path": "src/specify_cli/commands/generated.py",
+      "module": "src.specify_cli.commands.generated",
+      "layer": "commands",
+      "functions": 13,
+      "classes": 0,
+      "code_lines": 349,
+      "complexity": 13
+    },
+    {
+      "path": "src/specify_cli/commands/ggen.py",
+      "module": "src.specify_cli.commands.ggen",
+      "layer": "commands",
+      "functions": 2,
+      "classes": 0,
+      "code_lines": 380,
+      "complexity": 58
+    },
+    {
+      "path": "src/specify_cli/commands/guides.py",
+      "module": "src.specify_cli.commands.guides",
+      "layer": "commands",
+      "functions": 1,
+      "classes": 0,
+      "code_lines": 17,
+      "complexity": 1
+    },
+    {
+      "path": "src/specify_cli/commands/hd.py",
+      "module": "src.specify_cli.commands.hd",
+      "layer": "commands",
+      "functions": 7,
+      "classes": 0,
+      "code_lines": 267,
+      "complexity": 33
+    },
+    {
+      "path": "src/specify_cli/commands/hdql.py",
+      "module": "src.specify_cli.commands.hdql",
+      "layer": "commands",
+      "functions": 5,
+      "classes": 0,
+      "code_lines": 114,
+      "complexity": 17
+    },
+    {
+      "path": "src/specify_cli/commands/infodesign.py",
+      "module": "src.specify_cli.commands.infodesign",
+      "layer": "commands",
+      "functions": 1,
+      "classes": 0,
+      "code_lines": 17,
+      "complexity": 1
+    },
+    {
+      "path": "src/specify_cli/commands/init.py",
+      "module": "src.specify_cli.commands.init",
+      "layer": "commands",
+      "functions": 2,
+      "classes": 0,
+      "code_lines": 188,
+      "complexity": 22
+    },
+    {
+      "path": "src/specify_cli/commands/jtbd.py",
+      "module": "src.specify_cli.commands.jtbd",
+      "layer": "commands",
+      "functions": 6,
+      "classes": 0,
+      "code_lines": 677,
+      "complexity": 81
+    },
+    {
+      "path": "src/specify_cli/commands/lint.py",
+      "module": "src.specify_cli.commands.lint",
+      "layer": "commands",
+      "functions": 1,
+      "classes": 0,
+      "code_lines": 17,
+      "complexity": 1
+    },
+    {
+      "path": "src/specify_cli/commands/mermaid.py",
+      "module": "src.specify_cli.commands.mermaid",
+      "layer": "commands",
+      "functions": 1,
+      "classes": 0,
+      "code_lines": 17,
+      "complexity": 1
+    },
+    {
+      "path": "src/specify_cli/commands/observability.py",
+      "module": "src.specify_cli.commands.observability",
+      "layer": "commands",
+      "functions": 5,
+      "classes": 0,
+      "code_lines": 288,
+      "complexity": 28
+    },
+    {
+      "path": "src/specify_cli/commands/otel.py",
+      "module": "src.specify_cli.commands.otel",
+      "layer": "commands",
+      "functions": 1,
+      "classes": 0,
+      "code_lines": 17,
+      "complexity": 1
+    },
+    {
+      "path": "src/specify_cli/commands/pm.py",
+      "module": "src.specify_cli.commands.pm",
+      "layer": "commands",
+      "functions": 5,
+      "classes": 0,
+      "code_lines": 670,
+      "complexity": 55
+    },
+    {
+      "path": "src/specify_cli/commands/spiff.py",
+      "module": "src.specify_cli.commands.spiff",
+      "layer": "commands",
+      "functions": 8,
+      "classes": 0,
+      "code_lines": 330,
+      "complexity": 39
+    },
+    {
+      "path": "src/specify_cli/commands/terraform.py",
+      "module": "src.specify_cli.commands.terraform",
+      "layer": "commands",
+      "functions": 1,
+      "classes": 0,
+      "code_lines": 17,
+      "complexity": 1
+    },
+    {
+      "path": "src/specify_cli/commands/tests.py",
+      "module": "src.specify_cli.commands.tests",
+      "layer": "commands",
+      "functions": 1,
+      "classes": 0,
+      "code_lines": 17,
+      "complexity": 1
+    },
+    {
+      "path": "src/specify_cli/commands/version.py",
+      "module": "src.specify_cli.commands.version",
+      "layer": "commands",
+      "functions": 2,
+      "classes": 0,
+      "code_lines": 119,
+      "complexity": 14
+    },
+    {
+      "path": "src/specify_cli/commands/worktree.py",
+      "module": "src.specify_cli.commands.worktree",
+      "layer": "commands",
+      "functions": 1,
+      "classes": 0,
+      "code_lines": 17,
+      "complexity": 1
+    },
+    {
+      "path": "src/specify_cli/core/__init__.py",
+      "module": "src.specify_cli.core.__init__",
+      "layer": "core",
+      "functions": 0,
+      "classes": 0,
+      "code_lines": 260,
+      "complexity": 0
+    },
+    {
+      "path": "src/specify_cli/core/advanced_cache.py",
+      "module": "src.specify_cli.core.advanced_cache",
+      "layer": "core",
+      "functions": 7,
+      "classes": 3,
+      "code_lines": 705,
+      "complexity": 17
+    },
+    {
+      "path": "src/specify_cli/core/advanced_observability.py",
+      "module": "src.specify_cli.core.advanced_observability",
+      "layer": "core",
+      "functions": 10,
+      "classes": 5,
+      "code_lines": 552,
+      "complexity": 34
+    },
+    {
+      "path": "src/specify_cli/core/cache.py",
+      "module": "src.specify_cli.core.cache",
+      "layer": "core",
+      "functions": 7,
+      "classes": 0,
+      "code_lines": 205,
+      "complexity": 29
+    },
+    {
+      "path": "src/specify_cli/core/config.py",
+      "module": "src.specify_cli.core.config",
+      "layer": "core",
+      "functions": 4,
+      "classes": 1,
+      "code_lines": 195,
+      "complexity": 9
+    },
+    {
+      "path": "src/specify_cli/core/dod_types.py",
+      "module": "src.specify_cli.core.dod_types",
+      "layer": "core",
+      "functions": 0,
+      "classes": 2,
+      "code_lines": 57,
+      "complexity": 0
+    },
+    {
+      "path": "src/specify_cli/core/error_handling.py",
+      "module": "src.specify_cli.core.error_handling",
+      "layer": "core",
+      "functions": 8,
+      "classes": 9,
+      "code_lines": 424,
+      "complexity": 47
+    },
+    {
+      "path": "src/specify_cli/core/git.py",
+      "module": "src.specify_cli.core.git",
+      "layer": "core",
+      "functions": 2,
+      "classes": 0,
+      "code_lines": 57,
+      "complexity": 11
+    },
+    {
+      "path": "src/specify_cli/core/github.py",
+      "module": "src.specify_cli.core.github",
+      "layer": "core",
+      "functions": 5,
+      "classes": 0,
+      "code_lines": 205,
+      "complexity": 44
+    },
+    {
+      "path": "src/specify_cli/core/instrumentation.py",
+      "module": "src.specify_cli.core.instrumentation",
+      "layer": "core",
+      "functions": 7,
+      "classes": 5,
+      "code_lines": 209,
+      "complexity": 54
+    },
+    {
+      "path": "src/specify_cli/core/jtbd_measurement.py",
+      "module": "src.specify_cli.core.jtbd_measurement",
+      "layer": "core",
+      "functions": 16,
+      "classes": 3,
+      "code_lines": 698,
+      "complexity": 98
+    },
+    {
+      "path": "src/specify_cli/core/jtbd_metrics.py",
+      "module": "src.specify_cli.core.jtbd_metrics",
+      "layer": "core",
+      "functions": 6,
+      "classes": 10,
+      "code_lines": 747,
+      "complexity": 26
+    },
+    {
+      "path": "src/specify_cli/core/observability_dashboards.py",
+      "module": "src.specify_cli.core.observability_dashboards",
+      "layer": "core",
+      "functions": 6,
+      "classes": 0,
+      "code_lines": 464,
+      "complexity": 23
+    },
+    {
+      "path": "src/specify_cli/core/process.py",
+      "module": "src.specify_cli.core.process",
+      "layer": "core",
+      "functions": 6,
+      "classes": 0,
+      "code_lines": 306,
+      "complexity": 20
+    },
+    {
+      "path": "src/specify_cli/core/semconv.py",
+      "module": "src.specify_cli.core.semconv",
+      "layer": "core",
+      "functions": 1,
+      "classes": 20,
+      "code_lines": 309,
+      "complexity": 2
+    },
+    {
+      "path": "src/specify_cli/core/shell.py",
+      "module": "src.specify_cli.core.shell",
+      "layer": "core",
+      "functions": 9,
+      "classes": 1,
+      "code_lines": 245,
+      "complexity": 19
+    },
+    {
+      "path": "src/specify_cli/core/telemetry.py",
+      "module": "src.specify_cli.core.telemetry",
+      "layer": "core",
+      "functions": 20,
+      "classes": 2,
+      "code_lines": 277,
+      "complexity": 31
+    },
+    {
+      "path": "src/specify_cli/core/telemetry_optimized.py",
+      "module": "src.specify_cli.core.telemetry_optimized",
+      "layer": "core",
+      "functions": 8,
+      "classes": 0,
+      "code_lines": 210,
+      "complexity": 27
+    },
+    {
+      "path": "src/specify_cli/dspy_commands.py",
+      "module": "src.specify_cli.dspy_commands",
+      "layer": null,
+      "functions": 15,
+      "classes": 4,
+      "code_lines": 730,
+      "complexity": 106
+    },
+    {
+      "path": "src/specify_cli/dspy_latex/__init__.py",
+      "module": "src.specify_cli.dspy_latex.__init__",
+      "layer": null,
+      "functions": 0,
+      "classes": 0,
+      "code_lines": 68,
+      "complexity": 0
+    },
+    {
+      "path": "src/specify_cli/dspy_latex/compiler.py",
+      "module": "src.specify_cli.dspy_latex.compiler",
+      "layer": null,
+      "functions": 0,
+      "classes": 17,
+      "code_lines": 1285,
+      "complexity": 0
+    },
+    {
+      "path": "src/specify_cli/dspy_latex/observability.py",
+      "module": "src.specify_cli.dspy_latex.observability",
+      "layer": null,
+      "functions": 0,
+      "classes": 14,
+      "code_lines": 1241,
+      "complexity": 0
+    },
+    {
+      "path": "src/specify_cli/dspy_latex/optimizer.py",
+      "module": "src.specify_cli.dspy_latex.optimizer",
+      "layer": null,
+      "functions": 4,
+      "classes": 25,
+      "code_lines": 1209,
+      "complexity": 9
+    },
+    {
+      "path": "src/specify_cli/dspy_latex/processor.py",
+      "module": "src.specify_cli.dspy_latex.processor",
+      "layer": null,
+      "functions": 1,
+      "classes": 21,
+      "code_lines": 1114,
+      "complexity": 1
+    },
+    {
+      "path": "src/specify_cli/hyperdimensional/__init__.py",
+      "module": "src.specify_cli.hyperdimensional.__init__",
+      "layer": null,
+      "functions": 0,
+      "classes": 0,
+      "code_lines": 277,
+      "complexity": 0
+    },
+    {
+      "path": "src/specify_cli/hyperdimensional/analytics.py",
+      "module": "src.specify_cli.hyperdimensional.analytics",
+      "layer": null,
+      "functions": 0,
+      "classes": 4,
+      "code_lines": 659,
+      "complexity": 0
+    },
+    {
+      "path": "src/specify_cli/hyperdimensional/ast_nodes.py",
+      "module": "src.specify_cli.hyperdimensional.ast_nodes",
+      "layer": null,
+      "functions": 0,
+      "classes": 13,
+      "code_lines": 253,
+      "complexity": 0
+    },
+    {
+      "path": "src/specify_cli/hyperdimensional/compiler.py",
+      "module": "src.specify_cli.hyperdimensional.compiler",
+      "layer": null,
+      "functions": 1,
+      "classes": 3,
+      "code_lines": 353,
+      "complexity": 1
+    },
+    {
+      "path": "src/specify_cli/hyperdimensional/core.py",
+      "module": "src.specify_cli.hyperdimensional.core",
+      "layer": null,
+      "functions": 4,
+      "classes": 2,
+      "code_lines": 500,
+      "complexity": 12
+    },
+    {
+      "path": "src/specify_cli/hyperdimensional/dashboards.py",
+      "module": "src.specify_cli.hyperdimensional.dashboards",
+      "layer": null,
+      "functions": 0,
+      "classes": 5,
+      "code_lines": 962,
+      "complexity": 0
+    },
+    {
+      "path": "src/specify_cli/hyperdimensional/decision_framework.py",
+      "module": "src.specify_cli.hyperdimensional.decision_framework",
+      "layer": null,
+      "functions": 13,
+      "classes": 3,
+      "code_lines": 604,
+      "complexity": 49
+    },
+    {
+      "path": "src/specify_cli/hyperdimensional/decision_support.py",
+      "module": "src.specify_cli.hyperdimensional.decision_support",
+      "layer": null,
+      "functions": 0,
+      "classes": 4,
+      "code_lines": 611,
+      "complexity": 0
+    },
+    {
+      "path": "src/specify_cli/hyperdimensional/embedding_store.py",
+      "module": "src.specify_cli.hyperdimensional.embedding_store",
+      "layer": null,
+      "functions": 0,
+      "classes": 2,
+      "code_lines": 361,
+      "complexity": 0
+    },
+    {
+      "path": "src/specify_cli/hyperdimensional/embeddings.py",
+      "module": "src.specify_cli.hyperdimensional.embeddings",
+      "layer": null,
+      "functions": 0,
+      "classes": 3,
+      "code_lines": 660,
+      "complexity": 0
+    },
+    {
+      "path": "src/specify_cli/hyperdimensional/entropy.py",
+      "module": "src.specify_cli.hyperdimensional.entropy",
+      "layer": null,
+      "functions": 0,
+      "classes": 0,
+      "code_lines": 0,
+      "complexity": 0
+    },
+    {
+      "path": "src/specify_cli/hyperdimensional/executor.py",
+      "module": "src.specify_cli.hyperdimensional.executor",
+      "layer": null,
+      "functions": 0,
+      "classes": 2,
+      "code_lines": 374,
+      "complexity": 0
+    },
+    {
+      "path": "src/specify_cli/hyperdimensional/export.py",
+      "module": "src.specify_cli.hyperdimensional.export",
+      "layer": null,
+      "functions": 0,
+      "classes": 2,
+      "code_lines": 488,
+      "complexity": 0
+    },
+    {
+      "path": "src/specify_cli/hyperdimensional/job_outcome.py",
+      "module": "src.specify_cli.hyperdimensional.job_outcome",
+      "layer": null,
+      "functions": 11,
+      "classes": 4,
+      "code_lines": 498,
+      "complexity": 55
+    },
+    {
+      "path": "src/specify_cli/hyperdimensional/metrics.py",
+      "module": "src.specify_cli.hyperdimensional.metrics",
+      "layer": null,
+      "functions": 19,
+      "classes": 0,
+      "code_lines": 904,
+      "complexity": 73
+    },
+    {
+      "path": "src/specify_cli/hyperdimensional/metrics_core.py",
+      "module": "src.specify_cli.hyperdimensional.metrics_core",
+      "layer": null,
+      "functions": 17,
+      "classes": 0,
+      "code_lines": 147,
+      "complexity": 35
+    },
+    {
+      "path": "src/specify_cli/hyperdimensional/monitoring.py",
+      "module": "src.specify_cli.hyperdimensional.monitoring",
+      "layer": null,
+      "functions": 0,
+      "classes": 3,
+      "code_lines": 508,
+      "complexity": 0
+    },
+    {
+      "path": "src/specify_cli/hyperdimensional/observability_core.py",
+      "module": "src.specify_cli.hyperdimensional.observability_core",
+      "layer": null,
+      "functions": 5,
+      "classes": 1,
+      "code_lines": 259,
+      "complexity": 17
+    },
+    {
+      "path": "src/specify_cli/hyperdimensional/parser.py",
+      "module": "src.specify_cli.hyperdimensional.parser",
+      "layer": null,
+      "functions": 1,
+      "classes": 5,
+      "code_lines": 484,
+      "complexity": 1
+    },
+    {
+      "path": "src/specify_cli/hyperdimensional/prioritization.py",
+      "module": "src.specify_cli.hyperdimensional.prioritization",
+      "layer": null,
+      "functions": 48,
+      "classes": 3,
+      "code_lines": 1628,
+      "complexity": 183
+    },
+    {
+      "path": "src/specify_cli/hyperdimensional/priority_core.py",
+      "module": "src.specify_cli.hyperdimensional.priority_core",
+      "layer": null,
+      "functions": 5,
+      "classes": 1,
+      "code_lines": 262,
+      "complexity": 8
+    },
+    {
+      "path": "src/specify_cli/hyperdimensional/query.py",
+      "module": "src.specify_cli.hyperdimensional.query",
+      "layer": null,
+      "functions": 1,
+      "classes": 1,
+      "code_lines": 98,
+      "complexity": 2
+    },
+    {
+      "path": "src/specify_cli/hyperdimensional/reasoning.py",
+      "module": "src.specify_cli.hyperdimensional.reasoning",
+      "layer": null,
+      "functions": 20,
+      "classes": 3,
+      "code_lines": 781,
+      "complexity": 90
+    },
+    {
+      "path": "src/specify_cli/hyperdimensional/reasoning_core.py",
+      "module": "src.specify_cli.hyperdimensional.reasoning_core",
+      "layer": null,
+      "functions": 7,
+      "classes": 0,
+      "code_lines": 268,
+      "complexity": 19
+    },
+    {
+      "path": "src/specify_cli/hyperdimensional/repair.py",
+      "module": "src.specify_cli.hyperdimensional.repair",
+      "layer": null,
+      "functions": 7,
+      "classes": 1,
+      "code_lines": 588,
+      "complexity": 48
+    },
+    {
+      "path": "src/specify_cli/hyperdimensional/repl.py",
+      "module": "src.specify_cli.hyperdimensional.repl",
+      "layer": null,
+      "functions": 1,
+      "classes": 1,
+      "code_lines": 204,
+      "complexity": 2
+    },
+    {
+      "path": "src/specify_cli/hyperdimensional/results.py",
+      "module": "src.specify_cli.hyperdimensional.results",
+      "layer": null,
+      "functions": 0,
+      "classes": 11,
+      "code_lines": 264,
+      "complexity": 0
+    },
+    {
+      "path": "src/specify_cli/hyperdimensional/search.py",
+      "module": "src.specify_cli.hyperdimensional.search",
+      "layer": null,
+      "functions": 0,
+      "classes": 2,
+      "code_lines": 400,
+      "complexity": 0
+    },
+    {
+      "path": "src/specify_cli/hyperdimensional/specification_reasoning.py",
+      "module": "src.specify_cli.hyperdimensional.specification_reasoning",
+      "layer": null,
+      "functions": 11,
+      "classes": 3,
+      "code_lines": 565,
+      "complexity": 67
+    },
+    {
+      "path": "src/specify_cli/hyperdimensional/speckit_embeddings.py",
+      "module": "src.specify_cli.hyperdimensional.speckit_embeddings",
+      "layer": null,
+      "functions": 6,
+      "classes": 0,
+      "code_lines": 303,
+      "complexity": 18
+    },
+    {
+      "path": "src/specify_cli/hyperdimensional/validation.py",
+      "module": "src.specify_cli.hyperdimensional.validation",
+      "layer": null,
+      "functions": 52,
+      "classes": 4,
+      "code_lines": 1828,
+      "complexity": 282
+    },
+    {
+      "path": "src/specify_cli/hyperdimensional/validation_core.py",
+      "module": "src.specify_cli.hyperdimensional.validation_core",
+      "layer": null,
+      "functions": 7,
+      "classes": 1,
+      "code_lines": 266,
+      "complexity": 41
+    },
+    {
+      "path": "src/specify_cli/ops/__init__.py",
+      "module": "src.specify_cli.ops.__init__",
+      "layer": "ops",
+      "functions": 0,
+      "classes": 0,
+      "code_lines": 33,
+      "complexity": 0
+    },
+    {
+      "path": "src/specify_cli/ops/build.py",
+      "module": "src.specify_cli.ops.build",
+      "layer": "ops",
+      "functions": 5,
+      "classes": 0,
+      "code_lines": 183,
+      "complexity": 14
+    },
+    {
+      "path": "src/specify_cli/ops/cache.py",
+      "module": "src.specify_cli.ops.cache",
+      "layer": "ops",
+      "functions": 1,
+      "classes": 0,
+      "code_lines": 34,
+      "complexity": 2
+    },
+    {
+      "path": "src/specify_cli/ops/check.py",
+      "module": "src.specify_cli.ops.check",
+      "layer": "ops",
+      "functions": 4,
+      "classes": 2,
+      "code_lines": 209,
+      "complexity": 20
+    },
+    {
+      "path": "src/specify_cli/ops/deps.py",
+      "module": "src.specify_cli.ops.deps",
+      "layer": "ops",
+      "functions": 6,
+      "classes": 0,
+      "code_lines": 220,
+      "complexity": 17
+    },
+    {
+      "path": "src/specify_cli/ops/docs.py",
+      "module": "src.specify_cli.ops.docs",
+      "layer": "ops",
+      "functions": 1,
+      "classes": 0,
+      "code_lines": 34,
+      "complexity": 2
+    },
+    {
+      "path": "src/specify_cli/ops/dod.py",
+      "module": "src.specify_cli.ops.dod",
+      "layer": "ops",
+      "functions": 2,
+      "classes": 0,
+      "code_lines": 142,
+      "complexity": 9
+    },
+    {
+      "path": "src/specify_cli/ops/ggen_atomic.py",
+      "module": "src.specify_cli.ops.ggen_atomic",
+      "layer": "ops",
+      "functions": 0,
+      "classes": 2,
+      "code_lines": 182,
+      "complexity": 0
+    },
+    {
+      "path": "src/specify_cli/ops/ggen_errors.py",
+      "module": "src.specify_cli.ops.ggen_errors",
+      "layer": "ops",
+      "functions": 2,
+      "classes": 1,
+      "code_lines": 248,
+      "complexity": 14
+    },
+    {
+      "path": "src/specify_cli/ops/ggen_filelock.py",
+      "module": "src.specify_cli.ops.ggen_filelock",
+      "layer": "ops",
+      "functions": 0,
+      "classes": 2,
+      "code_lines": 150,
+      "complexity": 0
+    },
+    {
+      "path": "src/specify_cli/ops/ggen_incremental.py",
+      "module": "src.specify_cli.ops.ggen_incremental",
+      "layer": "ops",
+      "functions": 0,
+      "classes": 3,
+      "code_lines": 206,
+      "complexity": 0
+    },
+    {
+      "path": "src/specify_cli/ops/ggen_logging.py",
+      "module": "src.specify_cli.ops.ggen_logging",
+      "layer": "ops",
+      "functions": 0,
+      "classes": 2,
+      "code_lines": 182,
+      "complexity": 0
+    },
+    {
+      "path": "src/specify_cli/ops/ggen_manifest.py",
+      "module": "src.specify_cli.ops.ggen_manifest",
+      "layer": "ops",
+      "functions": 2,
+      "classes": 2,
+      "code_lines": 181,
+      "complexity": 24
+    },
+    {
+      "path": "src/specify_cli/ops/ggen_preflight.py",
+      "module": "src.specify_cli.ops.ggen_preflight",
+      "layer": "ops",
+      "functions": 2,
+      "classes": 1,
+      "code_lines": 189,
+      "complexity": 29
+    },
+    {
+      "path": "src/specify_cli/ops/ggen_recovery.py",
+      "module": "src.specify_cli.ops.ggen_recovery",
+      "layer": "ops",
+      "functions": 1,
+      "classes": 2,
+      "code_lines": 192,
+      "complexity": 8
+    },
+    {
+      "path": "src/specify_cli/ops/ggen_shacl.py",
+      "module": "src.specify_cli.ops.ggen_shacl",
+      "layer": "ops",
+      "functions": 2,
+      "classes": 1,
+      "code_lines": 201,
+      "complexity": 25
+    },
+    {
+      "path": "src/specify_cli/ops/ggen_timeout.py",
+      "module": "src.specify_cli.ops.ggen_timeout",
+      "layer": "ops",
+      "functions": 3,
+      "classes": 1,
+      "code_lines": 130,
+      "complexity": 10
+    },
+    {
+      "path": "src/specify_cli/ops/ggen_timeout_config.py",
+      "module": "src.specify_cli.ops.ggen_timeout_config",
+      "layer": "ops",
+      "functions": 2,
+      "classes": 0,
+      "code_lines": 109,
+      "complexity": 15
+    },
+    {
+      "path": "src/specify_cli/ops/ggen_validation.py",
+      "module": "src.specify_cli.ops.ggen_validation",
+      "layer": "ops",
+      "functions": 4,
+      "classes": 1,
+      "code_lines": 199,
+      "complexity": 29
+    },
+    {
+      "path": "src/specify_cli/ops/guides.py",
+      "module": "src.specify_cli.ops.guides",
+      "layer": "ops",
+      "functions": 1,
+      "classes": 0,
+      "code_lines": 34,
+      "complexity": 2
+    },
+    {
+      "path": "src/specify_cli/ops/infodesign.py",
+      "module": "src.specify_cli.ops.infodesign",
+      "layer": "ops",
+      "functions": 1,
+      "classes": 0,
+      "code_lines": 36,
+      "complexity": 2
+    },
+    {
+      "path": "src/specify_cli/ops/init.py",
+      "module": "src.specify_cli.ops.init",
+      "layer": "ops",
+      "functions": 4,
+      "classes": 2,
+      "code_lines": 303,
+      "complexity": 31
+    },
+    {
+      "path": "src/specify_cli/ops/jtbd.py",
+      "module": "src.specify_cli.ops.jtbd",
+      "layer": "ops",
+      "functions": 9,
+      "classes": 10,
+      "code_lines": 1002,
+      "complexity": 85
+    },
+    {
+      "path": "src/specify_cli/ops/lint.py",
+      "module": "src.specify_cli.ops.lint",
+      "layer": "ops",
+      "functions": 1,
+      "classes": 0,
+      "code_lines": 34,
+      "complexity": 2
+    },
+    {
+      "path": "src/specify_cli/ops/mermaid.py",
+      "module": "src.specify_cli.ops.mermaid",
+      "layer": "ops",
+      "functions": 1,
+      "classes": 0,
+      "code_lines": 34,
+      "complexity": 2
+    },
+    {
+      "path": "src/specify_cli/ops/observability.py",
+      "module": "src.specify_cli.ops.observability",
+      "layer": "ops",
+      "functions": 8,
+      "classes": 0,
+      "code_lines": 143,
+      "complexity": 17
+    },
+    {
+      "path": "src/specify_cli/ops/otel.py",
+      "module": "src.specify_cli.ops.otel",
+      "layer": "ops",
+      "functions": 1,
+      "classes": 0,
+      "code_lines": 34,
+      "complexity": 2
+    },
+    {
+      "path": "src/specify_cli/ops/process_mining.py",
+      "module": "src.specify_cli.ops.process_mining",
+      "layer": "ops",
+      "functions": 10,
+      "classes": 0,
+      "code_lines": 334,
+      "complexity": 57
+    },
+    {
+      "path": "src/specify_cli/ops/terraform.py",
+      "module": "src.specify_cli.ops.terraform",
+      "layer": "ops",
+      "functions": 1,
+      "classes": 0,
+      "code_lines": 36,
+      "complexity": 2
+    },
+    {
+      "path": "src/specify_cli/ops/tests.py",
+      "module": "src.specify_cli.ops.tests",
+      "layer": "ops",
+      "functions": 4,
+      "classes": 0,
+      "code_lines": 146,
+      "complexity": 11
+    },
+    {
+      "path": "src/specify_cli/ops/transform.py",
+      "module": "src.specify_cli.ops.transform",
+      "layer": "ops",
+      "functions": 9,
+      "classes": 3,
+      "code_lines": 441,
+      "complexity": 42
+    },
+    {
+      "path": "src/specify_cli/ops/version.py",
+      "module": "src.specify_cli.ops.version",
+      "layer": "ops",
+      "functions": 6,
+      "classes": 1,
+      "code_lines": 208,
+      "complexity": 17
+    },
+    {
+      "path": "src/specify_cli/ops/worktree.py",
+      "module": "src.specify_cli.ops.worktree",
+      "layer": "ops",
+      "functions": 1,
+      "classes": 0,
+      "code_lines": 34,
+      "complexity": 2
+    },
+    {
+      "path": "src/specify_cli/runtime/__init__.py",
+      "module": "src.specify_cli.runtime.__init__",
+      "layer": "runtime",
+      "functions": 0,
+      "classes": 0,
+      "code_lines": 162,
+      "complexity": 0
+    },
+    {
+      "path": "src/specify_cli/runtime/build.py",
+      "module": "src.specify_cli.runtime.build",
+      "layer": "runtime",
+      "functions": 4,
+      "classes": 0,
+      "code_lines": 359,
+      "complexity": 44
+    },
+    {
+      "path": "src/specify_cli/runtime/cache.py",
+      "module": "src.specify_cli.runtime.cache",
+      "layer": "runtime",
+      "functions": 0,
+      "classes": 0,
+      "code_lines": 17,
+      "complexity": 0
+    },
+    {
+      "path": "src/specify_cli/runtime/deps.py",
+      "module": "src.specify_cli.runtime.deps",
+      "layer": "runtime",
+      "functions": 5,
+      "classes": 0,
+      "code_lines": 443,
+      "complexity": 55
+    },
+    {
+      "path": "src/specify_cli/runtime/docs.py",
+      "module": "src.specify_cli.runtime.docs",
+      "layer": "runtime",
+      "functions": 0,
+      "classes": 0,
+      "code_lines": 17,
+      "complexity": 0
+    },
+    {
+      "path": "src/specify_cli/runtime/dod.py",
+      "module": "src.specify_cli.runtime.dod",
+      "layer": "runtime",
+      "functions": 11,
+      "classes": 0,
+      "code_lines": 478,
+      "complexity": 61
+    },
+    {
+      "path": "src/specify_cli/runtime/dspy_latex.py",
+      "module": "src.specify_cli.runtime.dspy_latex",
+      "layer": "runtime",
+      "functions": 5,
+      "classes": 0,
+      "code_lines": 918,
+      "complexity": 49
+    },
+    {
+      "path": "src/specify_cli/runtime/ggen.py",
+      "module": "src.specify_cli.runtime.ggen",
+      "layer": "runtime",
+      "functions": 22,
+      "classes": 1,
+      "code_lines": 719,
+      "complexity": 129
+    },
+    {
+      "path": "src/specify_cli/runtime/git.py",
+      "module": "src.specify_cli.runtime.git",
+      "layer": "runtime",
+      "functions": 5,
+      "classes": 1,
+      "code_lines": 238,
+      "complexity": 22
+    },
+    {
+      "path": "src/specify_cli/runtime/github.py",
+      "module": "src.specify_cli.runtime.github",
+      "layer": "runtime",
+      "functions": 7,
+      "classes": 2,
+      "code_lines": 382,
+      "complexity": 41
+    },
+    {
+      "path": "src/specify_cli/runtime/guides.py",
+      "module": "src.specify_cli.runtime.guides",
+      "layer": "runtime",
+      "functions": 0,
+      "classes": 0,
+      "code_lines": 17,
+      "complexity": 0
+    },
+    {
+      "path": "src/specify_cli/runtime/infodesign.py",
+      "module": "src.specify_cli.runtime.infodesign",
+      "layer": "runtime",
+      "functions": 0,
+      "classes": 0,
+      "code_lines": 17,
+      "complexity": 0
+    },
+    {
+      "path": "src/specify_cli/runtime/jtbd.py",
+      "module": "src.specify_cli.runtime.jtbd",
+      "layer": "runtime",
+      "functions": 24,
+      "classes": 1,
+      "code_lines": 548,
+      "complexity": 64
+    },
+    {
+      "path": "src/specify_cli/runtime/lint.py",
+      "module": "src.specify_cli.runtime.lint",
+      "layer": "runtime",
+      "functions": 5,
+      "classes": 1,
+      "code_lines": 474,
+      "complexity": 63
+    },
+    {
+      "path": "src/specify_cli/runtime/mermaid.py",
+      "module": "src.specify_cli.runtime.mermaid",
+      "layer": "runtime",
+      "functions": 0,
+      "classes": 0,
+      "code_lines": 17,
+      "complexity": 0
+    },
+    {
+      "path": "src/specify_cli/runtime/otel.py",
+      "module": "src.specify_cli.runtime.otel",
+      "layer": "runtime",
+      "functions": 0,
+      "classes": 0,
+      "code_lines": 17,
+      "complexity": 0
+    },
+    {
+      "path": "src/specify_cli/runtime/receipt.py",
+      "module": "src.specify_cli.runtime.receipt",
+      "layer": "runtime",
+      "functions": 5,
+      "classes": 2,
+      "code_lines": 165,
+      "complexity": 10
+    },
+    {
+      "path": "src/specify_cli/runtime/template.py",
+      "module": "src.specify_cli.runtime.template",
+      "layer": "runtime",
+      "functions": 8,
+      "classes": 1,
+      "code_lines": 277,
+      "complexity": 59
+    },
+    {
+      "path": "src/specify_cli/runtime/terraform.py",
+      "module": "src.specify_cli.runtime.terraform",
+      "layer": "runtime",
+      "functions": 0,
+      "classes": 0,
+      "code_lines": 17,
+      "complexity": 0
+    },
+    {
+      "path": "src/specify_cli/runtime/tests.py",
+      "module": "src.specify_cli.runtime.tests",
+      "layer": "runtime",
+      "functions": 4,
+      "classes": 0,
+      "code_lines": 319,
+      "complexity": 48
+    },
+    {
+      "path": "src/specify_cli/runtime/tools.py",
+      "module": "src.specify_cli.runtime.tools",
+      "layer": "runtime",
+      "functions": 5,
+      "classes": 0,
+      "code_lines": 174,
+      "complexity": 23
+    },
+    {
+      "path": "src/specify_cli/runtime/worktree.py",
+      "module": "src.specify_cli.runtime.worktree",
+      "layer": "runtime",
+      "functions": 0,
+      "classes": 0,
+      "code_lines": 17,
+      "complexity": 0
+    },
+    {
+      "path": "src/specify_cli/spiff/__init__.py",
+      "module": "src.specify_cli.spiff.__init__",
+      "layer": null,
+      "functions": 3,
+      "classes": 0,
+      "code_lines": 50,
+      "complexity": 6
+    },
+    {
+      "path": "src/specify_cli/spiff/ops/__init__.py",
+      "module": "src.specify_cli.spiff.ops.__init__",
+      "layer": "ops",
+      "functions": 0,
+      "classes": 0,
+      "code_lines": 33,
+      "complexity": 0
+    },
+    {
+      "path": "src/specify_cli/spiff/ops/external_projects.py",
+      "module": "src.specify_cli.spiff.ops.external_projects",
+      "layer": "ops",
+      "functions": 16,
+      "classes": 2,
+      "code_lines": 451,
+      "complexity": 67
+    },
+    {
+      "path": "src/specify_cli/spiff/ops/otel_validation.py",
+      "module": "src.specify_cli.spiff.ops.otel_validation",
+      "layer": "ops",
+      "functions": 13,
+      "classes": 2,
+      "code_lines": 399,
+      "complexity": 26
+    },
+    {
+      "path": "src/specify_cli/spiff/runtime.py",
+      "module": "src.specify_cli.spiff.runtime",
+      "layer": null,
+      "functions": 14,
+      "classes": 0,
+      "code_lines": 356,
+      "complexity": 35
+    },
+    {
+      "path": "src/specify_cli/spiff_automation.py",
+      "module": "src.specify_cli.spiff_automation",
+      "layer": null,
+      "functions": 4,
+      "classes": 1,
+      "code_lines": 251,
+      "complexity": 12
+    },
+    {
+      "path": "src/specify_cli/testing/__init__.py",
+      "module": "src.specify_cli.testing.__init__",
+      "layer": null,
+      "functions": 0,
+      "classes": 0,
+      "code_lines": 28,
+      "complexity": 0
+    },
+    {
+      "path": "src/specify_cli/testing/reporting.py",
+      "module": "src.specify_cli.testing.reporting",
+      "layer": null,
+      "functions": 1,
+      "classes": 3,
+      "code_lines": 442,
+      "complexity": 1
+    },
+    {
+      "path": "src/specify_cli/utils/__init__.py",
+      "module": "src.specify_cli.utils.__init__",
+      "layer": null,
+      "functions": 0,
+      "classes": 0,
+      "code_lines": 26,
+      "complexity": 0
+    },
+    {
+      "path": "src/specify_cli/utils/ast_analyzer.py",
+      "module": "src.specify_cli.utils.ast_analyzer",
+      "layer": null,
+      "functions": 1,
+      "classes": 8,
+      "code_lines": 463,
+      "complexity": 1
+    },
+    {
+      "path": "src/specify_cli/utils/ast_transformers.py",
+      "module": "src.specify_cli.utils.ast_transformers",
+      "layer": null,
+      "functions": 2,
+      "classes": 3,
+      "code_lines": 392,
+      "complexity": 11
+    },
+    {
+      "path": "src/specify_cli/utils/commands.py",
+      "module": "src.specify_cli.utils.commands",
+      "layer": null,
+      "functions": 2,
+      "classes": 0,
+      "code_lines": 57,
+      "complexity": 13
+    },
+    {
+      "path": "src/specify_cli/utils/consistency_checker.py",
+      "module": "src.specify_cli.utils.consistency_checker",
+      "layer": null,
+      "functions": 1,
+      "classes": 2,
+      "code_lines": 272,
+      "complexity": 4
+    },
+    {
+      "path": "src/specify_cli/utils/constants.py",
+      "module": "src.specify_cli.utils.constants",
+      "layer": null,
+      "functions": 0,
+      "classes": 0,
+      "code_lines": 117,
+      "complexity": 0
+    },
+    {
+      "path": "src/specify_cli/utils/progress.py",
+      "module": "src.specify_cli.utils.progress",
+      "layer": null,
+      "functions": 4,
+      "classes": 1,
+      "code_lines": 153,
+      "complexity": 30
+    },
+    {
+      "path": "src/specify_cli/utils/templates.py",
+      "module": "src.specify_cli.utils.templates",
+      "layer": null,
+      "functions": 6,
+      "classes": 0,
+      "code_lines": 279,
+      "complexity": 96
+    }
+  ]
+}

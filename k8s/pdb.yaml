@@ -1,0 +1,23 @@
+---
+# ==============================================================================
+# PodDisruptionBudget for specify-cli
+# Ensures high availability during voluntary disruptions (node drains, updates)
+# ==============================================================================
+apiVersion: policy/v1
+kind: PodDisruptionBudget
+metadata:
+  name: specify-pdb
+  namespace: specify
+  labels:
+    app.kubernetes.io/name: specify
+    app.kubernetes.io/component: pod-disruption-budget
+    app.kubernetes.io/part-of: specify-platform
+spec:
+  minAvailable: 2
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: specify
+      app.kubernetes.io/component: application
+
+  # Alternative: use maxUnavailable instead of minAvailable
+  # maxUnavailable: 1

@@ -45,3 +45,10 @@ env/
 *.zip
 sdd-*/
 .claude-flow/
+
+# Coverage
+.coverage
+.coverage.*
+htmlcov/
+coverage.xml
+coverage.json

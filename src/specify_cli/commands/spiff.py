@@ -95,7 +95,7 @@ def validate(
 
         except Exception as e:
             colour(f"✗ Validation failed: {e}", "red")
-            raise typer.Exit(1)
+            raise typer.Exit(1) from None
 
 
 @app.command()
@@ -143,7 +143,7 @@ def validate_quick(
 
     except Exception as e:
         colour(f"✗ Validation failed: {e}", "red")
-        raise typer.Exit(1)
+        raise typer.Exit(1) from None
 
 
 @app.command()
@@ -169,7 +169,7 @@ def create_workflow(
 
     except Exception as e:
         colour(f"✗ Failed to create workflow: {e}", "red")
-        raise typer.Exit(1)
+        raise typer.Exit(1) from None
 
 
 @app.command()
@@ -185,14 +185,14 @@ def run_workflow(
     try:
         if not workflow_file.exists():
             colour(f"✗ Workflow file not found: {workflow_file}", "red")
-            raise typer.Exit(1)
+            raise typer.Exit(1) from None
 
         colour("→ Validating workflow...", "cyan")
         from specify_cli.spiff.runtime import run_bpmn, validate_bpmn_file
 
         if not validate_bpmn_file(workflow_file):
             colour("✗ Workflow validation failed", "red")
-            raise typer.Exit(1)
+            raise typer.Exit(1) from None
 
         colour("✓ Workflow is valid", "green")
 
@@ -220,7 +220,7 @@ def run_workflow(
 
     except Exception as e:
         colour(f"✗ Execution failed: {e}", "red")
-        raise typer.Exit(1)
+        raise typer.Exit(1) from None
 
 
 @app.command()
@@ -272,7 +272,7 @@ def discover_projects(
 
     except Exception as e:
         colour(f"✗ Discovery failed: {e}", "red")
-        raise typer.Exit(1)
+        raise typer.Exit(1) from None
 
 
 @app.command()
@@ -290,7 +290,7 @@ def validate_external(
     try:
         if not project_path.exists():
             colour(f"✗ Project path not found: {project_path}", "red")
-            raise typer.Exit(1)
+            raise typer.Exit(1) from None
 
         colour("→ Analyzing project...", "cyan")
         from specify_cli.spiff.ops.external_projects import _is_python_project
@@ -298,7 +298,7 @@ def validate_external(
         project_info = _is_python_project(project_path)
         if not project_info:
             colour("✗ Not a Python project", "red")
-            raise typer.Exit(1)
+            raise typer.Exit(1) from None
 
         colour(f"✓ Project analyzed: {project_info.project_type}", "green")
 
@@ -324,7 +324,7 @@ def validate_external(
 
     except Exception as e:
         colour(f"✗ Validation failed: {e}", "red")
-        raise typer.Exit(1)
+        raise typer.Exit(1) from None
 
 
 @app.command()
@@ -383,7 +383,7 @@ def batch_validate(
 
     except Exception as e:
         colour(f"✗ Batch validation failed: {e}", "red")
-        raise typer.Exit(1)
+        raise typer.Exit(1) from None
 
 
 @app.command()
@@ -426,4 +426,4 @@ def validate_8020(
 
     except Exception as e:
         colour(f"✗ Validation failed: {e}", "red")
-        raise typer.Exit(1)
+        raise typer.Exit(1) from None

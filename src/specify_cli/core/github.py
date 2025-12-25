@@ -152,7 +152,7 @@ def download_template_from_github(
     except Exception as e:
         console.print("[red]Error fetching release information[/red]")
         console.print(Panel(str(e), title="Fetch Error", border_style="red"))
-        raise typer.Exit(1)
+        raise typer.Exit(1) from None
 
     assets = release_data.get("assets", [])
     pattern = f"spec-kit-template-{ai_assistant}-{script_type}"
@@ -174,7 +174,7 @@ def download_template_from_github(
                 border_style="yellow",
             )
         )
-        raise typer.Exit(1)
+        raise typer.Exit(1) from None
 
     download_url = asset["browser_download_url"]
     filename = asset["name"]
@@ -234,7 +234,7 @@ def download_template_from_github(
         if zip_path.exists():
             zip_path.unlink()
         console.print(Panel(detail, title="Download Error", border_style="red"))
-        raise typer.Exit(1)
+        raise typer.Exit(1) from None
 
     if verbose:
         console.print(f"Downloaded: {filename}")

@@ -85,10 +85,10 @@ def check_dspy_available() -> None:
                 border_style="red",
             )
         )
-        raise typer.Exit(1)
+        raise typer.Exit(1) from None
 
 
-def load_config(config_path: Path | None = None) -> dict:
+def load_config(config_path: Path | None = None) -> dict[str, Any]:
     """Load DSPy configuration from file."""
     path = config_path or DEFAULT_CONFIG_PATH
     if path.exists():
@@ -130,7 +130,7 @@ def get_configured_lm(config: dict[str, Any] | None = None) -> Any:
                 border_style="red",
             )
         )
-        raise typer.Exit(1)
+        raise typer.Exit(1) from None
 
     # Configure the LM based on provider
     if provider == "openai":
@@ -205,7 +205,7 @@ def configure(
         if provider not in LM_PROVIDERS:
             console.print(f"[red]Unknown provider: {provider}[/red]")
             console.print(f"[dim]Available: {', '.join(LM_PROVIDERS.keys())}[/dim]")
-            raise typer.Exit(1)
+            raise typer.Exit(1) from None
         config["provider"] = provider
 
         # Set default model if not specified
@@ -263,20 +263,20 @@ def run(
     config = load_config()
     if not config:
         console.print("[red]DSPy not configured. Run 'specify dspy configure' first.[/red]")
-        raise typer.Exit(1)
+        raise typer.Exit(1) from None
 
     # Get input
     if input_file:
         if not input_file.exists():
             console.print(f"[red]File not found: {input_file}[/red]")
-            raise typer.Exit(1)
+            raise typer.Exit(1) from None
         file_content = input_file.read_text()
     else:
         file_content = None
 
     if not input_text and not file_content:
         console.print("[red]Provide input with --input or --file[/red]")
-        raise typer.Exit(1)
+        raise typer.Exit(1) from None
 
     # Configure DSPy
     lm = get_configured_lm(config)
@@ -287,7 +287,7 @@ def run(
         predictor = dspy.Predict(signature)
     except Exception as e:
         console.print(f"[red]Invalid signature: {e}[/red]")
-        raise typer.Exit(1)
+        raise typer.Exit(1) from None
 
     # Prepare inputs based on signature
     inputs = {}
@@ -343,7 +343,7 @@ def run(
 
     except Exception as e:
         console.print(f"[red]Error running signature: {e}[/red]")
-        raise typer.Exit(1)
+        raise typer.Exit(1) from None
 
 
 @dspy_app.command()
@@ -373,7 +373,7 @@ def generate(
     config = load_config()
     if not config:
         console.print("[red]DSPy not configured. Run 'specify dspy configure' first.[/red]")
-        raise typer.Exit(1)
+        raise typer.Exit(1) from None
 
     # Define signatures for different spec types
     signatures = {
@@ -386,7 +386,7 @@ def generate(
     if spec_type not in signatures:
         console.print(f"[red]Unknown spec type: {spec_type}[/red]")
         console.print(f"[dim]Available: {', '.join(signatures.keys())}[/dim]")
-        raise typer.Exit(1)
+        raise typer.Exit(1) from None
 
     # Configure DSPy
     lm = get_configured_lm(config)
@@ -503,7 +503,7 @@ def generate(
 
     except Exception as e:
         console.print(f"[red]Error generating {spec_type}: {e}[/red]")
-        raise typer.Exit(1)
+        raise typer.Exit(1) from None
 
 
 def format_as_markdown(spec_type: str, result) -> str:
@@ -761,27 +761,27 @@ def _optimize_spec_cli(
     # Validate inputs
     if not spec_file.exists():
         console.print(f"[red]Spec file not found: {spec_file}[/red]")
-        raise typer.Exit(1)
+        raise typer.Exit(1) from None
 
     if metric not in ["coverage", "clarity", "brevity", "performance"]:
         console.print(
             f"[red]Invalid metric: {metric}. Choose: coverage, clarity, brevity, performance[/red]"
         )
-        raise typer.Exit(1)
+        raise typer.Exit(1) from None
 
     if iterations < 1 or iterations > 10:
         console.print("[red]Iterations must be between 1 and 10[/red]")
-        raise typer.Exit(1)
+        raise typer.Exit(1) from None
 
     if temperature < 0.0 or temperature > 1.0:
         console.print("[red]Temperature must be between 0.0 and 1.0[/red]")
-        raise typer.Exit(1)
+        raise typer.Exit(1) from None
 
     # Load configuration
     config = load_config()
     if not config:
         console.print("[red]DSPy not configured. Run 'specify dspy configure' first.[/red]")
-        raise typer.Exit(1)
+        raise typer.Exit(1) from None
 
     # Override model if specified
     if model:
@@ -792,7 +792,7 @@ def _optimize_spec_cli(
         spec_format = "ttl" if spec_file.suffix.lower() in [".ttl", ".turtle", ".rdf"] else "json"
     except Exception as e:
         console.print(f"[red]Error reading spec file: {e}[/red]")
-        raise typer.Exit(1)
+        raise typer.Exit(1) from None
 
     # Configure DSPy with temperature
     try:
@@ -806,7 +806,7 @@ def _optimize_spec_cli(
         dspy.configure(lm=lm)
     except Exception as e:
         console.print(f"[red]Error configuring DSPy: {e}[/red]")
-        raise typer.Exit(1)
+        raise typer.Exit(1) from None
 
     # Show optimization parameters
     console.print(
@@ -844,7 +844,7 @@ def _optimize_spec_cli(
                     border_style="red",
                 )
             )
-            raise typer.Exit(1)
+            raise typer.Exit(1) from None
 
         # Display results
         console.print(
@@ -883,7 +883,7 @@ def _optimize_spec_cli(
             import traceback
 
             console.print(f"[dim]{traceback.format_exc()}[/dim]")
-        raise typer.Exit(1)
+        raise typer.Exit(1) from None
 
 
 @dspy_app.command()

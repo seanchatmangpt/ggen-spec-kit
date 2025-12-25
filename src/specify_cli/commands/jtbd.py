@@ -95,7 +95,7 @@ def track(
                 context_dict = json.loads(context)
             except json.JSONDecodeError as e:
                 colour(f"[red]Error:[/red] Invalid JSON context: {e}", "red")
-                raise typer.Exit(1)
+                raise typer.Exit(1) from None
 
         # First validate the input
         validation = jtbd_ops.validate_job_completion(
@@ -108,12 +108,12 @@ def track(
         if not validation.valid:
             if json_output:
                 dump_json({"success": False, "errors": validation.errors})
-                raise typer.Exit(1)
+                raise typer.Exit(1) from None
             console.print()
             colour("[red]Validation failed:[/red]", "red")
             for error in validation.errors:
                 console.print(f"  • {error}")
-            raise typer.Exit(1)
+            raise typer.Exit(1) from None
 
         # Show warnings if any
         if validation.warnings and not json_output:
@@ -158,7 +158,7 @@ def track(
                 )
         else:
             colour(f"[red]✗[/red] {result.message}", "red")
-            raise typer.Exit(1)
+            raise typer.Exit(1) from None
 
     except typer.Exit:
         raise
@@ -169,7 +169,7 @@ def track(
     except Exception as e:
         console.print()
         colour(f"[red]Error:[/red] {e}", "red")
-        raise typer.Exit(1)
+        raise typer.Exit(1) from None
 
 
 @app.command()
@@ -219,7 +219,7 @@ def outcome(
                 context_dict = json.loads(context)
             except json.JSONDecodeError as e:
                 colour(f"[red]Error:[/red] Invalid JSON context: {e}", "red")
-                raise typer.Exit(1)
+                raise typer.Exit(1) from None
 
         # Create and track the outcome achievement
         result = jtbd_ops.create_outcome_achievement(
@@ -266,7 +266,7 @@ def outcome(
                 console.print(f"  Persona: [cyan]{persona}[/cyan]")
         else:
             colour(f"[red]✗[/red] {result.message}", "red")
-            raise typer.Exit(1)
+            raise typer.Exit(1) from None
 
     except typer.Exit:
         raise
@@ -277,7 +277,7 @@ def outcome(
     except Exception as e:
         console.print()
         colour(f"[red]Error:[/red] {e}", "red")
-        raise typer.Exit(1)
+        raise typer.Exit(1) from None
 
 
 @app.command()
@@ -417,7 +417,7 @@ def report(
     except Exception as e:
         console.print()
         colour(f"[red]Error:[/red] {e}", "red")
-        raise typer.Exit(1)
+        raise typer.Exit(1) from None
 
 
 @app.command()
@@ -548,7 +548,7 @@ def analyze(
     except Exception as e:
         console.print()
         colour(f"[red]Error:[/red] {e}", "red")
-        raise typer.Exit(1)
+        raise typer.Exit(1) from None
 
 
 @app.command()
@@ -862,4 +862,4 @@ def dashboard(
     except Exception as e:
         console.print()
         colour(f"[red]Error:[/red] {e}", "red")
-        raise typer.Exit(1)
+        raise typer.Exit(1) from None

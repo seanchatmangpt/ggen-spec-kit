@@ -115,11 +115,11 @@ def init(
         console.print("\nUsage:")
         console.print("  specify init [PROJECT_NAME]")
         console.print("  specify init --here")
-        raise typer.Exit(1)
+        raise typer.Exit(1) from None
 
     if project_name and here:
         console.print("[red]Error:[/red] Cannot specify both project name and --here flag.")
-        raise typer.Exit(1)
+        raise typer.Exit(1) from None
 
     # Interactive AI assistant selection if not specified
     if not ai_assistant:
@@ -185,7 +185,7 @@ def init(
             colour("[red]✗ Project initialization failed[/red]", "red")
             for error in result.errors:
                 console.print(f"  • {error}")
-            raise typer.Exit(1)
+            raise typer.Exit(1) from None
 
     except init_ops.InitError as e:
         console.print()
@@ -201,7 +201,7 @@ def init(
             console.print("[yellow]Suggestions:[/yellow]")
             for suggestion in e.suggestions:
                 console.print(f"  • {suggestion}")
-        raise typer.Exit(1)
+        raise typer.Exit(1) from None
 
     except KeyboardInterrupt:
         console.print()
@@ -223,4 +223,4 @@ def init(
             console.print()
             console.print("[dim]Stack trace:[/dim]")
             console.print(traceback.format_exc())
-        raise typer.Exit(1)
+        raise typer.Exit(1) from None

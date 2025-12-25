@@ -471,7 +471,7 @@ def with_error_handling(
     Example
     -------
     >>> @with_error_handling("fetch_data", max_retries=3)
-    ... def fetch_data(url: str) -> dict:
+    ... def fetch_data(url: str) -> Dict[str, Any]:
     ...     return requests.get(url).json()
     """
 

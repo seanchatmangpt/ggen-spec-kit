@@ -1,0 +1,131 @@
+---
+# ==============================================================================
+# ArgoCD Application for specify-cli
+# GitOps continuous deployment with Argo CD
+# ==============================================================================
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: specify-cli
+  namespace: argocd
+  # Finalizer to ensure cascading deletion
+  finalizers:
+    - resources-finalizer.argocd.argoproj.io
+  labels:
+    app.kubernetes.io/name: specify-cli
+    app.kubernetes.io/component: application
+    environment: production
+  annotations:
+    argocd.argoproj.io/manifest-generate-paths: /k8s
+spec:
+  # Project
+  project: default
+
+  # Source configuration
+  source:
+    # Git repository
+    repoURL: https://github.com/github/spec-kit.git
+    targetRevision: main
+    path: k8s
+
+    # Directory configuration
+    directory:
+      recurse: true
+      jsonnet: {}
+
+  # Destination configuration
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: specify
+
+  # Sync policy
+  syncPolicy:
+    # Automated sync
+    automated:
+      # Automatically sync when changes detected
+      prune: true
+      # Automatically create namespace
+      selfHeal: true
+      # Allow empty directories
+      allowEmpty: false
+
+    # Sync options
+    syncOptions:
+      - CreateNamespace=true
+      - PrunePropagationPolicy=foreground
+      - PruneLast=true
+      - RespectIgnoreDifferences=true
+      - ApplyOutOfSyncOnly=true
+
+    # Retry policy
+    retry:
+      limit: 5
+      backoff:
+        duration: 5s
+        factor: 2
+        maxDuration: 3m
+
+  # Ignore differences
+  ignoreDifferences:
+    - group: apps
+      kind: Deployment
+      jsonPointers:
+        - /spec/replicas
+
+  # Health assessment
+  revisionHistoryLimit: 10
+
+  # Info
+  info:
+    - name: 'Description'
+      value: 'Specify CLI - RDF-first Spec-Driven Development toolkit'
+    - name: 'Repository'
+      value: 'https://github.com/github/spec-kit'
+
+---
+# ==============================================================================
+# ArgoCD AppProject for specify-cli
+# ==============================================================================
+apiVersion: argoproj.io/v1alpha1
+kind: AppProject
+metadata:
+  name: specify-project
+  namespace: argocd
+spec:
+  description: Specify CLI project
+
+  # Source repositories
+  sourceRepos:
+    - https://github.com/github/spec-kit.git
+    - https://charts.bitnami.com/bitnami
+
+  # Destination clusters and namespaces
+  destinations:
+    - namespace: specify
+      server: https://kubernetes.default.svc
+    - namespace: '*'
+      server: https://kubernetes.default.svc
+
+  # Cluster resource whitelist
+  clusterResourceWhitelist:
+    - group: '*'
+      kind: '*'
+
+  # Namespace resource whitelist
+  namespaceResourceWhitelist:
+    - group: '*'
+      kind: '*'
+
+  # Roles
+  roles:
+    - name: read-only
+      description: Read-only access to specify-cli
+      policies:
+        - p, proj:specify-project:read-only, applications, get, specify-project/*, allow
+        - p, proj:specify-project:read-only, applications, sync, specify-project/*, deny
+
+    - name: ci-role
+      description: CI/CD role for automated deployments
+      policies:
+        - p, proj:specify-project:ci-role, applications, sync, specify-project/*, allow
+        - p, proj:specify-project:ci-role, applications, override, specify-project/*, allow

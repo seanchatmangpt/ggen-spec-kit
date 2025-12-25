@@ -1,0 +1,60 @@
+---
+# ==============================================================================
+# Flux Kustomization for specify-cli
+# GitOps continuous deployment with Flux CD
+# ==============================================================================
+apiVersion: kustomize.toolkit.fluxcd.io/v1
+kind: Kustomization
+metadata:
+  name: specify-cli
+  namespace: flux-system
+spec:
+  # Source reference
+  sourceRef:
+    kind: GitRepository
+    name: specify-cli
+    namespace: flux-system
+
+  # Path to manifests
+  path: ./k8s
+
+  # Reconciliation interval
+  interval: 5m0s
+
+  # Retry interval on failure
+  retryInterval: 1m0s
+
+  # Timeout for operations
+  timeout: 5m0s
+
+  # Prune resources
+  prune: true
+
+  # Wait for resources to be ready
+  wait: true
+
+  # Health checks
+  healthChecks:
+    - apiVersion: apps/v1
+      kind: Deployment
+      name: specify-cli
+      namespace: specify
+
+  # Post-deployment actions
+  postBuild:
+    substitute:
+      ENVIRONMENT: "production"
+      VERSION: "0.0.25"
+
+  # Validation
+  validation: client
+
+  # Decryption (for SOPS encrypted secrets)
+  decryption:
+    provider: sops
+    secretRef:
+      name: sops-gpg
+
+  # Dependencies
+  dependsOn:
+    - name: infrastructure

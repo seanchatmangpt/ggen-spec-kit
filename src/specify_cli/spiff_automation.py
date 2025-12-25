@@ -34,10 +34,10 @@ class SelfAutomatingSystem:
 
     def __init__(self, workflows_dir: Path | None = None):
         self.workflows_dir = workflows_dir or Path(__file__).parent.parent.parent / "workflows"
-        self.workflows = {}
+        self.workflows: dict[str, Any] = {}
         self._load_workflows()
 
-    def _load_workflows(self):
+    def _load_workflows(self) -> None:
         """Load all BPMN workflows from workflows directory."""
         if not self.workflows_dir.exists():
             logger.warning(f"Workflows directory not found: {self.workflows_dir}")

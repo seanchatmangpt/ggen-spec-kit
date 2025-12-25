@@ -97,7 +97,7 @@ def cache_key(*args: Any) -> str:
     """
     # Convert all args to strings and join
     key_string = "|".join(str(arg) for arg in args)
-    return hashlib.sha1(key_string.encode()).hexdigest()
+    return hashlib.sha1(key_string.encode(), usedforsecurity=False).hexdigest()
 
 
 def get_cached(key: str) -> dict[str, Any] | None:

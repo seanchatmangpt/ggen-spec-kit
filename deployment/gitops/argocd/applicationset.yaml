@@ -1,0 +1,80 @@
+---
+# ==============================================================================
+# ArgoCD ApplicationSet for multi-environment deployments
+# Automatically creates applications for dev, staging, and production
+# ==============================================================================
+apiVersion: argoproj.io/v1alpha1
+kind: ApplicationSet
+metadata:
+  name: specify-cli-environments
+  namespace: argocd
+spec:
+  # Generators
+  generators:
+    # List generator for multiple environments
+    - list:
+        elements:
+          - environment: development
+            namespace: specify-dev
+            replicaCount: "2"
+            host: specify.dev.example.com
+            valuesFile: values-dev.yaml
+
+          - environment: staging
+            namespace: specify-staging
+            replicaCount: "3"
+            host: specify.staging.example.com
+            valuesFile: values-staging.yaml
+
+          - environment: production
+            namespace: specify
+            replicaCount: "5"
+            host: specify.example.com
+            valuesFile: values-production.yaml
+
+  # Template
+  template:
+    metadata:
+      name: 'specify-cli-{{environment}}'
+      labels:
+        environment: '{{environment}}'
+        app.kubernetes.io/name: specify-cli
+      annotations:
+        notifications.argoproj.io/subscribe.on-sync-succeeded.slack: specify-deployments
+
+    spec:
+      project: specify-project
+
+      source:
+        repoURL: https://github.com/github/spec-kit.git
+        targetRevision: main
+        path: deployment/helm
+
+        # Helm configuration
+        helm:
+          valueFiles:
+            - '{{valuesFile}}'
+          parameters:
+            - name: replicaCount
+              value: '{{replicaCount}}'
+            - name: ingress.hosts[0].host
+              value: '{{host}}'
+            - name: env.ENVIRONMENT
+              value: '{{environment}}'
+
+      destination:
+        server: https://kubernetes.default.svc
+        namespace: '{{namespace}}'
+
+      syncPolicy:
+        automated:
+          prune: true
+          selfHeal: true
+        syncOptions:
+          - CreateNamespace=true
+        retry:
+          limit: 3
+          backoff:
+            duration: 5s
+            factor: 2
+            maxDuration: 1m

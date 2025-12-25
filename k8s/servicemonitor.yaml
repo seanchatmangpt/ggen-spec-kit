@@ -1,0 +1,134 @@
+---
+# ==============================================================================
+# ServiceMonitor for Prometheus Operator
+# Configures Prometheus to scrape metrics from specify-cli
+# ==============================================================================
+apiVersion: monitoring.coreos.com/v1
+kind: ServiceMonitor
+metadata:
+  name: specify-metrics
+  namespace: specify
+  labels:
+    app.kubernetes.io/name: specify
+    app.kubernetes.io/component: monitoring
+    app.kubernetes.io/part-of: specify-platform
+    release: prometheus
+spec:
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: specify
+      app.kubernetes.io/component: service
+
+  endpoints:
+    - port: metrics
+      path: /metrics
+      interval: 30s
+      scrapeTimeout: 10s
+      scheme: http
+
+      # Relabeling configurations
+      relabelings:
+        - sourceLabels: [__meta_kubernetes_pod_name]
+          targetLabel: pod
+        - sourceLabels: [__meta_kubernetes_pod_node_name]
+          targetLabel: node
+        - sourceLabels: [__meta_kubernetes_namespace]
+          targetLabel: namespace
+
+      # Metric relabeling
+      metricRelabelings:
+        - sourceLabels: [__name__]
+          regex: 'go_.*'
+          action: keep
+        - sourceLabels: [__name__]
+          regex: 'python_.*'
+          action: keep
+        - sourceLabels: [__name__]
+          regex: 'specify_.*'
+          action: keep
+
+---
+# ==============================================================================
+# PrometheusRule for alerting
+# Defines alert rules for specify-cli
+# ==============================================================================
+apiVersion: monitoring.coreos.com/v1
+kind: PrometheusRule
+metadata:
+  name: specify-alerts
+  namespace: specify
+  labels:
+    app.kubernetes.io/name: specify
+    app.kubernetes.io/component: alerting
+    app.kubernetes.io/part-of: specify-platform
+    release: prometheus
+spec:
+  groups:
+    - name: specify-cli.rules
+      interval: 30s
+      rules:
+        # High error rate
+        - alert: SpecifyHighErrorRate
+          expr: |
+            rate(specify_errors_total[5m]) > 0.05
+          for: 5m
+          labels:
+            severity: warning
+          annotations:
+            summary: "High error rate in specify-cli"
+            description: "Error rate is {{ $value }} errors/sec for {{ $labels.pod }}"
+
+        # Pod not ready
+        - alert: SpecifyPodNotReady
+          expr: |
+            kube_pod_status_ready{namespace="specify", condition="false"} == 1
+          for: 5m
+          labels:
+            severity: warning
+          annotations:
+            summary: "Specify pod is not ready"
+            description: "Pod {{ $labels.pod }} has been not ready for 5 minutes"
+
+        # High CPU usage
+        - alert: SpecifyHighCPU
+          expr: |
+            rate(container_cpu_usage_seconds_total{namespace="specify", pod=~"specify-cli-.*"}[5m]) > 0.8
+          for: 10m
+          labels:
+            severity: warning
+          annotations:
+            summary: "High CPU usage in specify-cli"
+            description: "CPU usage is {{ $value | humanizePercentage }} for {{ $labels.pod }}"
+
+        # High memory usage
+        - alert: SpecifyHighMemory
+          expr: |
+            container_memory_usage_bytes{namespace="specify", pod=~"specify-cli-.*"} / container_spec_memory_limit_bytes{namespace="specify", pod=~"specify-cli-.*"} > 0.9
+          for: 5m
+          labels:
+            severity: warning
+          annotations:
+            summary: "High memory usage in specify-cli"
+            description: "Memory usage is {{ $value | humanizePercentage }} for {{ $labels.pod }}"
+
+        # Pod restart
+        - alert: SpecifyPodRestarting
+          expr: |
+            rate(kube_pod_container_status_restarts_total{namespace="specify", pod=~"specify-cli-.*"}[15m]) > 0
+          for: 5m
+          labels:
+            severity: warning
+          annotations:
+            summary: "Specify pod is restarting"
+            description: "Pod {{ $labels.pod }} has restarted {{ $value }} times in the last 15 minutes"
+
+        # Deployment replica mismatch
+        - alert: SpecifyDeploymentReplicaMismatch
+          expr: |
+            kube_deployment_spec_replicas{namespace="specify", deployment="specify-cli"} != kube_deployment_status_replicas_available{namespace="specify", deployment="specify-cli"}
+          for: 10m
+          labels:
+            severity: warning
+          annotations:
+            summary: "Specify deployment replica mismatch"
+            description: "Deployment {{ $labels.deployment }} has {{ $value }} unavailable replicas"

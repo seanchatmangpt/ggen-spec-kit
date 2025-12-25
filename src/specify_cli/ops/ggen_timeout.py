@@ -68,7 +68,7 @@ class SPARQLTimeoutError(Exception):
 
 
 def execute_with_timeout(
-    func: callable,
+    func: Callable[..., Any],
     *args: Any,
     timeout_seconds: float = 30,
     **kwargs: Any,

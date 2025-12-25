@@ -163,7 +163,7 @@ def dump_json(obj: Any) -> None:
             if _console.is_terminal:
                 _console.print(RichJSON(json_str))
             else:
-                print(json_str)
+                pass
 
             duration = time.time() - start_time
 

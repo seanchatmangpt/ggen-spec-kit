@@ -1,0 +1,80 @@
+{
+  "timestamp": "2025-12-25T08:21:15.013227",
+  "phases": [
+    {
+      "phase": 2,
+      "name": "Safe Automated Fixes",
+      "scripts": [
+        {
+          "script": "fix_mypy_types.py",
+          "description": "Fix callable types and imports",
+          "success": true,
+          "returncode": 0,
+          "output": "\ud83d\udd27 Advanced Type Annotation Fixer\n============================================================\nFound 181 Python files\n\u2713 src/specify_cli/async_core/http.py: Fixed\n\u2713 src/specify_cli/async_core/runner.py: Fixed\n\u2713 src/specify_cli/async_core/streams.py: Fixed\n\u2713 src/specify_cli/core/advanced_cache.py: Fixed\n\u2713 src/specify_cli/core/error_handling.py: Fixed\n\u2713 src/specify_cli/core/instrumentation.py: Fixed\n\u2713 src/specify_cli/core/jtbd_metrics.py: Fixed\n\u2713 src/specify_cli/core/shell.py: Fixed\n\u2713 src/specify_cl"
+        }
+      ],
+      "errors": 1,
+      "categories": {
+        "syntax": 1
+      }
+    },
+    {
+      "phase": 3,
+      "name": "Advanced Type Inference",
+      "scripts": [
+        {
+          "script": "hyper_advanced_type_fixer.py",
+          "description": "Advanced AST-based type inference",
+          "success": true,
+          "returncode": 0,
+          "output": "======================================================================\n\ud83d\ude80 HYPER-ADVANCED TYPE ANNOTATION SYSTEM\n======================================================================\n\n\ud83d\udcca Phase 1: Error Analysis\n----------------------------------------------------------------------\nTotal errors: 1\n\nTop error categories:\n  syntax              :   1\n\n\ud83d\udd27 Phase 2: Automated Fixes\n----------------------------------------------------------------------\n\n\ud83d\udd27 Applying automated fixes...\n======================="
+        }
+      ],
+      "errors": 1,
+      "categories": {
+        "syntax": 1
+      }
+    },
+    {
+      "phase": 4,
+      "name": "Attribute Error Fixes",
+      "scripts": [
+        {
+          "script": "fix_attr_defined_errors.py",
+          "description": "Fix attr-defined errors",
+          "success": true,
+          "returncode": 0,
+          "output": "\ud83d\udd27 Attribute Definition Error Fixer\n======================================================================\nFound 0 attr-defined errors\n\u2713 No attr-defined errors to fix!\n"
+        }
+      ],
+      "errors": 1,
+      "categories": {
+        "syntax": 1
+      }
+    },
+    {
+      "phase": 5,
+      "name": "Targeted Type Ignores",
+      "justified_ignores": 0,
+      "errors": 1,
+      "categories": {
+        "syntax": 1
+      }
+    }
+  ],
+  "initial_errors": 1,
+  "final_errors": 1,
+  "reduction": 0,
+  "reduction_pct": 0.0,
+  "target_met": true,
+  "initial_categories": {
+    "syntax": 1
+  },
+  "final_categories": {
+    "syntax": 1
+  },
+  "strict_compliance": {
+    "src/specify_cli/core/config.py": 2,
+    "src/specify_cli/core/telemetry.py": 1
+  }
+}

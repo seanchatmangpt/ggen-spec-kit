@@ -654,13 +654,13 @@ def _render_tera(template: str, data: Any) -> str:  # noqa: PLR0915
                 """Tera default filter: | default(value="x")"""
                 return value if value is not None and value != "" else value_
 
-            def tera_first(value: list) -> Any:
+            def tera_first(value: list[Any]) -> Any:
                 """Tera first filter: | first"""
                 if isinstance(value, (list, tuple)) and len(value) > 0:
                     return value[0]
                 return None
 
-            def tera_unique(value: list, attribute: str | None = None) -> list:
+            def tera_unique(value: list, attribute: str | None = None) -> list[Any]:
                 """Tera unique filter: | unique(attribute="x")"""
                 if not isinstance(value, (list, tuple)):
                     return []
@@ -679,7 +679,7 @@ def _render_tera(template: str, data: Any) -> str:  # noqa: PLR0915
                     return result
                 return list(dict.fromkeys(value))
 
-            def tera_filter(value: list, attribute: str | None = None, value_: Any = None) -> list:
+            def tera_filter(value: list, attribute: str | None = None, value_: Any = None) -> list[Any]:
                 """Tera filter filter: | filter(attribute="x", value="y") or | filter(attribute="x")"""
                 if not isinstance(value, (list, tuple)):
                     return []
@@ -699,7 +699,7 @@ def _render_tera(template: str, data: Any) -> str:  # noqa: PLR0915
                         result.append(item)
                 return result
 
-            def tera_sort(value: list, attribute: str | None = None) -> list:
+            def tera_sort(value: list, attribute: str | None = None) -> list[Any]:
                 """Tera sort filter: | sort(attribute="x")"""
                 if not isinstance(value, (list, tuple)):
                     return []

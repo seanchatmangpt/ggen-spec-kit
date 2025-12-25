@@ -1,0 +1,107 @@
+# ==============================================================================
+# Docker Compose Configuration for Development
+# Minimal stack for local development
+# ==============================================================================
+
+version: '3.9'
+
+networks:
+  dev-network:
+    driver: bridge
+
+volumes:
+  postgres-dev-data:
+  redis-dev-data:
+
+services:
+
+  # ----------------------------------------------------------------------------
+  # specify-cli - Development mode
+  # ----------------------------------------------------------------------------
+  specify-cli-dev:
+    build:
+      context: ..
+      dockerfile: deployment/Dockerfile
+      target: development
+      args:
+        USER_ID: ${UID:-1000}
+        GROUP_ID: ${GID:-1000}
+        APP_USER: specify
+        APP_GROUP: specify
+    image: specify-cli:dev
+    container_name: specify-cli-dev
+    hostname: specify-cli-dev
+    restart: unless-stopped
+    networks:
+      - dev-network
+    ports:
+      - "8080:8080"
+    volumes:
+      # Mount source code for live reload
+      - ../src:/app/src
+      - ../tests:/app/tests
+      - ../ontology:/app/ontology
+      - ../memory:/app/memory
+      - ../sparql:/app/sparql
+      - ../templates:/app/templates
+      - ../pyproject.toml:/app/pyproject.toml
+      # Preserve caches
+      - ~/.cache:/home/specify/.cache
+    environment:
+      - PYTHONUNBUFFERED=1
+      - PYTHONPATH=/app/src
+      - LOG_LEVEL=DEBUG
+      - DATABASE_URL=postgresql://specify:specify@postgres-dev:5432/specify
+      - REDIS_URL=redis://redis-dev:6379/0
+      - ENVIRONMENT=development
+    command: /bin/bash
+    stdin_open: true
+    tty: true
+    depends_on:
+      - postgres-dev
+      - redis-dev
+
+  # ----------------------------------------------------------------------------
+  # PostgreSQL - Development database
+  # ----------------------------------------------------------------------------
+  postgres-dev:
+    image: postgres:16-alpine
+    container_name: specify-postgres-dev
+    hostname: postgres-dev
+    restart: unless-stopped
+    networks:
+      - dev-network
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres-dev-data:/var/lib/postgresql/data
+    environment:
+      - POSTGRES_USER=specify
+      - POSTGRES_PASSWORD=specify
+      - POSTGRES_DB=specify
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U specify"]
+      interval: 5s
+      timeout: 3s
+      retries: 3
+
+  # ----------------------------------------------------------------------------
+  # Redis - Development cache
+  # ----------------------------------------------------------------------------
+  redis-dev:
+    image: redis:7-alpine
+    container_name: specify-redis-dev
+    hostname: redis-dev
+    restart: unless-stopped
+    networks:
+      - dev-network
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis-dev-data:/data
+    command: redis-server --appendonly yes
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 3s
+      retries: 3
