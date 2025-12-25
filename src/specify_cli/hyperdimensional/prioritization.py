@@ -1054,13 +1054,13 @@ def slack_time_analysis(
 
     for task_item in tasks:
         if isinstance(task_item, Task):
-            task_id = task.id
-            task_deps = task.dependencies
-            task_map[task_id] = task
+            task_id = task_item.id
+            task_deps = task_item.dependencies
+            task_map[task_id] = task_item
         else:
-            task_id = task.get("id", "")
-            task_deps = task.get("dependencies", [])
-            task_map[task_id] = task
+            task_id = task_item.get("id", "")
+            task_deps = task_item.get("dependencies", [])
+            task_map[task_id] = task_item
 
         for dep in task_deps:
             dependencies.append((task_id, dep))
@@ -1416,13 +1416,13 @@ def suggest_task_ordering(tasks: list[Task | dict[str, Any]]) -> list[str]:
 
     for task_item in tasks:
         if isinstance(task_item, Task):
-            task_id = task.id
-            task_deps = task.dependencies
+            task_id = task_item.id
+            task_deps = task_item.dependencies
         else:
-            task_id = task.get("id", "")
-            task_deps = task.get("dependencies", [])
+            task_id = task_item.get("id", "")
+            task_deps = task_item.get("dependencies", [])
 
-        task_map[task_id] = task
+        task_map[task_id] = task_item
         in_degree[task_id] = len(task_deps)
 
         for dep in task_deps:
@@ -1484,9 +1484,9 @@ def predict_effort_impact(
     task_map = {}
     for task_item in tasks:
         if isinstance(task_item, Task):
-            task_map[task.id] = task
+            task_map[task_item.id] = task_item
         else:
-            task_map[task.get("id", "")] = task
+            task_map[task_item.get("id", "")] = task_item
 
     # Calculate totals
     total_effort = 0.0
@@ -2238,9 +2238,9 @@ def suggest_parallel_work(tasks: list[Task | dict[str, Any]]) -> list[list[str]]
     task_map = {}
     for task_item in tasks:
         if isinstance(task_item, Task):
-            task_map[task.id] = task
+            task_map[task_item.id] = task_item
         else:
-            task_map[task.get("id", "")] = task
+            task_map[task_item.get("id", "")] = task_item
 
     # Calculate depth (longest path from root)
     def calculate_depth(task_id: str, visited: set[str]) -> int:
