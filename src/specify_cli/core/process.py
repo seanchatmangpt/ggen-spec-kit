@@ -172,7 +172,7 @@ def run(
 
         try:
             # SECURITY: Always use list-based execution, never shell=True
-            res = subprocess.run(cmd_list, check=False, **kw)
+            res = subprocess.run(cmd_list, **kw)
 
             duration = time.time() - start_time
 

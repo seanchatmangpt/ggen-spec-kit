@@ -86,6 +86,15 @@ __all__ = [
 Base = declarative_base()
 
 
+def _ensure_aware(dt: datetime | None) -> datetime | None:
+    """Ensure datetime is timezone-aware (UTC). Needed for SQLite compatibility."""
+    if dt is None:
+        return None
+    if dt.tzinfo is None:
+        return dt.replace(tzinfo=UTC)
+    return dt
+
+
 # ============================================================================
 # Enumerations
 # ============================================================================
@@ -636,7 +645,9 @@ class CacheEntry(Base):  # type: ignore[misc,valid-type]
         """Check if cache entry is expired."""
         if self.expires_at is None:
             return False
-        return datetime.now(UTC) > self.expires_at  # type: ignore[bool]
+        # Ensure expires_at is timezone-aware for SQLite compatibility
+        expires = _ensure_aware(self.expires_at)
+        return expires is not None and datetime.now(UTC) > expires  # type: ignore[bool]
 
 
 class Configuration(Base):  # type: ignore[misc,valid-type]
@@ -764,7 +775,9 @@ class SessionToken(Base):  # type: ignore[misc,valid-type]
     @hybrid_property
     def is_expired(self) -> bool:
         """Check if session token is expired."""
-        return datetime.now(UTC) > self.expires_at  # type: ignore[bool]
+        # Ensure expires_at is timezone-aware for SQLite compatibility
+        expires = _ensure_aware(self.expires_at)
+        return expires is not None and datetime.now(UTC) > expires  # type: ignore[bool]
 
 
 # ============================================================================
@@ -777,8 +790,12 @@ def calculate_command_duration(mapper: Any, connection: Any, target: Command) ->
     """Automatically calculate command duration on status update."""
     if target.status in (ExecutionStatus.SUCCESS, ExecutionStatus.FAILED, ExecutionStatus.CANCELLED, ExecutionStatus.TIMEOUT):
         if target.completed_at and target.started_at:
-            delta = target.completed_at - target.started_at
-            target.duration_ms = delta.total_seconds() * 1000
+            # Ensure both datetimes are timezone-aware for compatibility with SQLite
+            completed = _ensure_aware(target.completed_at)
+            started = _ensure_aware(target.started_at)
+            if completed and started:
+                delta = completed - started
+                target.duration_ms = delta.total_seconds() * 1000
 
 
 @event.listens_for(CacheEntry, "before_update")
