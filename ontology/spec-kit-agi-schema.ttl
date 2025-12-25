@@ -1,0 +1,267 @@
+@prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix owl: <http://www.w3.org/2001/XMLSchema#> .
+@prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
+@prefix shacl: <http://www.w3.org/ns/shacl#> .
+@prefix sk: <http://github.com/github/spec-kit#> .
+
+# ============================================================================
+# Spec-Kit RDF AGI (Autonomous Generative Intelligence) Schema
+# ============================================================================
+# Purpose: Enable autonomous reasoning, knowledge synthesis, and agent-based
+# specification analysis through RDF and hyperdimensional vector spaces
+# Author: Claude Code
+# Date: 2025-12-24
+# ============================================================================
+
+# ============================================================================
+# Core AGI Agent Classes
+# ============================================================================
+
+sk:AutonomousAgent a owl:Class ;
+    rdfs:label "Autonomous Agent"@en ;
+    rdfs:comment "Autonomous agent capable of reasoning, learning, and collaborating over RDF specifications"@en ;
+    rdfs:subClassOf rdfs:Resource .
+
+sk:ReasoningGoal a owl:Class ;
+    rdfs:label "Reasoning Goal"@en ;
+    rdfs:comment "Goal that an autonomous agent pursues through inference and reasoning"@en ;
+    rdfs:subClassOf rdfs:Resource .
+
+sk:InferenceChain a owl:Class ;
+    rdfs:label "Inference Chain"@en ;
+    rdfs:comment "Sequence of logical deductions producing new knowledge"@en ;
+    rdfs:subClassOf rdfs:Resource .
+
+sk:SemanticPredicate a owl:Class ;
+    rdfs:label "Semantic Predicate"@en ;
+    rdfs:comment "Predicate for semantic reasoning and knowledge representation"@en ;
+    rdfs:subClassOf rdf:Property .
+
+sk:InferredFact a owl:Class ;
+    rdfs:label "Inferred Fact"@en ;
+    rdfs:comment "Fact derived through automated reasoning from explicit facts"@en ;
+    rdfs:subClassOf rdfs:Resource .
+
+sk:Contradiction a owl:Class ;
+    rdfs:label "Contradiction"@en ;
+    rdfs:comment "Logical contradiction detected in knowledge graph"@en ;
+    rdfs:subClassOf rdfs:Resource .
+
+sk:ReasoningTrace a owl:Class ;
+    rdfs:label "Reasoning Trace"@en ;
+    rdfs:comment "Complete trace of reasoning steps for explainable AI"@en ;
+    rdfs:subClassOf rdfs:Resource .
+
+# ============================================================================
+# Knowledge Graph and Vector Space Classes
+# ============================================================================
+
+sk:KnowledgeGraph a owl:Class ;
+    rdfs:label "Knowledge Graph"@en ;
+    rdfs:comment "Collection of RDF facts, rules, and reasoning constraints"@en ;
+    rdfs:subClassOf rdfs:Resource .
+
+sk:SemanticRelation a owl:Class ;
+    rdfs:label "Semantic Relation"@en ;
+    rdfs:comment "Typed relationship between concepts in semantic space"@en ;
+    rdfs:subClassOf rdf:Property .
+
+sk:VectorRepresentation a owl:Class ;
+    rdfs:label "Vector Representation"@en ;
+    rdfs:comment "High-dimensional vector representing semantic meaning"@en ;
+    rdfs:subClassOf rdfs:Resource .
+
+sk:EmbeddingSpace a owl:Class ;
+    rdfs:label "Embedding Space"@en ;
+    rdfs:comment "High-dimensional space for semantic reasoning"@en ;
+    rdfs:subClassOf rdfs:Resource .
+
+sk:SimilarityMetric a owl:Class ;
+    rdfs:label "Similarity Metric"@en ;
+    rdfs:comment "Distance metric in vector space for semantic similarity"@en ;
+    rdfs:subClassOf rdfs:Resource .
+
+# ============================================================================
+# Reasoning Capability Classes
+# ============================================================================
+
+sk:DeductiveReasoning a owl:Class ;
+    rdfs:label "Deductive Reasoning"@en ;
+    rdfs:comment "Logical inference from rules producing certain conclusions"@en ;
+    rdfs:subClassOf sk:ReasoningGoal .
+
+sk:AbductiveReasoning a owl:Class ;
+    rdfs:label "Abductive Reasoning"@en ;
+    rdfs:comment "Inference to best explanation producing plausible conclusions"@en ;
+    rdfs:subClassOf sk:ReasoningGoal .
+
+sk:AnalogicalReasoning a owl:Class ;
+    rdfs:label "Analogical Reasoning"@en ;
+    rdfs:comment "Similarity-based reasoning in semantic vector space"@en ;
+    rdfs:subClassOf sk:ReasoningGoal .
+
+sk:ConstraintSatisfaction a owl:Class ;
+    rdfs:label "Constraint Satisfaction"@en ;
+    rdfs:comment "Finding solutions satisfying all constraints"@en ;
+    rdfs:subClassOf sk:ReasoningGoal .
+
+sk:ConceptSynthesis a owl:Class ;
+    rdfs:label "Concept Synthesis"@en ;
+    rdfs:comment "Generating new concepts by combining existing knowledge"@en ;
+    rdfs:subClassOf sk:ReasoningGoal .
+
+# ============================================================================
+# Agent Properties
+# ============================================================================
+
+sk:agentName a owl:DatatypeProperty ;
+    rdfs:label "agent name"@en ;
+    rdfs:domain sk:AutonomousAgent ;
+    rdfs:range xsd:string ;
+    rdfs:comment "Identifier for the autonomous agent"@en .
+
+sk:agentRole a owl:DatatypeProperty ;
+    rdfs:label "agent role"@en ;
+    rdfs:domain sk:AutonomousAgent ;
+    rdfs:range xsd:string ;
+    rdfs:comment "Role/type of autonomous agent (analyzer, resolver, synthesizer, etc.)"@en .
+
+sk:reasoningCapability a owl:ObjectProperty ;
+    rdfs:label "reasoning capability"@en ;
+    rdfs:domain sk:AutonomousAgent ;
+    rdfs:range sk:ReasoningGoal ;
+    rdfs:comment "Reasoning capability of the agent"@en .
+
+sk:hasGoal a owl:ObjectProperty ;
+    rdfs:label "has goal"@en ;
+    rdfs:domain sk:AutonomousAgent ;
+    rdfs:range sk:ReasoningGoal ;
+    rdfs:comment "Goal the agent is pursuing"@en .
+
+sk:hasInferenceChain a owl:ObjectProperty ;
+    rdfs:label "has inference chain"@en ;
+    rdfs:domain sk:ReasoningGoal ;
+    rdfs:range sk:InferenceChain ;
+    rdfs:comment "Inference chain producing conclusions"@en .
+
+sk:producesInferredFact a owl:ObjectProperty ;
+    rdfs:label "produces inferred fact"@en ;
+    rdfs:domain sk:InferenceChain ;
+    rdfs:range sk:InferredFact ;
+    rdfs:comment "Fact produced by inference chain"@en .
+
+sk:detectedContradiction a owl:ObjectProperty ;
+    rdfs:label "detected contradiction"@en ;
+    rdfs:domain sk:KnowledgeGraph ;
+    rdfs:range sk:Contradiction ;
+    rdfs:comment "Contradiction found in knowledge graph"@en .
+
+sk:contradicts a owl:ObjectProperty ;
+    rdfs:label "contradicts"@en ;
+    rdfs:domain sk:InferredFact ;
+    rdfs:range sk:InferredFact ;
+    rdfs:comment "One inferred fact contradicts another"@en .
+
+# ============================================================================
+# Vector Space Properties
+# ============================================================================
+
+sk:hasVectorRepresentation a owl:ObjectProperty ;
+    rdfs:label "has vector representation"@en ;
+    rdfs:domain rdfs:Resource ;
+    rdfs:range sk:VectorRepresentation ;
+    rdfs:comment "Vector embedding of resource in semantic space"@en .
+
+sk:vectorDimension a owl:DatatypeProperty ;
+    rdfs:label "vector dimension"@en ;
+    rdfs:domain sk:EmbeddingSpace ;
+    rdfs:range xsd:integer ;
+    rdfs:comment "Dimensionality of embedding space"@en .
+
+sk:semanticSimilarity a owl:DatatypeProperty ;
+    rdfs:label "semantic similarity"@en ;
+    rdfs:domain sk:SemanticRelation ;
+    rdfs:range xsd:double ;
+    rdfs:comment "Cosine similarity score between 0 and 1"@en .
+
+sk:confidenceScore a owl:DatatypeProperty ;
+    rdfs:label "confidence score"@en ;
+    rdfs:domain sk:InferredFact ;
+    rdfs:range xsd:double ;
+    rdfs:comment "Confidence in inferred fact (0-1)"@en .
+
+sk:inferenceStep a owl:DatatypeProperty ;
+    rdfs:label "inference step"@en ;
+    rdfs:domain sk:ReasoningTrace ;
+    rdfs:range xsd:integer ;
+    rdfs:comment "Step number in reasoning trace"@en .
+
+sk:stepDescription a owl:DatatypeProperty ;
+    rdfs:label "step description"@en ;
+    rdfs:domain sk:ReasoningTrace ;
+    rdfs:range xsd:string ;
+    rdfs:comment "Human-readable description of reasoning step"@en .
+
+sk:justification a owl:DatatypeProperty ;
+    rdfs:label "justification"@en ;
+    rdfs:domain sk:InferredFact ;
+    rdfs:range xsd:string ;
+    rdfs:comment "Explanation for why this fact was inferred"@en .
+
+# ============================================================================
+# SHACL Validation Shapes for AGI Schema
+# ============================================================================
+
+sk:AutonomousAgentShape a shacl:NodeShape ;
+    shacl:targetClass sk:AutonomousAgent ;
+    shacl:property [
+        shacl:path sk:agentName ;
+        shacl:datatype xsd:string ;
+        shacl:minCount 1 ;
+        shacl:maxCount 1
+    ] ;
+    shacl:property [
+        shacl:path sk:agentRole ;
+        shacl:datatype xsd:string ;
+        shacl:minCount 1 ;
+        shacl:maxCount 1
+    ] ;
+    shacl:property [
+        shacl:path sk:reasoningCapability ;
+        shacl:class sk:ReasoningGoal ;
+        shacl:minCount 1
+    ] .
+
+sk:InferredFactShape a shacl:NodeShape ;
+    shacl:targetClass sk:InferredFact ;
+    shacl:property [
+        shacl:path sk:confidenceScore ;
+        shacl:datatype xsd:double ;
+        shacl:minInclusive 0.0 ;
+        shacl:maxInclusive 1.0 ;
+        shacl:maxCount 1
+    ] ;
+    shacl:property [
+        shacl:path sk:justification ;
+        shacl:datatype xsd:string ;
+        shacl:maxCount 1
+    ] .
+
+sk:ContradictionShape a shacl:NodeShape ;
+    shacl:targetClass sk:Contradiction ;
+    shacl:property [
+        shacl:path sk:contradicts ;
+        shacl:class sk:InferredFact ;
+        shacl:minCount 2 ;
+        shacl:maxCount 2
+    ] .
+
+sk:VectorRepresentationShape a shacl:NodeShape ;
+    shacl:targetClass sk:VectorRepresentation ;
+    shacl:property [
+        shacl:path sk:vectorDimension ;
+        shacl:datatype xsd:integer ;
+        shacl:minInclusive 1 ;
+        shacl:maxCount 1
+    ] .
