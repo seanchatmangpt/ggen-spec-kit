@@ -1,0 +1,402 @@
+# ==============================================================================
+# Docker Compose Configuration for specify-cli
+# Full stack deployment with observability and monitoring
+# ==============================================================================
+
+version: '3.9'
+
+# ==============================================================================
+# Networks
+# ==============================================================================
+networks:
+  specify-network:
+    driver: bridge
+    ipam:
+      config:
+        - subnet: 172.28.0.0/16
+
+  monitoring:
+    driver: bridge
+    ipam:
+      config:
+        - subnet: 172.29.0.0/16
+
+# ==============================================================================
+# Volumes
+# ==============================================================================
+volumes:
+  # Application data
+  specify-data:
+    driver: local
+
+  # PostgreSQL database
+  postgres-data:
+    driver: local
+
+  # Redis cache
+  redis-data:
+    driver: local
+
+  # Prometheus metrics
+  prometheus-data:
+    driver: local
+
+  # Grafana dashboards
+  grafana-data:
+    driver: local
+
+  # Jaeger traces
+  jaeger-data:
+    driver: local
+
+  # Elasticsearch logs
+  elasticsearch-data:
+    driver: local
+
+# ==============================================================================
+# Services
+# ==============================================================================
+services:
+
+  # ----------------------------------------------------------------------------
+  # specify-cli - Main application
+  # ----------------------------------------------------------------------------
+  specify-cli:
+    build:
+      context: ..
+      dockerfile: deployment/Dockerfile
+      target: runtime
+      args:
+        USER_ID: 1000
+        GROUP_ID: 1000
+        APP_USER: specify
+        APP_GROUP: specify
+    image: specify-cli:${VERSION:-0.0.25}
+    container_name: specify-cli
+    hostname: specify-cli
+    restart: unless-stopped
+    networks:
+      - specify-network
+      - monitoring
+    ports:
+      - "${SPECIFY_PORT:-8080}:8080"
+    volumes:
+      - specify-data:/app/data
+      - ./config:/app/config:ro
+    environment:
+      # Application
+      - PYTHONUNBUFFERED=1
+      - PYTHONPATH=/app/src
+      - LOG_LEVEL=${LOG_LEVEL:-INFO}
+
+      # Database
+      - DATABASE_URL=postgresql://specify:specify@postgres:5432/specify
+      - REDIS_URL=redis://redis:6379/0
+
+      # OpenTelemetry
+      - OTEL_SERVICE_NAME=specify-cli
+      - OTEL_EXPORTER_OTLP_ENDPOINT=http://jaeger:4318
+      - OTEL_EXPORTER_OTLP_PROTOCOL=http/protobuf
+      - OTEL_TRACES_EXPORTER=otlp
+      - OTEL_METRICS_EXPORTER=otlp
+      - OTEL_LOGS_EXPORTER=otlp
+      - OTEL_RESOURCE_ATTRIBUTES=service.name=specify-cli,service.version=${VERSION:-0.0.25},deployment.environment=${ENVIRONMENT:-development}
+
+      # Performance
+      - UV_CACHE_DIR=/app/.cache/uv
+      - NUMBA_CACHE_DIR=/app/.cache/numba
+    healthcheck:
+      test: ["CMD", "specify", "--version"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 10s
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+      jaeger:
+        condition: service_started
+    labels:
+      - "com.specify.service=cli"
+      - "com.specify.version=${VERSION:-0.0.25}"
+
+  # ----------------------------------------------------------------------------
+  # PostgreSQL - Database
+  # ----------------------------------------------------------------------------
+  postgres:
+    image: postgres:16-alpine
+    container_name: specify-postgres
+    hostname: postgres
+    restart: unless-stopped
+    networks:
+      - specify-network
+    ports:
+      - "${POSTGRES_PORT:-5432}:5432"
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
+      - ./init-scripts:/docker-entrypoint-initdb.d:ro
+    environment:
+      - POSTGRES_USER=specify
+      - POSTGRES_PASSWORD=specify
+      - POSTGRES_DB=specify
+      - POSTGRES_INITDB_ARGS=--encoding=UTF8 --locale=en_US.UTF-8
+      - PGDATA=/var/lib/postgresql/data/pgdata
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U specify"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 10s
+    labels:
+      - "com.specify.service=database"
+
+  # ----------------------------------------------------------------------------
+  # Redis - Cache and session store
+  # ----------------------------------------------------------------------------
+  redis:
+    image: redis:7-alpine
+    container_name: specify-redis
+    hostname: redis
+    restart: unless-stopped
+    networks:
+      - specify-network
+    ports:
+      - "${REDIS_PORT:-6379}:6379"
+    volumes:
+      - redis-data:/data
+    command: >
+      redis-server
+      --appendonly yes
+      --appendfsync everysec
+      --maxmemory 512mb
+      --maxmemory-policy allkeys-lru
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 10s
+    labels:
+      - "com.specify.service=cache"
+
+  # ----------------------------------------------------------------------------
+  # Jaeger - Distributed tracing
+  # ----------------------------------------------------------------------------
+  jaeger:
+    image: jaegertracing/all-in-one:1.53
+    container_name: specify-jaeger
+    hostname: jaeger
+    restart: unless-stopped
+    networks:
+      - monitoring
+    ports:
+      - "${JAEGER_UI_PORT:-16686}:16686"      # UI
+      - "${JAEGER_COLLECTOR_PORT:-4318}:4318" # OTLP HTTP
+      - "${JAEGER_COLLECTOR_GRPC:-4317}:4317" # OTLP gRPC
+    volumes:
+      - jaeger-data:/badger
+    environment:
+      - COLLECTOR_OTLP_ENABLED=true
+      - SPAN_STORAGE_TYPE=badger
+      - BADGER_EPHEMERAL=false
+      - BADGER_DIRECTORY_VALUE=/badger/data
+      - BADGER_DIRECTORY_KEY=/badger/key
+    labels:
+      - "com.specify.service=tracing"
+
+  # ----------------------------------------------------------------------------
+  # Prometheus - Metrics collection
+  # ----------------------------------------------------------------------------
+  prometheus:
+    image: prom/prometheus:v2.48.1
+    container_name: specify-prometheus
+    hostname: prometheus
+    restart: unless-stopped
+    networks:
+      - monitoring
+    ports:
+      - "${PROMETHEUS_PORT:-9090}:9090"
+    volumes:
+      - prometheus-data:/prometheus
+      - ./prometheus/prometheus.yml:/etc/prometheus/prometheus.yml:ro
+      - ./prometheus/alerts:/etc/prometheus/alerts:ro
+    command:
+      - '--config.file=/etc/prometheus/prometheus.yml'
+      - '--storage.tsdb.path=/prometheus'
+      - '--storage.tsdb.retention.time=30d'
+      - '--web.console.libraries=/usr/share/prometheus/console_libraries'
+      - '--web.console.templates=/usr/share/prometheus/consoles'
+      - '--web.enable-lifecycle'
+    healthcheck:
+      test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost:9090/-/healthy"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 30s
+    labels:
+      - "com.specify.service=metrics"
+
+  # ----------------------------------------------------------------------------
+  # Grafana - Dashboards and visualization
+  # ----------------------------------------------------------------------------
+  grafana:
+    image: grafana/grafana:10.2.3
+    container_name: specify-grafana
+    hostname: grafana
+    restart: unless-stopped
+    networks:
+      - monitoring
+    ports:
+      - "${GRAFANA_PORT:-3000}:3000"
+    volumes:
+      - grafana-data:/var/lib/grafana
+      - ./grafana/dashboards:/etc/grafana/provisioning/dashboards:ro
+      - ./grafana/datasources:/etc/grafana/provisioning/datasources:ro
+    environment:
+      - GF_SECURITY_ADMIN_USER=${GRAFANA_USER:-admin}
+      - GF_SECURITY_ADMIN_PASSWORD=${GRAFANA_PASSWORD:-admin}
+      - GF_INSTALL_PLUGINS=grafana-piechart-panel
+      - GF_USERS_ALLOW_SIGN_UP=false
+      - GF_SERVER_ROOT_URL=http://localhost:3000
+      - GF_AUTH_ANONYMOUS_ENABLED=false
+    healthcheck:
+      test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost:3000/api/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 30s
+    depends_on:
+      - prometheus
+    labels:
+      - "com.specify.service=visualization"
+
+  # ----------------------------------------------------------------------------
+  # Elasticsearch - Log storage
+  # ----------------------------------------------------------------------------
+  elasticsearch:
+    image: docker.elastic.co/elasticsearch/elasticsearch:8.11.3
+    container_name: specify-elasticsearch
+    hostname: elasticsearch
+    restart: unless-stopped
+    networks:
+      - monitoring
+    ports:
+      - "${ELASTICSEARCH_PORT:-9200}:9200"
+      - "${ELASTICSEARCH_NODE_PORT:-9300}:9300"
+    volumes:
+      - elasticsearch-data:/usr/share/elasticsearch/data
+    environment:
+      - discovery.type=single-node
+      - xpack.security.enabled=false
+      - "ES_JAVA_OPTS=-Xms512m -Xmx512m"
+    healthcheck:
+      test: ["CMD-SHELL", "curl -f http://localhost:9200/_cluster/health || exit 1"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+      start_period: 60s
+    labels:
+      - "com.specify.service=logging"
+
+  # ----------------------------------------------------------------------------
+  # Kibana - Log visualization
+  # ----------------------------------------------------------------------------
+  kibana:
+    image: docker.elastic.co/kibana/kibana:8.11.3
+    container_name: specify-kibana
+    hostname: kibana
+    restart: unless-stopped
+    networks:
+      - monitoring
+    ports:
+      - "${KIBANA_PORT:-5601}:5601"
+    environment:
+      - ELASTICSEARCH_HOSTS=http://elasticsearch:9200
+      - SERVER_NAME=kibana
+      - SERVER_HOST=0.0.0.0
+    healthcheck:
+      test: ["CMD-SHELL", "curl -f http://localhost:5601/api/status || exit 1"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+      start_period: 60s
+    depends_on:
+      elasticsearch:
+        condition: service_healthy
+    labels:
+      - "com.specify.service=log-visualization"
+
+  # ----------------------------------------------------------------------------
+  # Logstash - Log processing
+  # ----------------------------------------------------------------------------
+  logstash:
+    image: docker.elastic.co/logstash/logstash:8.11.3
+    container_name: specify-logstash
+    hostname: logstash
+    restart: unless-stopped
+    networks:
+      - monitoring
+    ports:
+      - "${LOGSTASH_PORT:-5044}:5044"
+      - "${LOGSTASH_TCP_PORT:-5000}:5000"
+      - "${LOGSTASH_UDP_PORT:-5000}:5000/udp"
+    volumes:
+      - ./logstash/pipeline:/usr/share/logstash/pipeline:ro
+      - ./logstash/config/logstash.yml:/usr/share/logstash/config/logstash.yml:ro
+    environment:
+      - "LS_JAVA_OPTS=-Xmx256m -Xms256m"
+    depends_on:
+      elasticsearch:
+        condition: service_healthy
+    labels:
+      - "com.specify.service=log-processing"
+
+  # ----------------------------------------------------------------------------
+  # Node Exporter - Host metrics
+  # ----------------------------------------------------------------------------
+  node-exporter:
+    image: prom/node-exporter:v1.7.0
+    container_name: specify-node-exporter
+    hostname: node-exporter
+    restart: unless-stopped
+    networks:
+      - monitoring
+    ports:
+      - "${NODE_EXPORTER_PORT:-9100}:9100"
+    command:
+      - '--path.procfs=/host/proc'
+      - '--path.sysfs=/host/sys'
+      - '--path.rootfs=/host'
+      - '--collector.filesystem.mount-points-exclude=^/(sys|proc|dev|host|etc)($$|/)'
+    volumes:
+      - /proc:/host/proc:ro
+      - /sys:/host/sys:ro
+      - /:/host:ro,rslave
+    labels:
+      - "com.specify.service=host-metrics"
+
+  # ----------------------------------------------------------------------------
+  # cAdvisor - Container metrics
+  # ----------------------------------------------------------------------------
+  cadvisor:
+    image: gcr.io/cadvisor/cadvisor:v0.47.2
+    container_name: specify-cadvisor
+    hostname: cadvisor
+    restart: unless-stopped
+    networks:
+      - monitoring
+    ports:
+      - "${CADVISOR_PORT:-8081}:8080"
+    volumes:
+      - /:/rootfs:ro
+      - /var/run:/var/run:ro
+      - /sys:/sys:ro
+      - /var/lib/docker:/var/lib/docker:ro
+      - /dev/disk:/dev/disk:ro
+    privileged: true
+    devices:
+      - /dev/kmsg
+    labels:
+      - "com.specify.service=container-metrics"

@@ -1,0 +1,125 @@
+===============================================================================
+   ____                  _  __           ____ _     ___
+  / ___| _ __   ___  ___(_)/ _|_   _    / ___| |   |_ _|
+  \___ \| '_ \ / _ \/ __| | |_| | | |  | |   | |    | |
+   ___) | |_) |  __/ (__| |  _| |_| |  | |___| |___ | |
+  |____/| .__/ \___|\___|_|_|  \__, |   \____|_____|___|
+        |_|                    |___/
+
+  RDF-first Spec-Driven Development Toolkit
+===============================================================================
+
+Thank you for installing {{ .Chart.Name }}!
+
+Your release is named: {{ .Release.Name }}
+Namespace: {{ .Release.Namespace }}
+
+To learn more about the release, try:
+
+  $ helm status {{ .Release.Name }} -n {{ .Release.Namespace }}
+  $ helm get all {{ .Release.Name }} -n {{ .Release.Namespace }}
+
+===============================================================================
+1. Get the application URL:
+===============================================================================
+
+{{- if .Values.ingress.enabled }}
+
+The application is available at:
+
+{{- range .Values.ingress.hosts }}
+  - https://{{ .host }}{{ (index .paths 0).path }}
+{{- end }}
+
+{{- else if contains "NodePort" .Values.service.type }}
+
+Export the node port:
+
+  export NODE_PORT=$(kubectl get --namespace {{ .Release.Namespace }} -o jsonpath="{.spec.ports[0].nodePort}" services {{ include "specify-cli.fullname" . }})
+  export NODE_IP=$(kubectl get nodes --namespace {{ .Release.Namespace }} -o jsonpath="{.items[0].status.addresses[0].address}")
+  echo http://$NODE_IP:$NODE_PORT
+
+{{- else if contains "LoadBalancer" .Values.service.type }}
+
+Get the LoadBalancer IP:
+
+  export SERVICE_IP=$(kubectl get svc --namespace {{ .Release.Namespace }} {{ include "specify-cli.fullname" . }} --template "{{"{{ range (index .status.loadBalancer.ingress 0) }}{{.}}{{ end }}"}}")
+  echo http://$SERVICE_IP:{{ .Values.service.port }}
+
+{{- else if contains "ClusterIP" .Values.service.type }}
+
+Forward the port to access the application:
+
+  export POD_NAME=$(kubectl get pods --namespace {{ .Release.Namespace }} -l "app.kubernetes.io/name={{ include "specify-cli.name" . }},app.kubernetes.io/instance={{ .Release.Name }}" -o jsonpath="{.items[0].metadata.name}")
+  kubectl --namespace {{ .Release.Namespace }} port-forward $POD_NAME 8080:8080
+
+Visit http://127.0.0.1:8080 in your browser.
+
+{{- end }}
+
+===============================================================================
+2. Check deployment status:
+===============================================================================
+
+  kubectl get all -n {{ .Release.Namespace }} -l app.kubernetes.io/instance={{ .Release.Name }}
+
+===============================================================================
+3. View logs:
+===============================================================================
+
+  kubectl logs -n {{ .Release.Namespace }} -l app.kubernetes.io/name={{ include "specify-cli.name" . }} -f
+
+===============================================================================
+4. Access the CLI:
+===============================================================================
+
+  kubectl exec -it -n {{ .Release.Namespace }} deployment/{{ include "specify-cli.fullname" . }} -- specify --help
+
+===============================================================================
+5. Monitoring and Observability:
+===============================================================================
+
+{{- if .Values.monitoring.enabled }}
+
+Prometheus ServiceMonitor is enabled. Metrics are available at:
+  - Port: {{ .Values.service.metricsPort }}
+  - Path: /metrics
+
+Grafana dashboards can be imported from:
+  - deployment/grafana/dashboards/
+
+{{- if .Values.ingress.enabled }}
+Jaeger UI (if deployed):
+  - https://jaeger.{{ (index .Values.ingress.hosts 0).host }}
+{{- end }}
+
+{{- else }}
+
+Monitoring is disabled. To enable:
+
+  helm upgrade {{ .Release.Name }} specify-cli/specify-cli \
+    --set monitoring.enabled=true \
+    -n {{ .Release.Namespace }}
+
+{{- end }}
+
+===============================================================================
+6. Troubleshooting:
+===============================================================================
+
+Check pod status:
+  kubectl describe pod -n {{ .Release.Namespace }} -l app.kubernetes.io/name={{ include "specify-cli.name" . }}
+
+Check events:
+  kubectl get events -n {{ .Release.Namespace }} --sort-by='.lastTimestamp'
+
+View configuration:
+  kubectl get configmap -n {{ .Release.Namespace }} {{ include "specify-cli.fullname" . }}-config -o yaml
+
+===============================================================================
+
+For more information, visit:
+  - Documentation: https://github.com/github/spec-kit#readme
+  - Issues: https://github.com/github/spec-kit/issues
+
+Happy developing with Specify CLI! 🚀

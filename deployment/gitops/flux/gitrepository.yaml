@@ -1,0 +1,48 @@
+---
+# ==============================================================================
+# Flux GitRepository source for specify-cli
+# ==============================================================================
+apiVersion: source.toolkit.fluxcd.io/v1
+kind: GitRepository
+metadata:
+  name: specify-cli
+  namespace: flux-system
+spec:
+  # Repository URL
+  url: https://github.com/github/spec-kit.git
+
+  # Branch/tag to track
+  ref:
+    branch: main
+
+  # Reconciliation interval
+  interval: 1m0s
+
+  # Timeout
+  timeout: 60s
+
+  # Ignore patterns
+  ignore: |
+    # CI/CD
+    .github/
+    .gitlab-ci.yml
+
+    # Documentation
+    docs/
+    *.md
+    !README.md
+
+    # Local development
+    .env
+    .vscode/
+    .idea/
+
+  # Secret reference for private repositories
+  # secretRef:
+  #   name: github-credentials
+
+  # Verification (optional)
+  # verify:
+  #   mode: head
+  #   secretRef:
+  #     name: git-pgp-public-keys

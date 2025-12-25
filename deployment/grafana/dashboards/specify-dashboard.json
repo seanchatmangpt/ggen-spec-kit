@@ -1,0 +1,82 @@
+{
+  "dashboard": {
+    "title": "Specify CLI - Overview",
+    "tags": ["specify", "cli", "rdf"],
+    "timezone": "browser",
+    "schemaVersion": 38,
+    "version": 1,
+    "refresh": "30s",
+    "panels": [
+      {
+        "title": "Request Rate",
+        "type": "graph",
+        "gridPos": {"x": 0, "y": 0, "w": 12, "h": 8},
+        "targets": [
+          {
+            "expr": "rate(http_requests_total{job=\"specify-cli\"}[5m])",
+            "legendFormat": "{{instance}}"
+          }
+        ]
+      },
+      {
+        "title": "Error Rate",
+        "type": "graph",
+        "gridPos": {"x": 12, "y": 0, "w": 12, "h": 8},
+        "targets": [
+          {
+            "expr": "rate(http_requests_total{job=\"specify-cli\",status=~\"5..\"}[5m])",
+            "legendFormat": "{{instance}} - {{status}}"
+          }
+        ]
+      },
+      {
+        "title": "Response Time (p95)",
+        "type": "graph",
+        "gridPos": {"x": 0, "y": 8, "w": 12, "h": 8},
+        "targets": [
+          {
+            "expr": "histogram_quantile(0.95, rate(http_request_duration_seconds_bucket{job=\"specify-cli\"}[5m]))",
+            "legendFormat": "{{instance}}"
+          }
+        ]
+      },
+      {
+        "title": "CPU Usage",
+        "type": "graph",
+        "gridPos": {"x": 12, "y": 8, "w": 12, "h": 8},
+        "targets": [
+          {
+            "expr": "rate(process_cpu_seconds_total{job=\"specify-cli\"}[5m]) * 100",
+            "legendFormat": "{{instance}}"
+          }
+        ]
+      },
+      {
+        "title": "Memory Usage",
+        "type": "graph",
+        "gridPos": {"x": 0, "y": 16, "w": 12, "h": 8},
+        "targets": [
+          {
+            "expr": "process_resident_memory_bytes{job=\"specify-cli\"} / 1024 / 1024",
+            "legendFormat": "{{instance}}"
+          }
+        ]
+      },
+      {
+        "title": "Active Connections",
+        "type": "graph",
+        "gridPos": {"x": 12, "y": 16, "w": 12, "h": 8},
+        "targets": [
+          {
+            "expr": "database_connections_active{job=\"specify-cli\"}",
+            "legendFormat": "Database - {{instance}}"
+          },
+          {
+            "expr": "redis_connections_active{job=\"specify-cli\"}",
+            "legendFormat": "Redis - {{instance}}"
+          }
+        ]
+      }
+    ]
+  }
+}

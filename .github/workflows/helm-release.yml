@@ -1,0 +1,146 @@
+name: Helm Chart Release
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - 'deployment/helm/**'
+      - '.github/workflows/helm-release.yml'
+  release:
+    types: [published]
+  workflow_dispatch:
+
+env:
+  HELM_VERSION: v3.13.3
+
+jobs:
+  # --------------------------------------------------------------------------
+  # Lint and test Helm chart
+  # --------------------------------------------------------------------------
+  lint-test:
+    name: Lint and Test
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Set up Helm
+        uses: azure/setup-helm@v3
+        with:
+          version: ${{ env.HELM_VERSION }}
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Install chart-testing
+        uses: helm/chart-testing-action@v2
+
+      - name: Run chart-testing (lint)
+        run: |
+          ct lint --charts deployment/helm/ \
+            --chart-repos bitnami=https://charts.bitnami.com/bitnami
+
+      - name: Create kind cluster
+        uses: helm/kind-action@v1
+
+      - name: Run chart-testing (install)
+        run: |
+          ct install --charts deployment/helm/
+
+  # --------------------------------------------------------------------------
+  # Package and publish Helm chart
+  # --------------------------------------------------------------------------
+  release:
+    name: Release Chart
+    runs-on: ubuntu-latest
+    needs: lint-test
+    if: github.event_name == 'release' || github.ref == 'refs/heads/main'
+
+    permissions:
+      contents: write
+      packages: write
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Configure Git
+        run: |
+          git config user.name "$GITHUB_ACTOR"
+          git config user.email "$GITHUB_ACTOR@users.noreply.github.com"
+
+      - name: Install Helm
+        uses: azure/setup-helm@v3
+        with:
+          version: ${{ env.HELM_VERSION }}
+
+      - name: Package Helm chart
+        run: |
+          helm package deployment/helm/ --destination .deploy
+
+      - name: Login to GitHub Container Registry
+        uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Push Helm chart to GHCR
+        run: |
+          helm push .deploy/*.tgz oci://ghcr.io/${{ github.repository_owner }}/charts
+
+      - name: Update Helm repository index
+        run: |
+          git checkout gh-pages || git checkout --orphan gh-pages
+          helm repo index .deploy --url https://${{ github.repository_owner }}.github.io/${{ github.event.repository.name }}/
+          mv .deploy/index.yaml ./
+          git add index.yaml
+          git commit -m "Update Helm repository index"
+          git push origin gh-pages
+
+      - name: Create release notes
+        if: github.event_name == 'release'
+        uses: softprops/action-gh-release@v1
+        with:
+          files: .deploy/*.tgz
+          generate_release_notes: true
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+  # --------------------------------------------------------------------------
+  # Publish chart to Artifact Hub
+  # --------------------------------------------------------------------------
+  publish-artifact-hub:
+    name: Publish to Artifact Hub
+    runs-on: ubuntu-latest
+    needs: release
+    if: github.event_name == 'release'
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Create Artifact Hub metadata
+        run: |
+          cat > deployment/helm/artifacthub-repo.yml <<EOF
+          repositoryID: ${{ github.repository }}
+          owners:
+            - name: ${{ github.repository_owner }}
+              email: ${{ github.event.repository.owner.email }}
+          EOF
+
+      - name: Commit Artifact Hub metadata
+        run: |
+          git config user.name "$GITHUB_ACTOR"
+          git config user.email "$GITHUB_ACTOR@users.noreply.github.com"
+          git add deployment/helm/artifacthub-repo.yml
+          git commit -m "Add Artifact Hub metadata" || true
+          git push || true

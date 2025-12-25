@@ -1,0 +1,173 @@
+---
+# ==============================================================================
+# NetworkPolicy for specify-cli
+# Restricts network traffic to only allowed connections
+# ==============================================================================
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: specify-netpol
+  namespace: specify
+  labels:
+    app.kubernetes.io/name: specify
+    app.kubernetes.io/component: network-policy
+    app.kubernetes.io/part-of: specify-platform
+spec:
+  podSelector:
+    matchLabels:
+      app.kubernetes.io/name: specify
+      app.kubernetes.io/component: application
+
+  policyTypes:
+    - Ingress
+    - Egress
+
+  # Ingress rules - what can connect TO specify-cli
+  ingress:
+    # Allow from ingress controller
+    - from:
+        - namespaceSelector:
+            matchLabels:
+              name: ingress-nginx
+        - podSelector:
+            matchLabels:
+              app.kubernetes.io/name: ingress-nginx
+      ports:
+        - protocol: TCP
+          port: 8080
+
+    # Allow from monitoring (Prometheus)
+    - from:
+        - namespaceSelector:
+            matchLabels:
+              name: monitoring
+        - podSelector:
+            matchLabels:
+              app: prometheus
+      ports:
+        - protocol: TCP
+          port: 8081
+
+    # Allow from same namespace
+    - from:
+        - podSelector:
+            matchLabels:
+              app.kubernetes.io/part-of: specify-platform
+      ports:
+        - protocol: TCP
+          port: 8080
+
+  # Egress rules - what specify-cli can connect TO
+  egress:
+    # Allow DNS resolution
+    - to:
+        - namespaceSelector:
+            matchLabels:
+              name: kube-system
+        - podSelector:
+            matchLabels:
+              k8s-app: kube-dns
+      ports:
+        - protocol: UDP
+          port: 53
+
+    # Allow to PostgreSQL
+    - to:
+        - podSelector:
+            matchLabels:
+              app.kubernetes.io/name: postgres
+      ports:
+        - protocol: TCP
+          port: 5432
+
+    # Allow to Redis
+    - to:
+        - podSelector:
+            matchLabels:
+              app.kubernetes.io/name: redis
+      ports:
+        - protocol: TCP
+          port: 6379
+
+    # Allow to Jaeger (OTLP)
+    - to:
+        - namespaceSelector:
+            matchLabels:
+              name: monitoring
+        - podSelector:
+            matchLabels:
+              app: jaeger
+      ports:
+        - protocol: TCP
+          port: 4318
+        - protocol: TCP
+          port: 4317
+
+    # Allow HTTPS to external services (GitHub, etc.)
+    - to:
+        - namespaceSelector: {}
+      ports:
+        - protocol: TCP
+          port: 443
+        - protocol: TCP
+          port: 80
+
+---
+# ==============================================================================
+# NetworkPolicy for PostgreSQL
+# ==============================================================================
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: postgres-netpol
+  namespace: specify
+  labels:
+    app.kubernetes.io/name: postgres
+    app.kubernetes.io/component: network-policy
+spec:
+  podSelector:
+    matchLabels:
+      app.kubernetes.io/name: postgres
+
+  policyTypes:
+    - Ingress
+
+  ingress:
+    # Only allow from specify-cli
+    - from:
+        - podSelector:
+            matchLabels:
+              app.kubernetes.io/name: specify
+      ports:
+        - protocol: TCP
+          port: 5432
+
+---
+# ==============================================================================
+# NetworkPolicy for Redis
+# ==============================================================================
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: redis-netpol
+  namespace: specify
+  labels:
+    app.kubernetes.io/name: redis
+    app.kubernetes.io/component: network-policy
+spec:
+  podSelector:
+    matchLabels:
+      app.kubernetes.io/name: redis
+
+  policyTypes:
+    - Ingress
+
+  ingress:
+    # Only allow from specify-cli
+    - from:
+        - podSelector:
+            matchLabels:
+              app.kubernetes.io/name: specify
+      ports:
+        - protocol: TCP
+          port: 6379

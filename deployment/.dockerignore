@@ -1,0 +1,105 @@
+# Version control
+.git
+.gitignore
+.gitattributes
+.gitmodules
+
+# Python
+__pycache__
+*.py[cod]
+*$py.class
+*.so
+.Python
+*.egg-info
+dist
+build
+.eggs
+.venv
+venv
+ENV
+env
+
+# Testing
+.pytest_cache
+.coverage
+.coverage.*
+htmlcov
+coverage.json
+.tox
+.nox
+*.cover
+.hypothesis
+
+# IDEs
+.vscode
+.idea
+*.swp
+*.swo
+*~
+.DS_Store
+
+# CI/CD
+.github
+.gitlab-ci.yml
+.travis.yml
+.circleci
+
+# Documentation
+docs/_build
+sphinx-docs
+*.md
+!README.md
+
+# Deployment
+deployment
+k8s
+.kube
+
+# Cache
+.mypy_cache
+.ruff_cache
+.pytest_cache
+*.log
+
+# Reports
+reports/
+*.html
+
+# Data and examples
+data/
+examples/
+media/
+
+# Local development
+.env
+.env.local
+*.local
+secrets/
+.secrets.baseline
+
+# Temporary files
+tmp/
+temp/
+*.tmp
+*.bak
+
+# OS files
+Thumbs.db
+.DS_Store
+
+# LaTeX cache
+.latex_cache/
+
+# Test containers
+.testcontainers/
+
+# Other
+*.pnml
+*.bpmn
+*.xes
+process.*
+sample.*
+*.json
+!pyproject.toml
+!uv.lock
+!ggen.toml

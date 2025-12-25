@@ -41,6 +41,15 @@ dependencies = [
     "rdflib>=7.5.0",
     # Jinja2 for Tera-compatible template rendering in μ₃ EMIT stage
     "jinja2>=3.1.0",
+    # Database layer - SQLAlchemy ORM with Alembic migrations
+    "sqlalchemy>=2.0.0",
+    "alembic>=1.13.0",
+    # Async file I/O operations
+    "aiofiles>=24.0.0",
+    # Plugin system dependencies
+    "packaging>=23.0",  # Version parsing and comparison for plugin system
+    # Security layer - cryptography for encryption, signing, certificates
+    "cryptography>=42.0.0",
 ]
 
 # External system dependencies (must be installed separately):
@@ -105,6 +114,31 @@ hd = [
     "plotly>=5.18.0",
 ]
 
+# Database drivers (optional: uv sync --group db)
+db = [
+    "psycopg2-binary>=2.9.0",  # PostgreSQL driver
+    "pymysql>=1.1.0",  # MySQL driver
+    "pymongo>=4.6.0",  # MongoDB driver (for document storage)
+    "cryptography>=41.0.0",  # For encryption at rest
+]
+
+# Multi-cloud support (optional: uv sync --group cloud)
+cloud = [
+    # AWS
+    "boto3>=1.34.0",
+    "botocore>=1.34.0",
+    # GCP
+    "google-cloud-storage>=2.14.0",
+    "google-cloud-logging>=3.9.0",
+    "google-cloud-monitoring>=2.18.0",
+    "google-cloud-secret-manager>=2.18.0",
+    "google-cloud-compute>=1.15.0",
+    # Azure
+    "azure-storage-blob>=12.19.0",
+    "azure-identity>=1.15.0",
+    "azure-keyvault-secrets>=4.7.0",
+]
+
 # All optional features
 all = [
     "pm4py>=2.7.0",
@@ -115,6 +149,21 @@ all = [
     "scikit-learn>=1.3.0",
     "matplotlib>=3.7.0",
     "plotly>=5.18.0",
+    "psycopg2-binary>=2.9.0",
+    "pymysql>=1.1.0",
+    "pymongo>=4.6.0",
+    "cryptography>=41.0.0",
+    # Cloud support
+    "boto3>=1.34.0",
+    "botocore>=1.34.0",
+    "google-cloud-storage>=2.14.0",
+    "google-cloud-logging>=3.9.0",
+    "google-cloud-monitoring>=2.18.0",
+    "google-cloud-secret-manager>=2.18.0",
+    "google-cloud-compute>=1.15.0",
+    "azure-storage-blob>=12.19.0",
+    "azure-identity>=1.15.0",
+    "azure-keyvault-secrets>=4.7.0",
 ]
 
 [build-system]

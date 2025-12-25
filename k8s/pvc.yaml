@@ -1,0 +1,21 @@
+---
+# ==============================================================================
+# PersistentVolumeClaim for specify-cli data
+# ==============================================================================
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: specify-data-pvc
+  namespace: specify
+  labels:
+    app.kubernetes.io/name: specify
+    app.kubernetes.io/component: storage
+    app.kubernetes.io/part-of: specify-platform
+spec:
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: 10Gi
+  storageClassName: standard
+  volumeMode: Filesystem

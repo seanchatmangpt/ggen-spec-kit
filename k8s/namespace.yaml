@@ -1,0 +1,16 @@
+---
+# ==============================================================================
+# Namespace for specify-cli application
+# ==============================================================================
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: specify
+  labels:
+    app.kubernetes.io/name: specify
+    app.kubernetes.io/component: namespace
+    app.kubernetes.io/part-of: specify-platform
+    app.kubernetes.io/managed-by: kubectl
+    environment: production
+  annotations:
+    description: "Specify CLI - RDF-first Spec-Driven Development toolkit"

@@ -1,0 +1,105 @@
+---
+# ==============================================================================
+# Flux HelmRelease for specify-cli
+# Automated Helm chart deployment with Flux CD
+# ==============================================================================
+apiVersion: helm.toolkit.fluxcd.io/v2beta1
+kind: HelmRelease
+metadata:
+  name: specify-cli
+  namespace: flux-system
+spec:
+  # Target namespace
+  targetNamespace: specify
+
+  # Reconciliation interval
+  interval: 10m0s
+
+  # Timeout
+  timeout: 10m0s
+
+  # Chart reference
+  chart:
+    spec:
+      chart: ./deployment/helm
+      sourceRef:
+        kind: GitRepository
+        name: specify-cli
+        namespace: flux-system
+      interval: 5m0s
+
+  # Values
+  values:
+    replicaCount: 3
+
+    image:
+      registry: ghcr.io
+      repository: github/spec-kit
+      tag: "0.0.25"
+      pullPolicy: IfNotPresent
+
+    ingress:
+      enabled: true
+      hosts:
+        - host: specify.example.com
+          paths:
+            - path: /
+              pathType: Prefix
+
+    autoscaling:
+      enabled: true
+      minReplicas: 3
+      maxReplicas: 10
+
+    monitoring:
+      enabled: true
+      serviceMonitor:
+        enabled: true
+
+  # Values from ConfigMaps/Secrets
+  valuesFrom:
+    - kind: ConfigMap
+      name: specify-helm-values
+      valuesKey: values.yaml
+      optional: false
+
+  # Automated upgrade strategy
+  upgrade:
+    remediation:
+      retries: 3
+      remediateLastFailure: true
+    crds: CreateReplace
+    cleanupOnFail: true
+    force: false
+
+  # Rollback configuration
+  rollback:
+    recreate: true
+    force: true
+    cleanupOnFail: true
+
+  # Installation configuration
+  install:
+    remediation:
+      retries: 3
+    crds: CreateReplace
+    createNamespace: true
+    replace: true
+
+  # Post-deployment tests
+  test:
+    enable: true
+    timeout: 5m0s
+
+  # Drift detection
+  driftDetection:
+    mode: enabled
+    ignore:
+      - paths: ["/spec/replicas"]
+        target:
+          kind: Deployment
+
+  # Health checks
+  dependsOn:
+    - name: infrastructure
+      namespace: flux-system

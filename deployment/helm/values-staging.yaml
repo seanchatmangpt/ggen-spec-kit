@@ -1,0 +1,91 @@
+# ==============================================================================
+# Staging values for specify-cli Helm chart
+# Override default values for staging deployment
+# ==============================================================================
+
+# Moderate replica count for staging
+replicaCount: 3
+
+# Staging image tag (use specific version or 'latest')
+image:
+  tag: "staging"
+  pullPolicy: Always
+
+# Ingress with staging domain
+ingress:
+  enabled: true
+  hosts:
+    - host: specify.staging.example.com
+      paths:
+        - path: /
+          pathType: Prefix
+  tls:
+    - secretName: specify-staging-tls-cert
+      hosts:
+        - specify.staging.example.com
+
+# Moderate resource limits for staging
+resources:
+  limits:
+    cpu: 1000m
+    memory: 1Gi
+  requests:
+    cpu: 200m
+    memory: 256Mi
+
+# Moderate autoscaling for staging
+autoscaling:
+  enabled: true
+  minReplicas: 3
+  maxReplicas: 8
+  targetCPUUtilizationPercentage: 70
+  targetMemoryUtilizationPercentage: 80
+
+# Staging environment with debug logging
+env:
+  LOG_LEVEL: "DEBUG"
+  ENVIRONMENT: "staging"
+
+# Staging database
+postgresql:
+  enabled: true
+  primary:
+    persistence:
+      enabled: true
+      size: 20Gi
+    resources:
+      requests:
+        cpu: 200m
+        memory: 512Mi
+      limits:
+        cpu: 1000m
+        memory: 1Gi
+
+# Staging Redis
+redis:
+  enabled: true
+  master:
+    persistence:
+      enabled: true
+      size: 10Gi
+    resources:
+      requests:
+        cpu: 100m
+        memory: 256Mi
+      limits:
+        cpu: 500m
+        memory: 512Mi
+
+# Monitoring enabled
+monitoring:
+  enabled: true
+  serviceMonitor:
+    enabled: true
+    interval: 30s
+  prometheusRule:
+    enabled: true
+
+# Moderate persistent storage
+persistence:
+  enabled: true
+  size: 20Gi

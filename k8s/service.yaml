@@ -1,0 +1,60 @@
+---
+# ==============================================================================
+# Service for specify-cli application
+# ==============================================================================
+apiVersion: v1
+kind: Service
+metadata:
+  name: specify-service
+  namespace: specify
+  labels:
+    app.kubernetes.io/name: specify
+    app.kubernetes.io/component: service
+    app.kubernetes.io/part-of: specify-platform
+  annotations:
+    prometheus.io/scrape: "true"
+    prometheus.io/port: "8080"
+    prometheus.io/path: "/metrics"
+spec:
+  type: ClusterIP
+  selector:
+    app.kubernetes.io/name: specify
+    app.kubernetes.io/component: application
+  ports:
+    - name: http
+      port: 8080
+      targetPort: http
+      protocol: TCP
+    - name: metrics
+      port: 8081
+      targetPort: metrics
+      protocol: TCP
+  sessionAffinity: ClientIP
+  sessionAffinityConfig:
+    clientIP:
+      timeoutSeconds: 10800
+
+---
+# ==============================================================================
+# Headless Service for StatefulSet (if needed)
+# ==============================================================================
+apiVersion: v1
+kind: Service
+metadata:
+  name: specify-headless
+  namespace: specify
+  labels:
+    app.kubernetes.io/name: specify
+    app.kubernetes.io/component: headless-service
+    app.kubernetes.io/part-of: specify-platform
+spec:
+  type: ClusterIP
+  clusterIP: None
+  selector:
+    app.kubernetes.io/name: specify
+    app.kubernetes.io/component: application
+  ports:
+    - name: http
+      port: 8080
+      targetPort: http
+      protocol: TCP

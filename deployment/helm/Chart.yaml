@@ -1,0 +1,28 @@
+apiVersion: v2
+name: specify-cli
+description: Helm chart for Specify CLI - RDF-first Spec-Driven Development toolkit
+type: application
+version: 0.1.0
+appVersion: "0.0.25"
+
+keywords:
+  - specify
+  - rdf
+  - spec-driven
+  - development
+  - cli
+  - opentelemetry
+
+home: https://github.com/github/spec-kit
+sources:
+  - https://github.com/github/spec-kit
+
+maintainers:
+  - name: Sean Chatman
+    email: info@chatmangpt.com
+
+icon: https://raw.githubusercontent.com/github/spec-kit/main/media/icon.png
+
+annotations:
+  category: Development
+  licenses: MIT
