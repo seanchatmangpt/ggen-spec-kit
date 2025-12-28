@@ -1,0 +1,58 @@
+{
+  "$schema": "https://claude.ai/schemas/plugin.json",
+  "name": "ggen-spec-kit",
+  "version": "1.0.0",
+  "description": "RDF-first specification development toolkit implementing the constitutional equation spec.md = μ(feature.ttl)",
+  "author": "Spec-Kit Team",
+  "license": "MIT",
+  "homepage": "https://github.com/seanchatmangpt/ggen-spec-kit",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/seanchatmangpt/ggen-spec-kit.git"
+  },
+  "keywords": [
+    "rdf",
+    "specification",
+    "code-generation",
+    "turtle",
+    "sparql",
+    "three-tier-architecture",
+    "ggen"
+  ],
+  "engines": {
+    "claude-code": ">=2.0.0"
+  },
+  "components": {
+    "commands": {
+      "enabled": true,
+      "directory": "../.claude/commands"
+    },
+    "agents": {
+      "enabled": true,
+      "directory": "../.claude/agents"
+    },
+    "skills": {
+      "enabled": true,
+      "directory": "../.claude/skills"
+    },
+    "hooks": {
+      "enabled": true,
+      "directory": "../.claude/hooks"
+    },
+    "rules": {
+      "enabled": true,
+      "directory": "../.claude/rules"
+    }
+  },
+  "dependencies": {},
+  "metadata": {
+    "category": "development",
+    "tags": [
+      "rdf",
+      "specification-driven",
+      "code-generation",
+      "semantic-web"
+    ],
+    "minClaudeVersion": "2.0.0"
+  }
+}
