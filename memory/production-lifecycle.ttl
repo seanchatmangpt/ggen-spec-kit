@@ -1,0 +1,600 @@
+@prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
+@prefix sk: <http://github.com/github/spec-kit#> .
+@prefix prod: <http://github.com/github/spec-kit/production#> .
+
+# ============================================================================
+# Production Lifecycle Specification
+# ============================================================================
+# Constitutional equation: production-docs.md = μ(production-lifecycle.ttl)
+#
+# This specification defines the complete production lifecycle for ggen-spec-kit:
+# - Semantic versioning strategy
+# - Pre-release validation gates
+# - Release automation workflow
+# - Post-release verification
+# - Rollback procedures
+# - Hotfix emergency procedures
+# ============================================================================
+
+# ----------------------------------------------------------------------------
+# Production Lifecycle Process
+# ----------------------------------------------------------------------------
+
+prod:ProductionLifecycle a sk:Feature ;
+    sk:featureBranch "production-lifecycle" ;
+    sk:featureName "Production Release and Deployment Lifecycle" ;
+    sk:created "2025-12-28"^^xsd:date ;
+    sk:status "Draft" ;
+    sk:userInput "Define comprehensive production lifecycle with semantic versioning, pre/post-release checks, rollback procedures, and hotfix workflows" .
+
+# ============================================================================
+# SEMANTIC VERSIONING STRATEGY
+# ============================================================================
+
+prod:SemanticVersioning a sk:FunctionalRequirement ;
+    sk:requirementId "FR-001" ;
+    sk:category "Versioning" ;
+    sk:title "Semantic Versioning 2.0.0" ;
+    sk:description """
+    Project follows Semantic Versioning 2.0.0 (semver.org):
+
+    MAJOR.MINOR.PATCH[-PRE-RELEASE][+BUILD]
+
+    Version Components:
+    - MAJOR: Breaking changes (incompatible API changes)
+    - MINOR: New features (backward-compatible functionality)
+    - PATCH: Bug fixes (backward-compatible bug fixes)
+    - PRE-RELEASE: Optional pre-release identifier (alpha, beta, rc.1)
+    - BUILD: Optional build metadata (+20130313144700)
+
+    Increment Rules:
+    - Breaking change → MAJOR + 1, MINOR = 0, PATCH = 0
+    - New feature → MINOR + 1, PATCH = 0
+    - Bug fix → PATCH + 1
+
+    Pre-release Versions:
+    - Alpha: 1.0.0-alpha.1 (internal testing, unstable)
+    - Beta: 1.0.0-beta.1 (external testing, feature-complete)
+    - RC: 1.0.0-rc.1 (release candidate, production-ready)
+
+    Version Detection from Commits:
+    - Commit contains 'BREAKING CHANGE' → MAJOR
+    - Commit type 'feat' → MINOR
+    - Commit type 'fix', 'perf', 'refactor' → PATCH
+    """ .
+
+prod:VersionBumping a sk:FunctionalRequirement ;
+    sk:requirementId "FR-002" ;
+    sk:category "Versioning" ;
+    sk:title "Automated Version Bumping" ;
+    sk:description """
+    Automated version detection and bumping from conventional commits.
+
+    Algorithm:
+    1. Parse commits since last release tag
+    2. Detect highest version impact:
+       - Any commit with 'BREAKING CHANGE' → MAJOR
+       - Any commit type 'feat' → MINOR (if no BREAKING)
+       - Any commit type 'fix' → PATCH (if no feat or BREAKING)
+    3. Increment version accordingly
+    4. Update pyproject.toml version field
+    5. Create git tag with version
+
+    Manual Override:
+    - `specify git release major` → Force MAJOR bump
+    - `specify git release minor` → Force MINOR bump
+    - `specify git release patch` → Force PATCH bump
+    - `specify git release 1.2.3` → Set exact version
+    """ .
+
+# ============================================================================
+# PRE-RELEASE VALIDATION GATES
+# ============================================================================
+
+prod:PreReleaseGate a sk:FunctionalRequirement ;
+    sk:requirementId "FR-003" ;
+    sk:category "Quality Gates" ;
+    sk:title "Pre-Release Validation Gates" ;
+    sk:description """
+    Comprehensive validation before release creation.
+
+    Required Checks (fail if any fails):
+    1. Git Status Clean:
+       - No uncommitted changes
+       - No untracked files
+       - All changes committed
+
+    2. Quality Gates Pass:
+       - Ruff linting passes (no errors)
+       - MyPy type checking passes (no errors)
+       - Bandit security scan passes (no high/critical issues)
+
+    3. Test Coverage:
+       - All tests pass (100% pass rate)
+       - Coverage ≥ 50% (configurable threshold)
+       - No skipped tests (except @pytest.mark.skip with reason)
+
+    4. Changelog Updated:
+       - CHANGELOG.md contains unreleased changes
+       - Version section exists for new version
+       - Changes categorized (Added, Changed, Fixed, etc.)
+
+    5. Documentation:
+       - README.md is up-to-date
+       - API docs generated from RDF (ggen sync ran)
+       - No broken links in documentation
+
+    6. Version Consistency:
+       - pyproject.toml version matches release version
+       - No version conflicts in dependencies
+       - Version bumped correctly per semver rules
+
+    Optional Checks (warnings only):
+    - Breaking changes documented in CHANGELOG
+    - Migration guide exists for MAJOR versions
+    - Deprecation warnings handled
+    """ .
+
+prod:PreReleaseChecklist a sk:Task ;
+    sk:taskId "T001" ;
+    sk:phase "Pre-Release" ;
+    sk:parallel false ;
+    sk:taskDescription """
+    Implement pre-release check command:
+    - File: src/specify_cli/commands/git_pre_release_check.py
+    - Run all validation gates in parallel
+    - Generate detailed report (JSON + Markdown)
+    - Exit code 0 if all pass, 1 if any fail
+    - --skip flag to skip specific checks (CI override)
+    """ .
+
+# ============================================================================
+# RELEASE AUTOMATION WORKFLOW
+# ============================================================================
+
+prod:ReleaseWorkflow a sk:FunctionalRequirement ;
+    sk:requirementId "FR-004" ;
+    sk:category "Release Automation" ;
+    sk:title "Automated Release Process" ;
+    sk:description """
+    Automated release creation and publishing workflow.
+
+    Release Steps (specify git release <version>):
+
+    1. PRE-RELEASE PHASE:
+       - Run pre-release validation gates (FR-003)
+       - Confirm version bump is correct
+       - Generate changelog from commits
+       - Update CHANGELOG.md with new version section
+
+    2. TAGGING PHASE:
+       - Create annotated git tag (v<version>)
+       - Tag message: Release notes summary
+       - Optional: GPG sign tag (--sign flag)
+       - Push tag to remote
+
+    3. BUILD PHASE:
+       - Build Python wheel (uv build)
+       - Build source distribution (sdist)
+       - Run smoke tests on built artifacts
+       - Verify package metadata
+
+    4. PUBLISH PHASE:
+       - Publish to PyPI (uv publish)
+       - Create GitHub release
+       - Upload artifacts to GitHub release
+       - Update release notes from changelog
+
+    5. POST-RELEASE PHASE:
+       - Run post-release verification (FR-005)
+       - Create announcement draft
+       - Update documentation website
+       - Notify stakeholders (optional webhook)
+
+    Rollback on Failure:
+    - If any phase fails, rollback changes
+    - Delete created tag (local and remote)
+    - Restore CHANGELOG.md
+    - Exit with detailed error report
+    """ .
+
+prod:GitHubReleaseIntegration a sk:FunctionalRequirement ;
+    sk:requirementId "FR-005" ;
+    sk:category "Release Automation" ;
+    sk:title "GitHub Release Integration" ;
+    sk:description """
+    GitHub Release creation with rich metadata.
+
+    Release Metadata:
+    - Title: "v<version> - <release-name>"
+    - Body: Extracted from CHANGELOG.md for this version
+    - Tag: v<version>
+    - Assets: wheel, sdist, checksums, signatures
+    - Pre-release flag: true if version contains alpha/beta/rc
+
+    Release Notes Format:
+    - Summary (1-3 sentences)
+    - Breaking Changes (if MAJOR version)
+    - New Features (from feat commits)
+    - Bug Fixes (from fix commits)
+    - Contributors (from commit authors)
+    - Full changelog link
+
+    Automation:
+    - Use gh CLI for GitHub API interaction
+    - Auto-generate notes from commits if CHANGELOG missing
+    - Upload artifacts with parallel uploads
+    - Set release as latest (unless pre-release)
+    """ .
+
+# ============================================================================
+# POST-RELEASE VERIFICATION
+# ============================================================================
+
+prod:PostReleaseVerification a sk:FunctionalRequirement ;
+    sk:requirementId "FR-006" ;
+    sk:category "Quality Gates" ;
+    sk:title "Post-Release Verification" ;
+    sk:description """
+    Verify release was successful and deployable.
+
+    Verification Checks:
+
+    1. Git Verification:
+       - Tag exists on remote (git ls-remote --tags)
+       - Tag matches local tag (SHA comparison)
+       - Tag is annotated (not lightweight)
+       - Tag is signed (if --sign was used)
+
+    2. GitHub Release Verification:
+       - GitHub release exists (gh release view v<version>)
+       - Release is published (not draft)
+       - All artifacts uploaded (wheel, sdist)
+       - Checksums match artifacts
+
+    3. PyPI Verification:
+       - Package published to PyPI
+       - Version available (pip index versions specify-cli)
+       - Package installable (pip install specify-cli==<version>)
+       - CLI executable after install (specify --version)
+
+    4. Documentation Verification:
+       - Docs updated for new version
+       - Changelog contains release notes
+       - API reference matches new version
+
+    5. Smoke Tests:
+       - Install from PyPI in fresh venv
+       - Run basic CLI commands (specify --help, specify check)
+       - Verify version output matches release
+
+    Failure Handling:
+    - If verification fails, create incident report
+    - Notify team (email/slack/github issue)
+    - Suggest rollback if critical failure
+    """ .
+
+# ============================================================================
+# ROLLBACK PROCEDURES
+# ============================================================================
+
+prod:RollbackProcedure a sk:FunctionalRequirement ;
+    sk:requirementId "FR-007" ;
+    sk:category "Incident Response" ;
+    sk:title "Release Rollback Procedures" ;
+    sk:description """
+    Safe rollback to previous stable release.
+
+    Rollback Strategies:
+
+    1. REVERT Strategy (Recommended):
+       - Create revert commits for bad changes
+       - Maintains complete git history
+       - Safe for public branches (main)
+       - Example: git revert v1.2.3..v1.2.4
+       - Creates new release (e.g., 1.2.5)
+
+    2. RESET Strategy (Destructive):
+       - Hard reset to previous version
+       - Rewrites git history (dangerous)
+       - Requires force push (avoid on main)
+       - Only use for unreleased branches
+       - Example: git reset --hard v1.2.2
+
+    3. HOTFIX Strategy (Fast):
+       - Create hotfix branch from previous release
+       - Apply minimal fix
+       - Release as patch version
+       - Example: v1.2.2 had issue → create v1.2.3 hotfix
+
+    Rollback Steps (specify git rollback <version>):
+
+    1. Confirm rollback target version exists
+    2. Create rollback branch (rollback-<version>)
+    3. Apply rollback strategy (revert by default)
+    4. Run smoke tests on rolled-back code
+    5. Create new patch release (auto-increment patch)
+    6. Publish rollback release
+    7. Deprecate bad release on GitHub (edit release, mark as draft)
+    8. Update CHANGELOG with rollback note
+
+    Safety Checks:
+    - Require --confirm flag for production rollbacks
+    - Dry-run mode to preview changes (--dry-run)
+    - Backup tag created before rollback
+    """ .
+
+# ============================================================================
+# HOTFIX EMERGENCY PROCEDURES
+# ============================================================================
+
+prod:HotfixWorkflow a sk:FunctionalRequirement ;
+    sk:requirementId "FR-008" ;
+    sk:category "Incident Response" ;
+    sk:title "Hotfix Emergency Workflow" ;
+    sk:description """
+    Fast-track hotfix for critical production issues.
+
+    Hotfix Criteria (when to use):
+    - Critical production bug (data loss, security, downtime)
+    - Cannot wait for next scheduled release
+    - Affects current production version
+    - Low-risk fix (surgical change)
+
+    Hotfix Workflow (specify git hotfix <name>):
+
+    1. BRANCH CREATION:
+       - Create hotfix branch from latest release tag
+       - Branch name: hotfix/<version>-<name>
+       - Example: hotfix/1.2.3-auth-bypass
+
+    2. FIX IMPLEMENTATION:
+       - Implement minimal fix (no refactoring)
+       - Write regression test
+       - Update CHANGELOG with [HOTFIX] marker
+       - Commit with conventional format: fix(hotfix): <message>
+
+    3. VALIDATION (Expedited):
+       - Run focused tests (not full suite)
+       - Security scan (Bandit)
+       - Manual verification in staging
+       - Code review (required, even for emergency)
+
+    4. RELEASE:
+       - Auto-increment patch version
+       - Create release tag (v<version>)
+       - Publish to PyPI immediately
+       - Create GitHub release with [HOTFIX] label
+
+    5. BACKPORT:
+       - Merge hotfix to main branch
+       - Merge hotfix to develop branch (if using GitFlow)
+       - Cherry-pick to active release branches
+       - Delete hotfix branch
+
+    Hotfix SLA:
+    - Critical severity: < 4 hours from detection to fix
+    - High severity: < 24 hours
+    - Medium severity: < 1 week (consider regular release)
+
+    Communication:
+    - Post incident in #incidents channel
+    - Update status page
+    - Send notification to affected users
+    - Post-mortem within 48 hours
+    """ .
+
+prod:HotfixBackport a sk:Task ;
+    sk:taskId "T002" ;
+    sk:phase "Hotfix" ;
+    sk:parallel false ;
+    sk:taskDescription """
+    Implement hotfix backporting automation:
+    - File: src/specify_cli/commands/git_hotfix.py
+    - Auto-detect branches needing backport
+    - Cherry-pick hotfix commits to each branch
+    - Handle merge conflicts gracefully
+    - Create backport PRs automatically
+    """ .
+
+# ============================================================================
+# CI/CD PIPELINE INTEGRATION
+# ============================================================================
+
+prod:CICDPipeline a sk:FunctionalRequirement ;
+    sk:requirementId "FR-009" ;
+    sk:category "Automation" ;
+    sk:title "CI/CD Pipeline Integration" ;
+    sk:description """
+    GitHub Actions workflows for automated release process.
+
+    Workflow 1: Pre-Release Checks (.github/workflows/pre-release.yml)
+    Trigger: Manual (workflow_dispatch) before release
+    Steps:
+    - Run quality gates (ruff, mypy, bandit)
+    - Run full test suite with coverage
+    - Verify changelog updated
+    - Check version consistency
+    - Generate pre-release report (artifact)
+
+    Workflow 2: Release Automation (.github/workflows/release.yml)
+    Trigger: Push tag matching v*.*.*
+    Steps:
+    - Checkout tag
+    - Build wheel and sdist
+    - Run smoke tests on artifacts
+    - Publish to PyPI (with API token)
+    - Create GitHub release
+    - Upload artifacts to release
+    - Run post-release verification
+
+    Workflow 3: Hotfix Pipeline (.github/workflows/hotfix.yml)
+    Trigger: Push to hotfix/* branch
+    Steps:
+    - Run focused tests (not full suite)
+    - Security scan
+    - Build artifacts
+    - Deploy to staging for verification
+    - Require manual approval for production
+    - Auto-merge to main after release
+
+    Workflow 4: Rollback Automation (.github/workflows/rollback.yml)
+    Trigger: Manual (workflow_dispatch) with version input
+    Steps:
+    - Confirm rollback target exists
+    - Create revert commits
+    - Run smoke tests
+    - Create rollback release
+    - Deprecate bad release on GitHub
+    - Post incident report
+    """ .
+
+# ============================================================================
+# SUCCESS CRITERIA
+# ============================================================================
+
+prod:SC001 a sk:SuccessCriterion ;
+    sk:criterionId "SC-001" ;
+    sk:measurable true ;
+    sk:metric "Release Time" ;
+    sk:target "< 15 minutes" ;
+    sk:description "Full release process (pre-check → tag → publish → verify) completes in under 15 minutes" .
+
+prod:SC002 a sk:SuccessCriterion ;
+    sk:criterionId "SC-002" ;
+    sk:measurable true ;
+    sk:metric "Release Success Rate" ;
+    sk:target "≥ 95%" ;
+    sk:description "95% of releases succeed without rollback (tracked over 20 releases)" .
+
+prod:SC003 a sk:SuccessCriterion ;
+    sk:criterionId "SC-003" ;
+    sk:measurable true ;
+    sk:metric "Hotfix Time to Production" ;
+    sk:target "< 4 hours" ;
+    sk:description "Critical hotfixes deployed to production in under 4 hours from detection" .
+
+prod:SC004 a sk:SuccessCriterion ;
+    sk:criterionId "SC-004" ;
+    sk:measurable true ;
+    sk:metric "Zero Downtime" ;
+    sk:target "100%" ;
+    sk:description "All releases and hotfixes maintain zero downtime (no service interruption)" .
+
+prod:SC005 a sk:SuccessCriterion ;
+    sk:criterionId "SC-005" ;
+    sk:measurable true ;
+    sk:metric "Rollback Success" ;
+    sk:target "< 10 minutes" ;
+    sk:description "Rollback to previous version completes in under 10 minutes" .
+
+# ============================================================================
+# EDGE CASES
+# ============================================================================
+
+prod:EdgeCase001 a sk:EdgeCase ;
+    sk:scenario "Release fails during PyPI publish but tag already pushed" ;
+    sk:expectedBehavior "Rollback script deletes remote tag, retries publish, or creates hotfix release" .
+
+prod:EdgeCase002 a sk:EdgeCase ;
+    sk:scenario "Hotfix needed but main branch diverged significantly from release" ;
+    sk:expectedBehavior "Create hotfix from release tag, cherry-pick specific commits, avoid full merge" .
+
+prod:EdgeCase003 a sk:EdgeCase ;
+    sk:scenario "Multiple hotfixes needed for different production versions" ;
+    sk:expectedBehavior "Support multiple hotfix branches (hotfix/1.2.x, hotfix/1.3.x) with parallel releases" .
+
+prod:EdgeCase004 a sk:EdgeCase ;
+    sk:scenario "Pre-release check fails but urgent release needed" ;
+    sk:expectedBehavior "Allow override with --force flag, create incident report, schedule follow-up fix" .
+
+prod:EdgeCase005 a sk:EdgeCase ;
+    sk:scenario "GitHub API rate limit hit during release" ;
+    sk:expectedBehavior "Retry with exponential backoff, fallback to manual GitHub release creation" .
+
+# ============================================================================
+# IMPLEMENTATION TASKS
+# ============================================================================
+
+prod:Task003 a sk:Task ;
+    sk:taskId "T003" ;
+    sk:phase "Implementation" ;
+    sk:parallel true ;
+    sk:filePath "src/specify_cli/ops/git_release_ops.py" ;
+    sk:taskDescription "Implement release operation logic: version bumping, changelog generation, tag creation" .
+
+prod:Task004 a sk:Task ;
+    sk:taskId "T004" ;
+    sk:phase "Implementation" ;
+    sk:parallel true ;
+    sk:filePath "src/specify_cli/runtime/git_runtime.py" ;
+    sk:taskDescription "Implement git runtime operations: tag creation, push, commit parsing, branch operations" .
+
+prod:Task005 a sk:Task ;
+    sk:taskId "T005" ;
+    sk:phase "Implementation" ;
+    sk:parallel true ;
+    sk:filePath ".github/workflows/pre-release.yml" ;
+    sk:taskDescription "Create pre-release validation workflow: quality gates, test coverage, changelog check" .
+
+prod:Task006 a sk:Task ;
+    sk:taskId "T006" ;
+    sk:phase "Implementation" ;
+    sk:parallel true ;
+    sk:filePath ".github/workflows/hotfix.yml" ;
+    sk:taskDescription "Create hotfix automation workflow: fast-track validation, staging deployment, auto-merge" .
+
+prod:Task007 a sk:Task ;
+    sk:taskId "T007" ;
+    sk:phase "Implementation" ;
+    sk:parallel true ;
+    sk:filePath "scripts/rollback.sh" ;
+    sk:taskDescription "Create rollback shell script: revert commits, create rollback release, deprecate bad release" .
+
+prod:Task008 a sk:Task ;
+    sk:taskId "T008" ;
+    sk:phase "Testing" ;
+    sk:parallel false ;
+    sk:filePath "tests/e2e/test_release_workflow.py" ;
+    sk:taskDescription "Create end-to-end release workflow tests: simulate full release, verify artifacts, test rollback" .
+
+# ============================================================================
+# DEPENDENCIES
+# ============================================================================
+
+prod:Dependency001 a sk:Dependency ;
+    sk:title "GitHub CLI (gh)" ;
+    sk:description "GitHub CLI for creating releases, managing issues, and API interactions" ;
+    sk:version "≥ 2.0.0" .
+
+prod:Dependency002 a sk:Dependency ;
+    sk:title "Git" ;
+    sk:description "Git version control with tag and branch management" ;
+    sk:version "≥ 2.30.0" .
+
+prod:Dependency003 a sk:Dependency ;
+    sk:title "uv" ;
+    sk:description "Python package manager for building and publishing" ;
+    sk:version "≥ 0.5.0" .
+
+# ============================================================================
+# ASSUMPTIONS
+# ============================================================================
+
+prod:Assumption001 a sk:Assumption ;
+    sk:description "Team follows conventional commits for all production commits" .
+
+prod:Assumption002 a sk:Assumption ;
+    sk:description "PyPI API token configured in GitHub Secrets (PYPI_TOKEN)" .
+
+prod:Assumption003 a sk:Assumption ;
+    sk:description "All production releases go through main branch (no direct hotfix to prod)" .
+
+prod:Assumption004 a sk:Assumption ;
+    sk:description "Breaking changes always documented in CHANGELOG with migration guide" .
+
+# ============================================================================
+# End of Production Lifecycle Specification
+# ============================================================================
