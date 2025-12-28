@@ -1,0 +1,14 @@
+{
+  "$schema": "https://claude.ai/schemas/settings.json",
+  "_comment": "Copy this file to settings.local.json for personal overrides (gitignored)",
+  "permissions": {
+    "allow": [
+      "Bash(git push:*)",
+      "WebSearch"
+    ]
+  },
+  "env": {
+    "OTEL_EXPORTER_OTLP_ENDPOINT": "http://localhost:4317",
+    "DEBUG": "true"
+  }
+}
