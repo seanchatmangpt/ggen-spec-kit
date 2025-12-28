@@ -1,0 +1,88 @@
+{
+  "$schema": "https://claude.ai/schemas/settings.json",
+  "permissions": {
+    "allow": [
+      "Read(**/*)",
+      "Glob(**/*)",
+      "Grep(**/*)",
+      "Bash(uv run:*)",
+      "Bash(uv sync:*)",
+      "Bash(pytest:*)",
+      "Bash(ruff:*)",
+      "Bash(mypy:*)",
+      "Bash(ggen:*)",
+      "Bash(git status:*)",
+      "Bash(git diff:*)",
+      "Bash(git log:*)",
+      "Bash(git branch:*)",
+      "Bash(git show:*)",
+      "Bash(gh pr:*)",
+      "Bash(gh issue:*)",
+      "WebFetch(domain:github.com)",
+      "WebFetch(domain:docs.anthropic.com)",
+      "WebFetch(domain:modelcontextprotocol.io)",
+      "WebFetch(domain:pypi.org)",
+      "WebFetch(domain:python.org)"
+    ],
+    "ask": [
+      "Edit(**/*.py)",
+      "Edit(**/*.ttl)",
+      "Write(**/*)",
+      "Bash(git add:*)",
+      "Bash(git commit:*)",
+      "Bash(git push:*)",
+      "Bash(git checkout:*)",
+      "Bash(git merge:*)",
+      "Bash(pip install:*)",
+      "Bash(npm:*)"
+    ],
+    "deny": [
+      "Read(.env*)",
+      "Read(**/*secret*)",
+      "Read(**/*credential*)",
+      "Read(**/*.pem)",
+      "Read(**/*.key)",
+      "Edit(.env*)",
+      "Write(.env*)",
+      "Bash(rm -rf:*)",
+      "Bash(sudo:*)",
+      "Bash(chmod -R 777:*)",
+      "Bash(curl*|*sh:*)",
+      "Bash(wget*|*sh:*)",
+      "Bash(git push --force:*)",
+      "Bash(git rebase:*)"
+    ]
+  },
+  "hooks": {
+    "PreToolUse": [
+      {
+        "matcher": "Edit|Write",
+        "hooks": [".claude/hooks/pre-commit-check.sh"]
+      },
+      {
+        "matcher": "Bash",
+        "hooks": [".claude/hooks/bash-safety.sh"]
+      }
+    ],
+    "PostToolUse": [
+      {
+        "matcher": "Edit|Write",
+        "hooks": [".claude/hooks/post-edit-format.sh"]
+      }
+    ],
+    "SessionStart": [
+      {
+        "hooks": [".claude/hooks/session-start.sh"]
+      }
+    ],
+    "Stop": [
+      {
+        "hooks": [".claude/hooks/notification.sh"]
+      }
+    ]
+  },
+  "env": {
+    "PYTHONPATH": "src",
+    "OTEL_SERVICE_NAME": "specify-cli"
+  }
+}

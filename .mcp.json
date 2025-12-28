@@ -1,0 +1,65 @@
+{
+  "$schema": "https://modelcontextprotocol.io/schemas/mcp.json",
+  "mcpServers": {
+    "filesystem": {
+      "command": "npx",
+      "args": [
+        "-y",
+        "@anthropic/mcp-server-filesystem",
+        "--root",
+        "."
+      ],
+      "env": {
+        "MCP_READ_ONLY": "false"
+      }
+    },
+    "github": {
+      "command": "npx",
+      "args": [
+        "-y",
+        "@anthropic/mcp-server-github"
+      ],
+      "env": {
+        "GITHUB_TOKEN": "${GITHUB_TOKEN}"
+      }
+    },
+    "memory": {
+      "command": "npx",
+      "args": [
+        "-y",
+        "@anthropic/mcp-server-memory"
+      ]
+    },
+    "brave-search": {
+      "command": "npx",
+      "args": [
+        "-y",
+        "@anthropic/mcp-server-brave-search"
+      ],
+      "env": {
+        "BRAVE_API_KEY": "${BRAVE_API_KEY}"
+      },
+      "_disabled": true,
+      "_comment": "Enable by removing _disabled and setting BRAVE_API_KEY"
+    },
+    "postgres": {
+      "command": "npx",
+      "args": [
+        "-y",
+        "@anthropic/mcp-server-postgres",
+        "${DATABASE_URL}"
+      ],
+      "_disabled": true,
+      "_comment": "Enable by removing _disabled and setting DATABASE_URL"
+    },
+    "puppeteer": {
+      "command": "npx",
+      "args": [
+        "-y",
+        "@anthropic/mcp-server-puppeteer"
+      ],
+      "_disabled": true,
+      "_comment": "Enable for web scraping and browser automation"
+    }
+  }
+}

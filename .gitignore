@@ -46,6 +46,10 @@ env/
 sdd-*/
 .claude-flow/
 
+# Claude Code local settings (personal overrides)
+.claude/settings.local.json
+CLAUDE.local.md
+
 # Coverage
 .coverage
 .coverage.*
