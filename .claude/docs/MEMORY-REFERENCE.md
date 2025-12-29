@@ -106,8 +106,11 @@ At Regular Intervals (30-45 min):
 ## Extended Context Window
 
 ```bash
-# Enable 1M token context
+# Enable 1M token context (desktop CLI)
 claude --model claude-opus-4-5-20251101[1m]
+
+# Web: Use [1m] notation in session
+# Available on web; improves handling of large CLAUDE.md files
 ```
 
 ## Session Management
@@ -240,6 +243,7 @@ Output buffer: 20-40k (10-20%)
 2. Verify readable by user
 3. Run `/memory` command
 4. Start fresh session
+5. On web: Confirm file is in project root
 
 ### Context Exhausted
 1. Run `/compact` to summarize

@@ -2,9 +2,19 @@
 # Notification hook for Claude Code
 # Triggered by Stop event
 #
-# Sends desktop notification when Claude completes
+# Sends desktop notification when Claude completes (local only)
+# Skips notifications in web environment
 
 set -e
+
+# Detect execution context
+IS_REMOTE="${CLAUDE_CODE_REMOTE:-false}"
+
+# Skip notifications in remote/web environment
+if [ "$IS_REMOTE" = "true" ]; then
+    # Web environment - desktop notifications not applicable
+    exit 0
+fi
 
 # Read input
 INPUT=$(cat)
@@ -28,7 +38,7 @@ case "$STOP_REASON" in
         ;;
 esac
 
-# Send notification (platform-specific)
+# Send notification (platform-specific, local only)
 if command -v notify-send &> /dev/null; then
     # Linux
     notify-send "Claude Code" "$MESSAGE" 2>/dev/null || true

@@ -2,7 +2,7 @@
 
 ## Overview
 
-Slash commands are user-defined prompts stored as Markdown files that execute with `/command-name` syntax. They support argument interpolation, file references, and tool permissions.
+Slash commands are user-defined prompts stored as Markdown files that execute with `/command-name` syntax. They support argument interpolation, file references, and tool permissions. Fully supported on web and desktop.
 
 ## Command File Format
 
@@ -177,6 +177,7 @@ Report findings with recommendations.
 4. **Organize by Category**: Use subdirectories
 5. **Version Control**: Commit project commands
 6. **Security Review**: Check bash operations
+7. **Web Ready**: Commands work equally on web and desktop
 
 ## Naming Conventions
 

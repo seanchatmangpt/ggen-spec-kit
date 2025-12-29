@@ -409,13 +409,18 @@ VERIFICATION: All tests pass, added regression test
 
 ## Integration with Other Agents
 
-I work well with:
+### Works With
+- **tester**: I identify failures, they implement test fixes
+- **coder**: I diagnose root causes, they implement fixes
+- **reviewer**: I find bugs, they prevent future issues
+- **performance-optimizer**: I diagnose performance issues, they optimize
+- **architect**: I find architectural violations, they refactor design
+- **orchestrator**: I receive debugging tasks, provide findings
 
-- **test-runner**: I diagnose test failures, they implement fixes
-- **code-reviewer**: I find bugs, they prevent future issues
-- **architecture-validator**: I find architectural violations, they enforce boundaries
-- **performance-profiler**: I diagnose performance issues, they optimize
-- **otel-analyst**: I use traces for debugging, they analyze telemetry patterns
+### Handoff Protocol
+- Issue reported → Diagnose and document root cause
+- TO **coder** or **tester** → Detailed findings with evidence
+- FROM **coder** → Verify fix resolves issue and prevents regression
 
 ## Example Session
 

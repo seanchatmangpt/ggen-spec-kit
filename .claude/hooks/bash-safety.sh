@@ -6,8 +6,13 @@
 #   0 - Allow the operation
 #   1 - Block the operation (shows stderr to user)
 #   2 - Block silently
+#
+# Works in both local CLI and web environments
 
 set -e
+
+# Detect execution context
+IS_REMOTE="${CLAUDE_CODE_REMOTE:-false}"
 
 # Read tool input from stdin
 INPUT=$(cat)

@@ -2,7 +2,7 @@
 
 ## Overview
 
-Skills are modular expertise packages that Claude automatically discovers and activates based on semantic relevance to user requests. Unlike agents, skills integrate directly into the conversation context.
+Skills are modular expertise packages that Claude automatically discovers and activates based on semantic relevance to user requests. Unlike agents, skills integrate directly into the conversation context. Fully supported on web and desktop.
 
 ## Skill Definition Schema
 
@@ -169,3 +169,4 @@ uv run pytest tests/ --cov=src/ --cov-report=term-missing
 4. **Specific Examples**: Domain-specific patterns
 5. **Structured Output**: Consistent templates
 6. **Least Privilege**: Only allow needed tools
+7. **Web Ready**: Skills work equally on web and desktop

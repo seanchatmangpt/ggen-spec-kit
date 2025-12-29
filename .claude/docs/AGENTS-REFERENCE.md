@@ -151,6 +151,7 @@ analyst → architect → implementer → tester → reviewer
 4. **Example Prompts**: Show how to invoke
 5. **Quality Gates**: Define success criteria
 6. **Collaboration Points**: Document handoffs
+7. **Web Compatibility**: Agents work on web; use context-aware docs
 
 ## Example: Minimal Agent
 

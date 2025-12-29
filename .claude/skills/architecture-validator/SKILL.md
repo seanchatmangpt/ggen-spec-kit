@@ -8,6 +8,25 @@ allowed-tools: Read, Glob, Grep, Bash, LSP
 
 Validate three-tier architecture compliance and ensure proper layer separation.
 
+## Trigger Conditions
+
+- Reviewing PRs with structural changes
+- Detecting circular import errors
+- Validating new module additions
+- Ensuring spec-kit constitutional integrity
+
+## Key Capabilities
+
+- Layer boundary validation (Commands → Ops → Runtime)
+- Circular dependency detection
+- Side-effect isolation verification
+- Pattern anti-detection
+
+## Integration
+
+**ggen v5.0.2**: Validates generated code matches three-tier structure
+**Architecture**: Audits Commands/Ops/Runtime layer separation
+
 ## Instructions
 
 1. Verify Commands → Ops → Runtime flow

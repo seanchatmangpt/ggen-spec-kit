@@ -8,6 +8,25 @@ allowed-tools: Read, Glob, Grep, Bash, LSP, Edit
 
 Systematically diagnose and fix issues using traces, logs, and code analysis.
 
+## Trigger Conditions
+
+- Test failures requiring diagnosis
+- Runtime errors in CLI execution
+- Import/attribute errors
+- OTEL trace analysis
+
+## Key Capabilities
+
+- Test failure diagnosis
+- Code execution tracing via LSP
+- Root cause identification
+- Layer-specific error handling
+
+## Integration
+
+**ggen v5.0.2**: Debugs code generation failures during ggen sync
+**Architecture**: Traces through Commands → Ops → Runtime call chain
+
 ## Instructions
 
 1. Understand and reproduce the problem

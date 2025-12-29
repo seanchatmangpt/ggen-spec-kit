@@ -8,6 +8,25 @@ allowed-tools: Read, Write, Edit, Glob, Grep, Bash
 
 Generate Markdown documentation from RDF specifications using ggen.
 
+## Trigger Conditions
+
+- Creating/updating Markdown docs from RDF
+- Managing documentation.ttl specifications
+- Implementing ggen transformations
+- Validating idempotent output
+
+## Key Capabilities
+
+- RDF → Markdown via ggen sync
+- Tera template management
+- SPARQL query alignment
+- Idempotence verification (μ∘μ = μ)
+
+## Integration
+
+**ggen v5.0.2**: Orchestrates docs generation via ggen sync (only available command)
+**Architecture**: Ops layer (no side effects until runtime output)
+
 ## Instructions
 
 1. Run ggen sync for RDF-to-Markdown

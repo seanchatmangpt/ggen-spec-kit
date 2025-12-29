@@ -2,7 +2,7 @@
 
 ## Overview
 
-Hooks are shell commands that execute in response to Claude Code events, enabling deterministic control over tool execution, validation, logging, and notifications.
+Hooks are shell commands that execute in response to Claude Code events, enabling deterministic control over tool execution, validation, logging, and notifications. Desktop only; not available in web browser.
 
 ## Hook Events
 
@@ -168,6 +168,7 @@ exit 0
 5. **Use absolute paths** - For script locations
 6. **Quote variables** - Prevent injection
 7. **Validate inputs** - Never trust directly
+8. **Desktop only** - Hooks not available in web sessions
 
 ## Security Considerations
 

@@ -8,6 +8,25 @@ allowed-tools: Read, Glob, Grep, Bash, LSP
 
 Analyze OpenTelemetry traces and metrics to understand system behavior.
 
+## Trigger Conditions
+
+- Performance analysis requirements
+- Instrumentation coverage gaps
+- Bottleneck identification
+- Span hierarchy validation
+
+## Key Capabilities
+
+- Trace hierarchy analysis
+- Metrics extraction (counters, histograms)
+- OTEL best practices enforcement
+- Coverage assessment
+
+## Integration
+
+**ggen v5.0.2**: Profiles ggen sync performance and instrumentation
+**Architecture**: Validates Commands/Ops/Runtime span hierarchies
+
 ## Instructions
 
 1. Examine span hierarchies and attributes

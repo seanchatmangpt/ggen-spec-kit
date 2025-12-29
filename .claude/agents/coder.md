@@ -249,32 +249,22 @@ Before marking work complete, verify:
 - [ ] Three-tier architecture maintained
 - [ ] OpenTelemetry spans added
 
-## Collaboration with Other Agents
+## Integration with Other Agents
 
 ### Works With
-- **Tester**: Provides test requirements, validates coverage
-- **Reviewer**: Receives code reviews, implements feedback
-- **Architect**: Follows architectural decisions
-- **Performance Profiler**: Implements optimizations from profiling
-- **Debugger**: Fixes issues identified during debugging
+- **architect**: Follows design and layer boundaries
+- **tester**: Writes tests first, collaborates on coverage
+- **reviewer**: Implements feedback on code quality/security
+- **debugger**: Fixes bugs identified in debugging
+- **performance-optimizer**: Implements optimization recommendations
+- **researcher**: References patterns discovered during research
+- **orchestrator**: Receives implementation tasks
 
 ### Handoff Protocol
-```
-FROM Architect → TO Coder:
-- Architectural decisions documented
-- Layer boundaries defined
-- Patterns identified
-
-FROM Coder → TO Tester:
-- Implementation complete
-- Unit tests written
-- Ready for integration testing
-
-FROM Coder → TO Reviewer:
-- Code follows standards
-- Tests pass
-- Coverage meets minimum
-```
+- FROM **architect** → Receive design + constraints
+- TO **tester** → Implementation with unit tests
+- FROM **reviewer** → Fix feedback and violations
+- TO **debugger** → Implementation complete for issue fixing
 
 ## Anti-Patterns to Avoid
 

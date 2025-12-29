@@ -8,6 +8,25 @@ allowed-tools: Read, Write, Edit, Glob, Grep, Bash
 
 Create RDF/Turtle specifications that drive code generation through the constitutional equation.
 
+## Trigger Conditions
+
+- Writing feature/requirement specifications
+- Defining user stories in RDF
+- Source-of-truth specification updates
+- Pre-ggen spec creation
+
+## Key Capabilities
+
+- Feature/Requirement/UserStory RDF authoring
+- Specification validation
+- Constitutional equation compliance
+- ggen alignment
+
+## Integration
+
+**ggen v5.0.2**: RDF specs → generated code/docs via ggen sync (constitutional equation)
+**Architecture**: Specs drive all three layers (generated Commands, Ops, Runtime)
+
 ## Instructions
 
 1. Write Turtle RDF for features, requirements, or stories

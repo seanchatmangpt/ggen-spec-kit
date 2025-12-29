@@ -8,6 +8,25 @@ allowed-tools: Read, Write, Edit, Glob, Grep, Bash, LSP
 
 Run tests, diagnose failures, and implement fixes for the spec-kit test suite.
 
+## Trigger Conditions
+
+- Executing pytest suite
+- Diagnosing test failures
+- Coverage validation (80%+ target)
+- Pre-commit verification
+
+## Key Capabilities
+
+- pytest execution with coverage
+- Failure diagnosis and root cause analysis
+- Mock/patch pattern validation
+- Coverage reporting
+
+## Integration
+
+**ggen v5.0.2**: Tests generated code in Commands/Ops layers
+**Architecture**: Unit/integration/e2e covering all three layers
+
 ## Instructions
 
 1. Run tests with appropriate pytest options

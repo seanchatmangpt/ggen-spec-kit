@@ -6,8 +6,7 @@ paths:
 
 # Template Rules
 
-## Purpose
-Tera templates render extracted SPARQL data into generated files.
+Render extracted SPARQL data into generated files. Add notice to all outputs.
 
 ## Syntax
 ```jinja2
@@ -18,18 +17,28 @@ Tera templates render extracted SPARQL data into generated files.
 {{ value | filter }}
 ```
 
+## DO
+- ✅ Add "Generated from RDF" notice
+- ✅ Use meaningful variable names
+- ✅ Preserve indentation in output
+- ✅ Handle empty collections
+- ✅ Use macros for patterns
+
+## DON'T
+- ❌ Remove generation notices
+- ❌ Complex nested logic
+- ❌ Hardcode values (use SPARQL data)
+- ❌ Ignore empty collections
+
 ## Python Code Template
 ```jinja2
-{# templates/command.tera #}
 """{{ description }}
 
 Generated from RDF specification. DO NOT EDIT MANUALLY.
 """
 from __future__ import annotations
-
 import typer
 from rich.console import Console
-
 from specify_cli.ops import {{ name }}_ops
 
 app = typer.Typer()
@@ -38,55 +47,28 @@ console = Console()
 @app.command()
 def {{ name }}(
     {% for arg in arguments %}
-    {{ arg.name }}: {{ arg.type }}{% if not arg.required %} = None{% endif %},
+    {{ arg.name }}: {{ arg.type }},
     {% endfor %}
 ) -> None:
     """{{ description }}"""
-    result = {{ name }}_ops.execute(
-        {% for arg in arguments %}
-        {{ arg.name }}={{ arg.name }},
-        {% endfor %}
-    )
+    result = {{ name }}_ops.execute({{ name }}={{ name }})
     console.print(result)
 ```
 
-## Documentation Template
+## Doc Template
 ```jinja2
-{# templates/doc.tera #}
 # {{ title }}
-
 {{ description }}
 
 ## Usage
-
 ```bash
-specify {{ command }} {{ usage }}
+specify {{ command }}
 ```
-
-## Arguments
 
 {% for arg in arguments %}
-- `{{ arg.name }}` - {{ arg.description }}{% if arg.required %} (required){% endif %}
-{% endfor %}
-
-## Examples
-
-{% for example in examples %}
-```bash
-{{ example }}
-```
+- `{{ arg.name }}` - {{ arg.description }}
 {% endfor %}
 ```
 
-## Filters
-- `| upper` - Uppercase
-- `| lower` - Lowercase
-- `| title` - Title case
-- `| trim` - Remove whitespace
-- `| default("value")` - Default value
-
-## Best Practices
-- Add generation notice to output
-- Preserve indentation
-- Handle empty collections gracefully
-- Use macros for repeated patterns
+## Common Filters
+- `upper`, `lower`, `title`, `trim`, `default("x")`

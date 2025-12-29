@@ -2,18 +2,20 @@
 
 ## Built-in Tools (10)
 
-| Tool | Function | Permission | Read-Only |
-|------|----------|------------|-----------|
-| **Read** | Read file contents | No | Yes |
-| **Bash** | Execute shell commands | Yes | No |
-| **Edit** | Targeted file edits | Yes | No |
-| **Write** | Create/overwrite files | Yes | No |
-| **Glob** | Pattern-based file discovery | No | Yes |
-| **Grep** | Content pattern searching | No | Yes |
-| **WebFetch** | Fetch URL content | Yes | No |
-| **WebSearch** | Web search (US only) | Yes | No |
-| **Task** | Spawn subagents | No | N/A |
-| **NotebookEdit** | Modify Jupyter cells | Yes | No |
+| Tool | Function | Permission | Read-Only | Web Support |
+|------|----------|------------|-----------|-------------|
+| **Read** | Read file contents | No | Yes | Yes |
+| **Bash** | Execute shell commands | Yes | No | Limited* |
+| **Edit** | Targeted file edits | Yes | No | Yes |
+| **Write** | Create/overwrite files | Yes | No | Yes |
+| **Glob** | Pattern-based file discovery | No | Yes | Yes |
+| **Grep** | Content pattern searching | No | Yes | Yes |
+| **WebFetch** | Fetch URL content | Yes | No | Yes |
+| **WebSearch** | Web search (US only) | Yes | No | Yes |
+| **Task** | Spawn subagents | No | N/A | Yes |
+| **NotebookEdit** | Modify Jupyter cells | Yes | No | Yes |
+
+*Bash: Web sessions cannot execute arbitrary system commands; limited to safe operations.
 
 ## Tool Parameters
 
@@ -261,3 +263,5 @@ mcp__postgres__execute_query
 3. **Use specialized tools**: Glob over `find`, Grep over `grep`
 4. **Hook validation**: Deterministic checks via hooks
 5. **Security first**: Deny sensitive file access explicitly
+6. **Web Compatibility**: Avoid Bash for system-specific operations on web
+7. **Tool Selection**: Choose tools suitable for your platform

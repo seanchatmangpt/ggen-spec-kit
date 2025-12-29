@@ -7,11 +7,9 @@ paths:
 
 # RDF/Turtle Rules
 
-## Purpose
-RDF files are the SOURCE OF TRUTH per the constitutional equation.
+SOURCE OF TRUTH. Edit RDF first, generate code/docs via `ggen sync`.
 
 ## Prefixes
-Always declare standard prefixes:
 ```turtle
 @prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
 @prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
@@ -20,39 +18,32 @@ Always declare standard prefixes:
 ```
 
 ## Formatting
-- One triple per line for readability
-- Blank line between subjects
-- Use `;` for multiple predicates on same subject
-- Use `,` for multiple objects on same predicate
-- Indent continuation lines with 4 spaces
+- ✅ One triple per line
+- ✅ Blank line between subjects
+- ✅ Use `;` for multiple predicates
+- ✅ Use `,` for multiple objects
+- ✅ 4-space indent on continuation
+- ❌ Multiple triples on one line
+- ❌ Inconsistent indentation
 
 ## Pattern
 ```turtle
 sk:MyCommand
     a sk:Command ;
     rdfs:label "my-command" ;
-    sk:description "Description of the command" ;
+    sk:description "Command description" ;
     sk:hasArgument [
         a sk:Argument ;
         sk:name "input" ;
         sk:type "Path" ;
-        sk:required true ;
-        sk:description "Input file path"
-    ] ;
-    sk:hasOption [
-        a sk:Option ;
-        sk:name "verbose" ;
-        sk:short "-v" ;
-        sk:type "bool" ;
-        sk:default "false"
+        sk:required true
     ] .
 ```
 
 ## Validation
-- All resources should have `rdfs:label`
-- Commands should have `sk:description`
-- Arguments should specify `sk:type` and `sk:required`
-- Use SHACL shapes for validation
-
-## After Editing
-Always run `ggen sync` after editing TTL files to regenerate code.
+- ✅ All resources have `rdfs:label`
+- ✅ Commands have `sk:description`
+- ✅ Args specify `sk:type` and `sk:required`
+- ✅ Run `ggen sync` after editing
+- ❌ Missing labels or descriptions
+- ❌ Inconsistent property naming

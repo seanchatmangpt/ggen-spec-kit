@@ -7,39 +7,42 @@ paths:
 # Python Code Rules
 
 ## Type Hints
-- ALL functions MUST have complete type hints
-- Use `from __future__ import annotations` for forward references
-- Use `Optional[T]` or `T | None` for nullable types
-- Use `TypedDict` for complex dictionary structures
+- ✅ ALL functions MUST have complete type hints
+- ✅ Use `from __future__ import annotations`
+- ✅ Use `T | None` or `Optional[T]` for nullable
+- ❌ Untyped parameters or return values
 
 ## Docstrings
-- NumPy-style docstrings on all public functions
-- Include Parameters, Returns, Raises, Examples sections
-- Keep first line under 80 characters
+- ✅ NumPy-style on public functions
+- ✅ Include Parameters, Returns, Raises sections
+- ✅ First line under 80 characters
+- ❌ Missing descriptions on public APIs
 
 ## Imports
-- Standard library first, then third-party, then local
-- Use absolute imports from `specify_cli`
-- No wildcard imports (`from x import *`)
+- ✅ Standard lib → third-party → local
+- ✅ Absolute imports from `specify_cli`
+- ❌ Wildcard imports (`from x import *`)
+- ❌ Circular imports
 
 ## Error Handling
-- Use specific exception types
-- Never bare `except:`
-- Log exceptions with context
+- ✅ Specific exception types
+- ✅ Log exceptions with context
+- ❌ Bare `except:` or generic Exception
 
 ## Code Style
-- Max line length: 88 characters (Black default)
-- 4-space indentation
-- Two blank lines between top-level definitions
-- One blank line between method definitions
+- ✅ 88 char line length (Black)
+- ✅ 4-space indentation
+- ✅ Two blank lines between classes
+- ❌ Lines over 88 characters
 
-## Subprocess Calls
-- NEVER use `shell=True`
-- Use list-based command construction
-- Use `run_logged()` from runtime layer
+## Subprocess
+- ✅ Use `run_logged()` (runtime layer)
+- ✅ List-based: `["cmd", "arg"]`
+- ❌ `shell=True`
+- ❌ String-based commands
 
 ## Testing
-- Test files: `test_*.py`
-- Test functions: `test_*`
-- Use pytest fixtures
-- Aim for 80%+ coverage
+- ✅ `test_<scenario>_<expected>()` naming
+- ✅ Arrange/Act/Assert pattern
+- ✅ 80%+ coverage (ops layer focus)
+- ❌ Tests without fixtures

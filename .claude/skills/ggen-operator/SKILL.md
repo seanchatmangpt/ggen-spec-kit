@@ -8,6 +8,25 @@ allowed-tools: Read, Write, Edit, Glob, Grep, Bash
 
 Execute ggen transformations and manage the RDF-to-Markdown pipeline.
 
+## Trigger Conditions
+
+- Running ggen sync for spec-driven generation
+- Validating transformation idempotence
+- Troubleshooting generation failures
+- Verifying constitutional equation compliance
+
+## Key Capabilities
+
+- ggen sync execution and monitoring
+- Configuration validation (ggen.toml)
+- Five-stage pipeline orchestration (μ₁-μ₅)
+- Idempotence testing
+
+## Integration
+
+**ggen v5.0.2**: Direct interface to ggen sync (v5.0.2 only supports sync)
+**Architecture**: Runtime layer isolation (subprocess execution only)
+
 ## Instructions
 
 1. Run ggen sync for transformations

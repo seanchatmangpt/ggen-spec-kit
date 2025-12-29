@@ -4,7 +4,7 @@
 
 The Claude Agent SDK is Anthropic's framework for building autonomous AI agents with capabilities including file operations, code execution, web search, and MCP integration.
 
-## Installation
+## Installation & Availability
 
 ```bash
 # Python
@@ -13,6 +13,8 @@ pip install claude-agent-sdk
 # TypeScript
 npm install claude-agent-sdk
 ```
+
+**Web Note**: Agent SDK requires local execution; use Claude Code CLI for web browser sessions.
 
 ## Two Primary APIs
 
@@ -58,7 +60,7 @@ async def main():
 ```python
 options = ClaudeAgentOptions(
     # Model
-    model='claude-opus-4-1-20250805',
+    model='claude-opus-4-5-20251101',
     fallback_models=['claude-sonnet-4-5-20250929'],
 
     # Tools
@@ -248,7 +250,7 @@ options = ClaudeAgentOptions(
             'description': 'Reviews code quality',
             'system_prompt': 'You are a code reviewer...',
             'allowed_tools': ['Read', 'Grep'],
-            'model': 'claude-opus-4-1-20250805'
+            'model': 'claude-opus-4-5-20251101'
         },
         'test_writer': {
             'description': 'Writes tests',
@@ -281,3 +283,4 @@ client = ClaudeSDKClient(
 4. **Session Management**: Use resume for continuity
 5. **Hook Validation**: Validate tool inputs
 6. **Context Awareness**: Load project settings explicitly
+7. **Web Compatibility**: Use HTTP transports for MCP when on web

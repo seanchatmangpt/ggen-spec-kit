@@ -8,6 +8,25 @@ allowed-tools: Read, Write, Edit, Glob, Grep, Bash
 
 Write and optimize SPARQL queries for extracting data from RDF graphs.
 
+## Trigger Conditions
+
+- Creating ggen extraction queries
+- Optimizing query performance
+- Aligning queries with Tera templates
+- Testing data extraction
+
+## Key Capabilities
+
+- SPARQL query authoring (SELECT, OPTIONAL, FILTER)
+- Performance optimization
+- Query testing against graphs
+- Template variable binding
+
+## Integration
+
+**ggen v5.0.2**: SPARQL queries execute in μ₂ extraction phase
+**Architecture**: Ops layer (μ₂ data extraction, pure logic)
+
 ## Instructions
 
 1. Create SPARQL queries for data extraction

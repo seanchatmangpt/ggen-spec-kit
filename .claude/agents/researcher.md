@@ -126,17 +126,20 @@ use_cases:
 
 coordination:
   works_well_with:
-    - coder: "Provides research findings for implementation"
-    - architect: "Supplies architectural patterns and constraints"
-    - tester: "Identifies edge cases and test scenarios"
-    - reviewer: "Offers context for code review decisions"
+    - architect: Discover patterns and constraints
+    - coder: Provide research findings for implementation
+    - tester: Identify edge cases and test scenarios
+    - reviewer: Context for code review decisions
+    - performance-optimizer: Research optimization approaches
+    - security-auditor: Research security patterns
+    - orchestrator: Receive research tasks
 
   handoff_protocol:
-    - Document all findings in structured format
+    - Deliver structured research reports with evidence
     - Cite sources (file paths, URLs, line numbers)
-    - Highlight actionable insights
-    - Flag uncertainties or gaps
-    - Provide next-step recommendations
+    - Highlight key findings and actionable insights
+    - Flag uncertainties and open questions
+    - Recommend next steps and agent handoffs
 
 performance_targets:
   - Initial broad search: < 2 minutes

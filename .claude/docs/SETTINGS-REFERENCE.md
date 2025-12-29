@@ -2,7 +2,7 @@
 
 ## Overview
 
-Claude Code uses a hierarchical configuration system with multiple scopes and precedence levels.
+Claude Code uses a hierarchical configuration system with multiple scopes and precedence levels. Settings available on web and desktop; some features desktop-only (noted below).
 
 ## Settings Hierarchy (Highest to Lowest)
 
@@ -30,7 +30,7 @@ Claude Code uses a hierarchical configuration system with multiple scopes and pr
   "$schema": "https://json.schemastore.org/claude-code-settings.json",
 
   // MODEL CONFIGURATION
-  "model": "claude-sonnet-4-5-20250929",
+  "model": "claude-opus-4-5-20251101",
   "outputStyle": "Explanatory|Balanced|Concise",
   "alwaysThinkingEnabled": false,
 
@@ -64,14 +64,14 @@ Claude Code uses a hierarchical configuration system with multiple scopes and pr
     "CUSTOM_VAR": "value"
   },
 
-  // SANDBOX
+  // SANDBOX (desktop only)
   "sandbox": {
     "enabled": true,
     "autoAllowBashIfSandboxed": true,
     "excludedCommands": ["git", "docker"]
   },
 
-  // HOOKS
+  // HOOKS (desktop only)
   "hooks": {
     "SessionStart": [{
       "hooks": [{
@@ -255,3 +255,4 @@ Claude Code uses a hierarchical configuration system with multiple scopes and pr
 4. **Personal Overrides**: Use `.claude/settings.local.json`
 5. **Explicit Denies**: Block sensitive file access
 6. **Document Choices**: Comment why rules exist
+7. **Web Compatibility**: Avoid hooks in shared settings; use desktop-specific overrides

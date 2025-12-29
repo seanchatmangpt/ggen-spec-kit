@@ -8,6 +8,25 @@ allowed-tools: Read, Glob, Grep, Bash, LSP
 
 Profile performance, identify bottlenecks, and recommend optimizations.
 
+## Trigger Conditions
+
+- Slow command execution (>500ms)
+- Resource usage concerns
+- ggen sync performance tuning
+- Optimization recommendations
+
+## Key Capabilities
+
+- Execution timing measurements
+- Profiling (cProfile, memory_profiler)
+- Subprocess batching optimization
+- Benchmark creation
+
+## Integration
+
+**ggen v5.0.2**: Measures ggen sync duration against targets
+**Architecture**: Identifies bottlenecks in Runtime layer (subprocess/IO)
+
 ## Instructions
 
 1. Measure execution time and resources

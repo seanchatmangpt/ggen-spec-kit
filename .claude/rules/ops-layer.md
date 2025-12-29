@@ -5,59 +5,39 @@ paths:
 
 # Operations Layer Rules
 
-## Purpose
-The ops layer contains pure business logic with NO side effects.
+Pure business logic. No side effects. Input → validate → transform → return data.
 
-## MUST DO
-- Implement pure functions (same input = same output)
-- Return structured data (dictionaries, dataclasses)
-- Validate inputs and raise descriptive exceptions
-- Be fully unit-testable without mocking I/O
+## DO
+- Write pure functions (deterministic)
+- Return structured data (dict/dataclass)
+- Validate inputs, raise descriptive errors
+- Be fully unit-testable (no mocking needed)
 
-## MUST NOT
-- Import `subprocess` or execute commands
-- Open files with `open()` or `Path.read_text()`
-- Make HTTP requests
-- Access the filesystem directly
-- Print to console (return data instead)
+## DON'T
+- Use subprocess, file I/O, or HTTP
+- Import subprocess, pathlib, httpx
+- Print output (return data instead)
+- Access filesystem or network
+- Contain I/O logic (runtime handles it)
 
 ## Pattern
 ```python
-def process_data(input_data: dict[str, Any]) -> dict[str, Any]:
-    """Process input and return structured result.
-
-    Parameters
-    ----------
-    input_data : dict
-        The input data to process.
-
-    Returns
-    -------
-    dict
-        Structured result with status and data.
+def process(data: dict[str, Any]) -> dict[str, Any]:
+    """Process data and return result.
 
     Raises
     ------
     ValueError
-        If input_data is invalid.
+        If data is invalid.
     """
-    # Validate
-    if not input_data.get("required_field"):
-        raise ValueError("required_field is missing")
+    if not data.get("required_field"):
+        raise ValueError("required_field missing")
 
-    # Pure logic
-    result = transform(input_data)
-
-    # Return structured data
-    return {
-        "status": "success",
-        "data": result,
-        "metadata": {"processed_at": "..."}
-    }
+    result = transform(data)
+    return {"status": "success", "data": result}
 ```
 
-## When I/O is Needed
-If an operation needs file/network I/O, it should:
-1. Accept data as input (not paths)
-2. Return data as output
-3. Let the runtime layer handle actual I/O
+## I/O Delegation
+- Accept data, return data (not paths)
+- Let runtime layer handle actual I/O
+- Example: `process(content: str)` not `process(file_path: Path)`

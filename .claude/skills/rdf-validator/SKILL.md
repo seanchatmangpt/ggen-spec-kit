@@ -8,6 +8,25 @@ allowed-tools: Read, Glob, Grep, Bash
 
 Validate Turtle syntax, SHACL shapes, and RDF quality.
 
+## Trigger Conditions
+
+- TTL file syntax validation
+- SHACL shape constraint checking
+- Cross-reference verification
+- Pre-ggen validation
+
+## Key Capabilities
+
+- Turtle parse validation
+- SHACL constraint verification
+- Prefix/datatype validation
+- Quality assurance
+
+## Integration
+
+**ggen v5.0.2**: Validates input RDF before μ₁ normalization phase
+**Architecture**: Ops layer (μ₁ validation, pure logic)
+
 ## Instructions
 
 1. Check Turtle syntax is parseable
