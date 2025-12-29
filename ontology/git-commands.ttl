@@ -1,0 +1,410 @@
+@prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix owl: <http://www.w3.org/2002/07/owl#> .
+@prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
+@prefix cli: <http://github.com/github/spec-kit/cli#> .
+@prefix git: <http://github.com/github/spec-kit/git#> .
+
+# ============================================================================
+# Git Operations Ontology - Production Git Workflows
+# ============================================================================
+# Constitutional equation: git operations = μ(git-commands.ttl)
+#
+# Design: Git workflow automation following semantic versioning and GitFlow.
+# Implements branch management, release automation, and hotfix procedures.
+# ============================================================================
+
+# ----------------------------------------------------------------------------
+# Base Git Command Class
+# ----------------------------------------------------------------------------
+
+git:GitCommand a owl:Class ;
+    rdfs:subClassOf cli:Command ;
+    rdfs:label "Git Command"@en ;
+    rdfs:comment "Base class for Git workflow automation commands"@en .
+
+# ============================================================================
+# BRANCH MANAGEMENT COMMANDS
+# ============================================================================
+
+# ----------------------------------------------------------------------------
+# BranchCommand - Create feature/bugfix/release branches
+# ----------------------------------------------------------------------------
+
+cli:GitBranchCommand a owl:Class ;
+    rdfs:subClassOf git:GitCommand ;
+    rdfs:label "branch"@en ;
+    rdfs:comment "Create and manage feature, bugfix, and release branches"@en .
+
+cli:git_branch_type a owl:DatatypeProperty ;
+    rdfs:domain cli:GitBranchCommand ;
+    rdfs:range xsd:string ;
+    rdfs:comment "[type:argument] [index:0] [required:true] Branch type: feature, bugfix, release, hotfix"@en .
+
+cli:git_branch_name a owl:DatatypeProperty ;
+    rdfs:domain cli:GitBranchCommand ;
+    rdfs:range xsd:string ;
+    rdfs:comment "[type:argument] [index:1] [required:true] Branch name (kebab-case, will be prefixed with NNN-)"@en .
+
+cli:git_branch_from a owl:DatatypeProperty ;
+    rdfs:domain cli:GitBranchCommand ;
+    rdfs:range xsd:string ;
+    rdfs:comment "[type:option] [flag:--from] [short:-f] [default:main] [required:false] Base branch to create from"@en .
+
+cli:git_branch_push a owl:DatatypeProperty ;
+    rdfs:domain cli:GitBranchCommand ;
+    rdfs:range xsd:boolean ;
+    rdfs:comment "[type:option] [flag:--push] [short:-p] [default:true] [required:false] Push branch to remote after creation"@en .
+
+cli:git_branch_checkout a owl:DatatypeProperty ;
+    rdfs:domain cli:GitBranchCommand ;
+    rdfs:range xsd:boolean ;
+    rdfs:comment "[type:option] [flag:--checkout] [short:-c] [default:true] [required:false] Checkout branch after creation"@en .
+
+cli:git_branch_verbose a owl:DatatypeProperty ;
+    rdfs:domain cli:GitBranchCommand ;
+    rdfs:range xsd:boolean ;
+    rdfs:comment "[type:option] [flag:--verbose] [short:-v] [default:false] [required:false] Verbose output"@en .
+
+# ----------------------------------------------------------------------------
+# BranchCleanupCommand - Clean up merged branches
+# ----------------------------------------------------------------------------
+
+cli:GitBranchCleanupCommand a owl:Class ;
+    rdfs:subClassOf git:GitCommand ;
+    rdfs:label "branch-cleanup"@en ;
+    rdfs:comment "Clean up merged feature branches (local and remote)"@en .
+
+cli:git_branch_cleanup_dry_run a owl:DatatypeProperty ;
+    rdfs:domain cli:GitBranchCleanupCommand ;
+    rdfs:range xsd:boolean ;
+    rdfs:comment "[type:option] [flag:--dry-run] [default:false] [required:false] Show what would be deleted without deleting"@en .
+
+cli:git_branch_cleanup_remote a owl:DatatypeProperty ;
+    rdfs:domain cli:GitBranchCleanupCommand ;
+    rdfs:range xsd:boolean ;
+    rdfs:comment "[type:option] [flag:--remote] [short:-r] [default:false] [required:false] Also clean up remote branches"@en .
+
+cli:git_branch_cleanup_exclude a owl:DatatypeProperty ;
+    rdfs:domain cli:GitBranchCleanupCommand ;
+    rdfs:range xsd:string ;
+    rdfs:comment "[type:option] [flag:--exclude] [short:-e] [required:false] Exclude branches matching pattern (regex)"@en .
+
+cli:git_branch_cleanup_force a owl:DatatypeProperty ;
+    rdfs:domain cli:GitBranchCleanupCommand ;
+    rdfs:range xsd:boolean ;
+    rdfs:comment "[type:option] [flag:--force] [default:false] [required:false] Force delete unmerged branches"@en .
+
+# ============================================================================
+# COMMIT VALIDATION COMMANDS
+# ============================================================================
+
+# ----------------------------------------------------------------------------
+# CommitLintCommand - Validate commit messages
+# ----------------------------------------------------------------------------
+
+cli:GitCommitLintCommand a owl:Class ;
+    rdfs:subClassOf git:GitCommand ;
+    rdfs:label "commit-lint"@en ;
+    rdfs:comment "Validate commit messages against conventional commit format"@en .
+
+cli:git_commit_lint_ref a owl:DatatypeProperty ;
+    rdfs:domain cli:GitCommitLintCommand ;
+    rdfs:range xsd:string ;
+    rdfs:comment "[type:argument] [index:0] [required:false] Git ref to validate (default: HEAD)"@en .
+
+cli:git_commit_lint_range a owl:DatatypeProperty ;
+    rdfs:domain cli:GitCommitLintCommand ;
+    rdfs:range xsd:string ;
+    rdfs:comment "[type:option] [flag:--range] [short:-r] [required:false] Commit range to validate (e.g., main..HEAD)"@en .
+
+cli:git_commit_lint_strict a owl:DatatypeProperty ;
+    rdfs:domain cli:GitCommitLintCommand ;
+    rdfs:range xsd:boolean ;
+    rdfs:comment "[type:option] [flag:--strict] [default:false] [required:false] Strict mode (require scope, body length > 20)"@en .
+
+cli:git_commit_lint_types a owl:DatatypeProperty ;
+    rdfs:domain cli:GitCommitLintCommand ;
+    rdfs:range xsd:string ;
+    rdfs:comment "[type:option] [flag:--types] [required:false] Allowed commit types (comma-separated, default: feat,fix,docs,style,refactor,perf,test,build,ci,chore,revert)"@en .
+
+# ----------------------------------------------------------------------------
+# CommitTemplateCommand - Generate commit message template
+# ----------------------------------------------------------------------------
+
+cli:GitCommitTemplateCommand a owl:Class ;
+    rdfs:subClassOf git:GitCommand ;
+    rdfs:label "commit-template"@en ;
+    rdfs:comment "Generate conventional commit message template from staged changes"@en .
+
+cli:git_commit_template_analyze a owl:DatatypeProperty ;
+    rdfs:domain cli:GitCommitTemplateCommand ;
+    rdfs:range xsd:boolean ;
+    rdfs:comment "[type:option] [flag:--analyze] [short:-a] [default:true] [required:false] Analyze git diff to suggest commit type and scope"@en .
+
+cli:git_commit_template_scope a owl:DatatypeProperty ;
+    rdfs:domain cli:GitCommitTemplateCommand ;
+    rdfs:range xsd:string ;
+    rdfs:comment "[type:option] [flag:--scope] [short:-s] [required:false] Override scope detection"@en .
+
+cli:git_commit_template_type a owl:DatatypeProperty ;
+    rdfs:domain cli:GitCommitTemplateCommand ;
+    rdfs:range xsd:string ;
+    rdfs:comment "[type:option] [flag:--type] [short:-t] [required:false] Override type detection (feat, fix, docs, etc.)"@en .
+
+# ============================================================================
+# RELEASE MANAGEMENT COMMANDS
+# ============================================================================
+
+# ----------------------------------------------------------------------------
+# ReleaseCommand - Create semantic version release
+# ----------------------------------------------------------------------------
+
+cli:GitReleaseCommand a owl:Class ;
+    rdfs:subClassOf git:GitCommand ;
+    rdfs:label "release"@en ;
+    rdfs:comment "Create semantic version release with changelog and tags"@en .
+
+cli:git_release_version a owl:DatatypeProperty ;
+    rdfs:domain cli:GitReleaseCommand ;
+    rdfs:range xsd:string ;
+    rdfs:comment "[type:argument] [index:0] [required:false] Version to release (e.g., 1.2.3 or patch/minor/major for auto-increment)"@en .
+
+cli:git_release_dry_run a owl:DatatypeProperty ;
+    rdfs:domain cli:GitReleaseCommand ;
+    rdfs:range xsd:boolean ;
+    rdfs:comment "[type:option] [flag:--dry-run] [default:false] [required:false] Preview release without creating"@en .
+
+cli:git_release_changelog a owl:DatatypeProperty ;
+    rdfs:domain cli:GitReleaseCommand ;
+    rdfs:range xsd:boolean ;
+    rdfs:comment "[type:option] [flag:--changelog] [short:-c] [default:true] [required:false] Generate changelog from commits"@en .
+
+cli:git_release_push a owl:DatatypeProperty ;
+    rdfs:domain cli:GitReleaseCommand ;
+    rdfs:range xsd:boolean ;
+    rdfs:comment "[type:option] [flag:--push] [short:-p] [default:true] [required:false] Push tag and changes to remote"@en .
+
+cli:git_release_sign a owl:DatatypeProperty ;
+    rdfs:domain cli:GitReleaseCommand ;
+    rdfs:range xsd:boolean ;
+    rdfs:comment "[type:option] [flag:--sign] [short:-s] [default:false] [required:false] Sign release tag with GPG"@en .
+
+cli:git_release_pre_release a owl:DatatypeProperty ;
+    rdfs:domain cli:GitReleaseCommand ;
+    rdfs:range xsd:string ;
+    rdfs:comment "[type:option] [flag:--pre-release] [required:false] Pre-release identifier (alpha, beta, rc.1, etc.)"@en .
+
+# ----------------------------------------------------------------------------
+# ChangelogCommand - Generate changelog from commits
+# ----------------------------------------------------------------------------
+
+cli:GitChangelogCommand a owl:Class ;
+    rdfs:subClassOf git:GitCommand ;
+    rdfs:label "changelog"@en ;
+    rdfs:comment "Generate changelog from conventional commits"@en .
+
+cli:git_changelog_from a owl:DatatypeProperty ;
+    rdfs:domain cli:GitChangelogCommand ;
+    rdfs:range xsd:string ;
+    rdfs:comment "[type:option] [flag:--from] [short:-f] [required:false] Start tag/commit (default: latest tag)"@en .
+
+cli:git_changelog_to a owl:DatatypeProperty ;
+    rdfs:domain cli:GitChangelogCommand ;
+    rdfs:range xsd:string ;
+    rdfs:comment "[type:option] [flag:--to] [short:-t] [default:HEAD] [required:false] End tag/commit"@en .
+
+cli:git_changelog_output a owl:DatatypeProperty ;
+    rdfs:domain cli:GitChangelogCommand ;
+    rdfs:range xsd:string ;
+    rdfs:comment "[type:option] [flag:--output] [short:-o] [default:CHANGELOG.md] [required:false] [pytype:Path] Output file"@en .
+
+cli:git_changelog_format a owl:DatatypeProperty ;
+    rdfs:domain cli:GitChangelogCommand ;
+    rdfs:range xsd:string ;
+    rdfs:comment "[type:option] [flag:--format] [default:keepachangelog] [required:false] Changelog format: keepachangelog, github, conventional"@en .
+
+cli:git_changelog_group_by a owl:DatatypeProperty ;
+    rdfs:domain cli:GitChangelogCommand ;
+    rdfs:range xsd:string ;
+    rdfs:comment "[type:option] [flag:--group-by] [default:type] [required:false] Group commits by: type, scope, author"@en .
+
+# ============================================================================
+# CHERRY-PICK WORKFLOWS
+# ============================================================================
+
+# ----------------------------------------------------------------------------
+# CherryPickCommand - Cherry-pick commits with conflict resolution
+# ----------------------------------------------------------------------------
+
+cli:GitCherryPickCommand a owl:Class ;
+    rdfs:subClassOf git:GitCommand ;
+    rdfs:label "cherry-pick"@en ;
+    rdfs:comment "Cherry-pick commits with automated conflict detection and resolution"@en .
+
+cli:git_cherry_pick_commits a owl:DatatypeProperty ;
+    rdfs:domain cli:GitCherryPickCommand ;
+    rdfs:range xsd:string ;
+    rdfs:comment "[type:argument] [index:0] [required:true] Commit SHA or range to cherry-pick (e.g., abc123 or main~5..main~2)"@en .
+
+cli:git_cherry_pick_to a owl:DatatypeProperty ;
+    rdfs:domain cli:GitCherryPickCommand ;
+    rdfs:range xsd:string ;
+    rdfs:comment "[type:option] [flag:--to] [short:-t] [required:false] Target branch (default: current branch)"@en .
+
+cli:git_cherry_pick_strategy a owl:DatatypeProperty ;
+    rdfs:domain cli:GitCherryPickCommand ;
+    rdfs:range xsd:string ;
+    rdfs:comment "[type:option] [flag:--strategy] [short:-s] [default:recursive] [required:false] Merge strategy: recursive, ours, theirs"@en .
+
+cli:git_cherry_pick_continue a owl:DatatypeProperty ;
+    rdfs:domain cli:GitCherryPickCommand ;
+    rdfs:range xsd:boolean ;
+    rdfs:comment "[type:option] [flag:--continue] [default:false] [required:false] Continue after resolving conflicts"@en .
+
+cli:git_cherry_pick_abort a owl:DatatypeProperty ;
+    rdfs:domain cli:GitCherryPickCommand ;
+    rdfs:range xsd:boolean ;
+    rdfs:comment "[type:option] [flag:--abort] [default:false] [required:false] Abort cherry-pick and restore original state"@en .
+
+# ============================================================================
+# HOTFIX PROCEDURES
+# ============================================================================
+
+# ----------------------------------------------------------------------------
+# HotfixCommand - Create and deploy hotfix
+# ----------------------------------------------------------------------------
+
+cli:GitHotfixCommand a owl:Class ;
+    rdfs:subClassOf git:GitCommand ;
+    rdfs:label "hotfix"@en ;
+    rdfs:comment "Create hotfix branch, apply fix, and merge to main and develop"@en .
+
+cli:git_hotfix_name a owl:DatatypeProperty ;
+    rdfs:domain cli:GitHotfixCommand ;
+    rdfs:range xsd:string ;
+    rdfs:comment "[type:argument] [index:0] [required:true] Hotfix name (kebab-case)"@en .
+
+cli:git_hotfix_version a owl:DatatypeProperty ;
+    rdfs:domain cli:GitHotfixCommand ;
+    rdfs:range xsd:string ;
+    rdfs:comment "[type:option] [flag:--version] [short:-v] [required:false] Hotfix version (auto-increments patch if not provided)"@en .
+
+cli:git_hotfix_from a owl:DatatypeProperty ;
+    rdfs:domain cli:GitHotfixCommand ;
+    rdfs:range xsd:string ;
+    rdfs:comment "[type:option] [flag:--from] [short:-f] [default:main] [required:false] Base branch (usually main or latest release tag)"@en .
+
+cli:git_hotfix_finish a owl:DatatypeProperty ;
+    rdfs:domain cli:GitHotfixCommand ;
+    rdfs:range xsd:boolean ;
+    rdfs:comment "[type:option] [flag:--finish] [default:false] [required:false] Finish hotfix (merge to main and develop, create tag)"@en .
+
+cli:git_hotfix_delete_branch a owl:DatatypeProperty ;
+    rdfs:domain cli:GitHotfixCommand ;
+    rdfs:range xsd:boolean ;
+    rdfs:comment "[type:option] [flag:--delete-branch] [default:true] [required:false] Delete hotfix branch after finishing"@en .
+
+# ============================================================================
+# ROLLBACK PROCEDURES
+# ============================================================================
+
+# ----------------------------------------------------------------------------
+# RollbackCommand - Rollback to previous release
+# ----------------------------------------------------------------------------
+
+cli:GitRollbackCommand a owl:Class ;
+    rdfs:subClassOf git:GitCommand ;
+    rdfs:label "rollback"@en ;
+    rdfs:comment "Rollback to previous release (revert or reset)"@en .
+
+cli:git_rollback_to a owl:DatatypeProperty ;
+    rdfs:domain cli:GitRollbackCommand ;
+    rdfs:range xsd:string ;
+    rdfs:comment "[type:argument] [index:0] [required:false] Tag or commit to rollback to (default: previous release tag)"@en .
+
+cli:git_rollback_strategy a owl:DatatypeProperty ;
+    rdfs:domain cli:GitRollbackCommand ;
+    rdfs:range xsd:string ;
+    rdfs:comment "[type:option] [flag:--strategy] [short:-s] [default:revert] [required:false] Rollback strategy: revert (safe, creates new commit), reset (destructive, rewrites history)"@en .
+
+cli:git_rollback_dry_run a owl:DatatypeProperty ;
+    rdfs:domain cli:GitRollbackCommand ;
+    rdfs:range xsd:boolean ;
+    rdfs:comment "[type:option] [flag:--dry-run] [default:false] [required:false] Preview rollback without executing"@en .
+
+cli:git_rollback_push a owl:DatatypeProperty ;
+    rdfs:domain cli:GitRollbackCommand ;
+    rdfs:range xsd:boolean ;
+    rdfs:comment "[type:option] [flag:--push] [short:-p] [default:false] [required:false] Push rollback to remote (requires confirmation)"@en .
+
+cli:git_rollback_confirm a owl:DatatypeProperty ;
+    rdfs:domain cli:GitRollbackCommand ;
+    rdfs:range xsd:boolean ;
+    rdfs:comment "[type:option] [flag:--confirm] [default:false] [required:false] Skip confirmation prompt (use with caution)"@en .
+
+# ============================================================================
+# PRE-RELEASE CHECKS
+# ============================================================================
+
+# ----------------------------------------------------------------------------
+# PreReleaseCheckCommand - Run pre-release validation
+# ----------------------------------------------------------------------------
+
+cli:GitPreReleaseCheckCommand a owl:Class ;
+    rdfs:subClassOf git:GitCommand ;
+    rdfs:label "pre-release-check"@en ;
+    rdfs:comment "Run comprehensive pre-release checks (tests, linting, security, changelog)"@en .
+
+cli:git_pre_release_check_version a owl:DatatypeProperty ;
+    rdfs:domain cli:GitPreReleaseCheckCommand ;
+    rdfs:range xsd:string ;
+    rdfs:comment "[type:argument] [index:0] [required:true] Version to validate (e.g., 1.2.3)"@en .
+
+cli:git_pre_release_check_skip a owl:DatatypeProperty ;
+    rdfs:domain cli:GitPreReleaseCheckCommand ;
+    rdfs:range xsd:string ;
+    rdfs:comment "[type:option] [flag:--skip] [required:false] Skip specific checks (comma-separated: tests,lint,security,changelog,docs)"@en .
+
+cli:git_pre_release_check_strict a owl:DatatypeProperty ;
+    rdfs:domain cli:GitPreReleaseCheckCommand ;
+    rdfs:range xsd:boolean ;
+    rdfs:comment "[type:option] [flag:--strict] [default:true] [required:false] Strict mode (fail on warnings)"@en .
+
+cli:git_pre_release_check_output a owl:DatatypeProperty ;
+    rdfs:domain cli:GitPreReleaseCheckCommand ;
+    rdfs:range xsd:string ;
+    rdfs:comment "[type:option] [flag:--output] [short:-o] [required:false] [pytype:Path] Output report file (JSON)"@en .
+
+# ----------------------------------------------------------------------------
+# PostReleaseVerifyCommand - Verify release deployment
+# ----------------------------------------------------------------------------
+
+cli:GitPostReleaseVerifyCommand a owl:Class ;
+    rdfs:subClassOf git:GitCommand ;
+    rdfs:label "post-release-verify"@en ;
+    rdfs:comment "Verify release was deployed correctly (tag exists, artifacts published, changelog updated)"@en .
+
+cli:git_post_release_verify_version a owl:DatatypeProperty ;
+    rdfs:domain cli:GitPostReleaseVerifyCommand ;
+    rdfs:range xsd:string ;
+    rdfs:comment "[type:argument] [index:0] [required:true] Version to verify (e.g., 1.2.3)"@en .
+
+cli:git_post_release_verify_remote a owl:DatatypeProperty ;
+    rdfs:domain cli:GitPostReleaseVerifyCommand ;
+    rdfs:range xsd:string ;
+    rdfs:comment "[type:option] [flag:--remote] [short:-r] [default:origin] [required:false] Remote to check"@en .
+
+cli:git_post_release_verify_artifacts a owl:DatatypeProperty ;
+    rdfs:domain cli:GitPostReleaseVerifyCommand ;
+    rdfs:range xsd:boolean ;
+    rdfs:comment "[type:option] [flag:--artifacts] [default:true] [required:false] Verify GitHub release artifacts exist"@en .
+
+cli:git_post_release_verify_registry a owl:DatatypeProperty ;
+    rdfs:domain cli:GitPostReleaseVerifyCommand ;
+    rdfs:range xsd:string ;
+    rdfs:comment "[type:option] [flag:--registry] [required:false] Verify package published to registry (pypi, npm, docker, etc.)"@en .
+
+# ============================================================================
+# End of Git Operations Ontology
+# ============================================================================

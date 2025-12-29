@@ -1,0 +1,309 @@
+name: Hotfix Pipeline
+
+# Fast-track hotfix workflow for critical production issues
+# Runs focused validation and deploys quickly
+
+on:
+  push:
+    branches:
+      - 'hotfix/**'
+  workflow_dispatch:
+    inputs:
+      hotfix_name:
+        description: 'Hotfix name (kebab-case)'
+        required: true
+        type: string
+      base_version:
+        description: 'Base version to hotfix (e.g., 1.2.3)'
+        required: true
+        type: string
+
+permissions:
+  contents: write
+  pull-requests: write
+
+env:
+  PYTHON_VERSION_DEFAULT: "3.12"
+
+jobs:
+  # ============================================================================
+  # Job 1: Hotfix Validation (Expedited)
+  # ============================================================================
+  hotfix-validation:
+    name: Hotfix Validation (Fast Track)
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+
+    steps:
+      - name: Checkout hotfix branch
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Install uv
+        uses: astral-sh/setup-uv@v5
+        with:
+          enable-cache: true
+          cache-dependency-glob: "uv.lock"
+
+      - name: Set up Python
+        run: uv python install ${{ env.PYTHON_VERSION_DEFAULT }}
+
+      - name: Install dependencies
+        run: uv sync --group dev
+
+      - name: Ruff lint (fast)
+        run: |
+          echo "🔍 Running fast linting..."
+          uv run ruff check src/ tests/
+
+      - name: Security scan (critical issues only)
+        run: |
+          echo "🔒 Running security scan (critical/high only)..."
+          uv pip install bandit
+          uv run bandit -r src/ -ll
+
+      - name: Focused tests (unit only)
+        run: |
+          echo "🧪 Running focused unit tests..."
+          uv run pytest tests/unit/ -v --tb=short -x
+          echo "✅ Unit tests passed"
+
+  # ============================================================================
+  # Job 2: Build Hotfix Artifacts
+  # ============================================================================
+  build-hotfix:
+    name: Build Hotfix Artifacts
+    runs-on: ubuntu-latest
+    needs: hotfix-validation
+    timeout-minutes: 10
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Install uv
+        uses: astral-sh/setup-uv@v5
+
+      - name: Set up Python
+        run: uv python install ${{ env.PYTHON_VERSION_DEFAULT }}
+
+      - name: Build wheel and sdist
+        run: |
+          echo "📦 Building hotfix artifacts..."
+          uv build
+          ls -lh dist/
+
+      - name: Upload artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: hotfix-artifacts
+          path: dist/
+          retention-days: 7
+
+  # ============================================================================
+  # Job 3: Create Hotfix PR
+  # ============================================================================
+  create-hotfix-pr:
+    name: Create Hotfix PR
+    runs-on: ubuntu-latest
+    needs: build-hotfix
+    if: github.event_name == 'push'
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Extract hotfix info
+        id: hotfix_info
+        run: |
+          BRANCH_NAME="${GITHUB_REF#refs/heads/}"
+          HOTFIX_NAME=$(echo $BRANCH_NAME | sed 's/hotfix\///')
+          echo "hotfix_name=${HOTFIX_NAME}" >> $GITHUB_OUTPUT
+
+          # Get base version from branch name if follows pattern hotfix/1.2.3-name
+          BASE_VERSION=$(echo $HOTFIX_NAME | grep -oP '^\d+\.\d+\.\d+' || echo "unknown")
+          echo "base_version=${BASE_VERSION}" >> $GITHUB_OUTPUT
+
+      - name: Get hotfix commits
+        id: commits
+        run: |
+          # Get commits in hotfix branch not in main
+          COMMITS=$(git log main..HEAD --oneline)
+          echo "commits<<EOF" >> $GITHUB_OUTPUT
+          echo "$COMMITS" >> $GITHUB_OUTPUT
+          echo "EOF" >> $GITHUB_OUTPUT
+
+      - name: Create PR to main
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const hotfixName = '${{ steps.hotfix_info.outputs.hotfix_name }}';
+            const baseVersion = '${{ steps.hotfix_info.outputs.base_version }}';
+            const commits = `${{ steps.commits.outputs.commits }}`;
+
+            const prBody = `## 🚨 Hotfix: ${hotfixName}
+
+            **Base Version:** ${baseVersion}
+            **Branch:** ${{ github.ref }}
+            **Severity:** Critical
+
+            ### Changes
+            \`\`\`
+            ${commits}
+            \`\`\`
+
+            ### Validation Status
+            - ✅ Unit tests passed
+            - ✅ Security scan passed
+            - ✅ Linting passed
+
+            ### Deployment Checklist
+            - [ ] Code review completed
+            - [ ] Manual testing in staging
+            - [ ] Rollback plan documented
+            - [ ] Stakeholders notified
+
+            ### Post-Merge Actions
+            - Auto-create patch release (${baseVersion} → ${baseVersion}.1)
+            - Backport to develop branch
+            - Update changelog
+            - Deploy to production
+
+            ---
+            🤖 Auto-generated by Hotfix Pipeline
+            `;
+
+            try {
+              const { data: pr } = await github.rest.pulls.create({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                title: `🚨 Hotfix: ${hotfixName}`,
+                head: context.ref.replace('refs/heads/', ''),
+                base: 'main',
+                body: prBody,
+                draft: false
+              });
+
+              // Add labels
+              await github.rest.issues.addLabels({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                issue_number: pr.number,
+                labels: ['hotfix', 'priority:critical', 'auto-generated']
+              });
+
+              core.info(`Created PR #${pr.number}: ${pr.html_url}`);
+            } catch (error) {
+              if (error.message.includes('A pull request already exists')) {
+                core.info('PR already exists for this hotfix branch');
+              } else {
+                throw error;
+              }
+            }
+
+  # ============================================================================
+  # Job 4: Auto-Merge and Release (Manual Approval Required)
+  # ============================================================================
+  auto-merge-hotfix:
+    name: Auto-Merge Hotfix (Requires Approval)
+    runs-on: ubuntu-latest
+    needs: create-hotfix-pr
+    if: github.event_name == 'workflow_dispatch'
+    environment: production  # Requires manual approval in GitHub
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Merge hotfix to main
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+
+          git checkout main
+          git merge --no-ff ${{ github.ref }} -m "Merge hotfix: ${{ inputs.hotfix_name }}"
+          git push origin main
+
+      - name: Calculate hotfix version
+        id: version
+        run: |
+          BASE_VERSION="${{ inputs.base_version }}"
+          # Increment patch version
+          NEW_VERSION=$(echo $BASE_VERSION | awk -F. '{print $1"."$2"."$3+1}')
+          echo "new_version=${NEW_VERSION}" >> $GITHUB_OUTPUT
+          echo "Hotfix version: ${NEW_VERSION}"
+
+      - name: Create release tag
+        run: |
+          VERSION="${{ steps.version.outputs.new_version }}"
+          git tag -a "v${VERSION}" -m "Hotfix release ${VERSION}: ${{ inputs.hotfix_name }}"
+          git push origin "v${VERSION}"
+
+      - name: Backport to develop
+        run: |
+          # Check if develop branch exists
+          if git rev-parse --verify origin/develop >/dev/null 2>&1; then
+            git checkout develop
+            git cherry-pick main
+            git push origin develop
+            echo "✅ Backported to develop"
+          else
+            echo "⚠️  No develop branch, skipping backport"
+          fi
+
+      - name: Delete hotfix branch
+        run: |
+          git push origin --delete ${{ github.ref }}
+          echo "✅ Deleted hotfix branch"
+
+  # ============================================================================
+  # Job 5: Hotfix Summary and Notification
+  # ============================================================================
+  hotfix-summary:
+    name: Hotfix Summary
+    runs-on: ubuntu-latest
+    needs: [hotfix-validation, build-hotfix, create-hotfix-pr]
+    if: always()
+
+    steps:
+      - name: Generate hotfix summary
+        run: |
+          echo "# 🚨 Hotfix Pipeline Summary" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "**Hotfix:** ${{ inputs.hotfix_name || 'Auto-detected from branch' }}" >> $GITHUB_STEP_SUMMARY
+          echo "**Base Version:** ${{ inputs.base_version || 'Auto-detected' }}" >> $GITHUB_STEP_SUMMARY
+          echo "**Timestamp:** $(date -u +%Y-%m-%d\ %H:%M:%S\ UTC)" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+
+          echo "## Validation Results" >> $GITHUB_STEP_SUMMARY
+          if [ "${{ needs.hotfix-validation.result }}" == "success" ]; then
+            echo "✅ Validation: PASSED (fast-tracked)" >> $GITHUB_STEP_SUMMARY
+          else
+            echo "❌ Validation: FAILED" >> $GITHUB_STEP_SUMMARY
+          fi
+
+          if [ "${{ needs.build-hotfix.result }}" == "success" ]; then
+            echo "✅ Build: SUCCESS" >> $GITHUB_STEP_SUMMARY
+          else
+            echo "❌ Build: FAILED" >> $GITHUB_STEP_SUMMARY
+          fi
+
+          if [ "${{ needs.create-hotfix-pr.result }}" == "success" ]; then
+            echo "✅ PR Created: SUCCESS" >> $GITHUB_STEP_SUMMARY
+          else
+            echo "⚠️  PR Creation: SKIPPED or FAILED" >> $GITHUB_STEP_SUMMARY
+          fi
+
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "## Next Steps" >> $GITHUB_STEP_SUMMARY
+          echo "1. Review and approve the hotfix PR" >> $GITHUB_STEP_SUMMARY
+          echo "2. Manual testing in staging environment" >> $GITHUB_STEP_SUMMARY
+          echo "3. Run workflow_dispatch with approval for auto-merge" >> $GITHUB_STEP_SUMMARY
+          echo "4. Monitor production deployment" >> $GITHUB_STEP_SUMMARY
+          echo "5. Schedule post-mortem within 48 hours" >> $GITHUB_STEP_SUMMARY
