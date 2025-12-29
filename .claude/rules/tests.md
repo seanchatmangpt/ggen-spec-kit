@@ -5,31 +5,46 @@ paths:
 
 # Test Rules
 
+Unit (fast, isolated) → Integration (real deps) → E2E (CLI). 80%+ coverage on ops.
+
 ## Structure
 ```
 tests/
-├── unit/           # Fast, isolated unit tests
-├── integration/    # Tests with real dependencies
-├── e2e/           # End-to-end CLI tests
+├── unit/           # Fast, isolated ops tests
+├── integration/    # Real dependencies
+├── e2e/           # CLI end-to-end
 ├── conftest.py    # Shared fixtures
-└── fixtures/      # Test data files
+└── fixtures/      # Test data
 ```
 
 ## Naming
-- Test files: `test_<module>.py`
-- Test functions: `test_<scenario>_<expected_result>`
-- Test classes: `Test<ClassName>`
+- Files: `test_<module>.py`
+- Functions: `test_<scenario>_<expected>()`
+- Classes: `Test<ClassName>`
+
+## DO
+- ✅ Test ops layer (pure logic)
+- ✅ Use Arrange/Act/Assert pattern
+- ✅ Test error cases and edge cases
+- ✅ Use fixtures for setup
+- ✅ Aim for 80%+ coverage
+- ✅ Mock runtime for unit tests
+
+## DON'T
+- ❌ Test implementation details
+- ❌ Use global state
+- ❌ Mock ops layer functions
+- ❌ Slow tests in unit suite
+- ❌ Hardcoded test data
+- ❌ Unnamed test fixtures
 
 ## Pattern
 ```python
-import pytest
-from specify_cli.ops import my_ops
-
-class TestMyOperation:
-    """Tests for my_ops module."""
+class TestMyOps:
+    """Tests for my_ops."""
 
     def test_valid_input_returns_success(self) -> None:
-        """Test that valid input produces success result."""
+        """Test valid input produces success."""
         # Arrange
         input_data = {"key": "value"}
 
@@ -38,11 +53,10 @@ class TestMyOperation:
 
         # Assert
         assert result["status"] == "success"
-        assert "data" in result
 
-    def test_invalid_input_raises_value_error(self) -> None:
-        """Test that invalid input raises ValueError."""
-        with pytest.raises(ValueError, match="required_field"):
+    def test_invalid_input_raises_error(self) -> None:
+        """Test invalid input raises ValueError."""
+        with pytest.raises(ValueError):
             my_ops.process({})
 ```
 
@@ -52,21 +66,9 @@ class TestMyOperation:
 def sample_data() -> dict:
     """Provide sample test data."""
     return {"key": "value"}
-
-@pytest.fixture
-def temp_file(tmp_path: Path) -> Path:
-    """Create a temporary test file."""
-    file_path = tmp_path / "test.txt"
-    file_path.write_text("test content")
-    return file_path
 ```
 
 ## Coverage
 - Minimum: 80% line coverage
-- Run with: `uv run pytest --cov=src/specify_cli`
-- Focus on ops layer (highest value)
-
-## Mocking
-- Mock runtime layer for unit tests
-- Use real runtime for integration tests
-- Never mock ops layer
+- Focus: ops layer (pure logic)
+- Run: `uv run pytest --cov=src/specify_cli`

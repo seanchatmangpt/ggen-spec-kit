@@ -1,101 +1,80 @@
 # Bug Fix Workflow
 
-## Overview
-Systematic workflow for diagnosing and fixing bugs.
+## Process
 
-## Phases
+### 1. Reproduce Issue
+**Agent/Skill**: Debugger
+**Tools**: Read, Bash (pytest)
+**Steps**:
+- Understand reported issue details
+- Write failing test that reproduces bug
+- Document steps to trigger issue
+- Confirm test fails
 
-### Phase 1: Reproduce
-```yaml
-mode: investigation
-tools: [Read, Bash]
-output: Reproducible test case
-```
+**Success**: Have a failing test that demonstrates the bug
 
-Steps:
-1. Understand the reported issue
-2. Create minimal reproduction
-3. Write a failing test that demonstrates the bug
-4. Document reproduction steps
+---
 
-### Phase 2: Diagnose
-```yaml
-mode: investigation
-tools: [Read, Grep, Glob]
-output: Root cause identification
-```
+### 2. Diagnose Root Cause
+**Agent/Skill**: Debugger
+**Tools**: Read, Grep, Glob
+**Steps**:
+1. Trace execution path from test
+2. Identify affected layer (commands/ops/runtime)
+3. Locate exact code causing failure
+4. Analyze why it fails
 
-Steps:
-1. Trace execution path
-2. Identify the layer (commands/ops/runtime)
-3. Find the exact code causing the issue
-4. Understand why it fails
+**Success**: Clear understanding of root cause and location
 
-### Phase 3: Fix
-```yaml
-mode: implementation
-tools: [Edit]
-output: Corrected code
-```
+---
 
-Steps:
-1. Implement minimal fix
-2. Ensure fix is in correct layer
-3. Avoid introducing new issues
-4. Consider edge cases
+### 3. Implement Fix
+**Agent/Skill**: Code Reviewer
+**Tools**: Edit
+**Steps**:
+- Apply minimal, focused fix
+- Ensure fix is in correct layer
+- Add edge case handling
+- Avoid unrelated changes
 
-### Phase 4: Verify
-```yaml
-mode: verification
-tools: [Bash]
-output: All tests passing
-```
+**Success**: Fix is minimal and addresses root cause
 
-Steps:
-1. Run the failing test (should pass now)
+---
+
+### 4. Verify Fix
+**Agent/Skill**: Test Runner
+**Tools**: Bash
+**Steps**:
+1. Run failing test (should pass now)
 2. Run full test suite
-3. Run lint and type checks
-4. Manual verification if needed
+3. Run `uv run ruff check src/`
+4. Run `uv run mypy src/`
 
-### Phase 5: Document
-```yaml
-mode: implementation
-tools: [Edit]
-output: Updated documentation
-```
+**Success**: Original test passes, all other tests still pass, no lint/type errors
 
-Steps:
-1. Update changelog (via RDF if applicable)
-2. Add comments if logic is non-obvious
-3. Update tests if behavior changed
+---
 
-## Debugging Tools
+### 5. Document & Commit
+**Agent/Skill**: Code Reviewer
+**Tools**: Edit (memory/changelog.ttl)
+**Steps**:
+- Update changelog via RDF (memory/changelog.ttl)
+- Add inline comments if logic is non-obvious
+- Run `ggen sync` if RDF was modified
+
+**Success**: Documentation updated, ready to commit
+
+---
+
+## Quick Debug Commands
 
 ```bash
-# Run specific test with verbose output
+# Run specific test with output
 uv run pytest tests/path/to/test.py -v -s
 
-# Run with debugging
+# Run with debugger
 uv run pytest tests/path/to/test.py --pdb
 
-# Check coverage for specific file
+# Check coverage on specific file
 uv run pytest --cov=src/specify_cli/ops/file.py tests/
 ```
-
-## Common Bug Patterns
-
-### Layer Violation
-- Symptom: Import error or side effect in wrong layer
-- Fix: Move code to appropriate layer
-
-### Missing Validation
-- Symptom: Unexpected input causes crash
-- Fix: Add input validation in ops layer
-
-### Subprocess Error
-- Symptom: Command execution fails
-- Fix: Check command construction, ensure list-based
-
-### Type Error
-- Symptom: Type mismatch at runtime
-- Fix: Add proper type hints and validation

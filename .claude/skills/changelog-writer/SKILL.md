@@ -8,6 +8,25 @@ allowed-tools: Read, Write, Edit, Glob, Grep, Bash
 
 Write semantic changelog entries in RDF format for Keep a Changelog output.
 
+## Trigger Conditions
+
+- Documenting new releases
+- Recording breaking changes
+- Tracking feature/fix/deprecation entries
+- Maintaining CHANGELOG.md
+
+## Key Capabilities
+
+- Semantic versioning enforcement
+- RDF changelog specification
+- ggen transformation to Markdown
+- Change categorization (Added/Changed/Fixed/Removed/etc)
+
+## Integration
+
+**ggen v5.0.2**: Transforms memory/changelog.ttl → CHANGELOG.md via ggen sync
+**Architecture**: Pure Ops layer (RDF → structured data)
+
 ## Instructions
 
 1. Capture notable changes

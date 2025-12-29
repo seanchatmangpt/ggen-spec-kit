@@ -2,7 +2,7 @@
 
 ## Overview
 
-Claude Code supports multi-agent orchestration through the Task tool, enabling parallel task execution, specialized subagents, and hierarchical workflows.
+Claude Code supports multi-agent orchestration through the Task tool, enabling parallel task execution, specialized subagents, and hierarchical workflows. Full support on web and desktop; context isolation applies equally.
 
 ## Core Concept: Task Tool Parallelism
 
@@ -239,3 +239,4 @@ Result: 4x parallelism, better understanding
 6. **Error Recovery**: Plan for failures
 7. **Token Awareness**: Monitor consumption
 8. **Context Efficiency**: Lean CLAUDE.md, focused summaries
+9. **Web Optimization**: Use parallel tasks to reduce latency

@@ -5,40 +5,29 @@ paths:
 
 # Commands Layer Rules
 
-## Purpose
-The commands layer is the CLI interface using Typer. It should be a thin wrapper.
+Thin CLI wrapper. Zero side effects. Parse args → delegate → format.
 
-## MUST DO
-- Parse CLI arguments using Typer decorators
-- Format output using Rich (tables, panels, syntax highlighting)
-- Delegate ALL business logic to ops layer immediately
-- Return exit codes (0 for success, non-zero for errors)
+## DO
+- Parse args with Typer decorators
+- Delegate immediately to ops layer
+- Format output with Rich (table, panel, syntax)
+- Return exit codes (0=success)
 
-## MUST NOT
-- Import `subprocess` or use `subprocess.run()`
-- Open files with `open()` or `Path.read_text()`
-- Make HTTP requests with `httpx`, `requests`, or `urllib`
-- Contain business logic beyond argument validation
-- Access environment variables directly (use config)
+## DON'T
+- Use subprocess, file I/O, or HTTP
+- Contain business logic
+- Import `runtime` (ops → runtime only)
+- Access env vars directly (use config)
 
 ## Pattern
 ```python
 @app.command()
-def my_command(arg: str = typer.Argument(...)) -> None:
-    """Command description."""
-    # Delegate immediately to ops
-    result = my_ops.process(arg)
-    # Format and display
+def process(file: str = typer.Argument(...)) -> None:
+    """Process a file."""
+    result = my_ops.execute(file)
     console.print(Panel(result["message"]))
 ```
 
-## Imports Allowed
-- `typer`
-- `rich` and submodules
-- `specify_cli.ops.*`
-- `specify_cli.core.config`
-
-## Imports Forbidden
-- `subprocess`
-- `httpx`, `requests`
-- `specify_cli.runtime.*` (ops should call runtime)
+## Imports
+- ✅ typer, rich, specify_cli.ops.*, specify_cli.core.config
+- ❌ subprocess, httpx, specify_cli.runtime

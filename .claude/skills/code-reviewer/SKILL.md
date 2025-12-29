@@ -8,6 +8,25 @@ allowed-tools: Read, Glob, Grep, LSP, Bash
 
 Review code changes for quality, security, and architectural compliance with spec-kit's three-tier architecture.
 
+## Trigger Conditions
+
+- PR code review requests
+- Architecture boundary violations
+- Security compliance checks
+- Type hint/docstring validation
+
+## Key Capabilities
+
+- Three-tier layer validation
+- Security scanning (shell=True, path validation)
+- Type hints and docstring verification
+- Test coverage assessment
+
+## Integration
+
+**ggen v5.0.2**: Reviews generated code in Commands layer
+**Architecture**: Validates delegation from Commands → Ops → Runtime
+
 ## Instructions
 
 1. Read the changed files and understand the purpose

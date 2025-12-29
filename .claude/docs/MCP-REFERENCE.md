@@ -2,7 +2,7 @@
 
 ## Overview
 
-MCP is an open standard for AI-tool integrations, enabling Claude Code to connect with external tools, databases, and APIs through a unified protocol.
+MCP is an open standard for AI-tool integrations, enabling Claude Code to connect with external tools, databases, and APIs through a unified protocol. Web requires HTTP transports; STDIO servers require local execution.
 
 ## Architecture
 
@@ -75,11 +75,11 @@ claude mcp remove github
 
 ## Transport Types
 
-| Transport | Use Case | Performance |
-|-----------|----------|-------------|
-| **STDIO** | Local tools | Highest |
-| **Streamable HTTP** | Remote/cloud | Good |
-| **HTTP+SSE** | Legacy (deprecated) | Varies |
+| Transport | Use Case | Performance | Web Support |
+|-----------|----------|-------------|-------------|
+| **STDIO** | Local tools | Highest | Desktop only |
+| **Streamable HTTP** | Remote/cloud | Good | Yes |
+| **HTTP+SSE** | Legacy (deprecated) | Varies | Limited |
 
 ## Tool Invocation Pattern
 
@@ -216,3 +216,4 @@ MCP_DEBUG=1 ./myserver
 2. **Pagination**: Use for large results
 3. **Token Limits**: Warn when output > 10,000 tokens
 4. **Caching**: Cache expensive operations
+5. **Web Deployment**: Use HTTP transports for web compatibility

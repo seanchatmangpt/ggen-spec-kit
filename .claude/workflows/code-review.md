@@ -1,97 +1,102 @@
 # Code Review Workflow
 
-## Overview
-Comprehensive code review process for PRs and code changes.
+## Process
 
-## Review Checklist
+### 1. Understand Changes
+**Agent/Skill**: Code Reviewer
+**Tools**: Bash (gh pr), Read
+**Steps**:
+1. Review PR title and description
+2. Check which files are modified
+3. Read the diff: `gh pr diff [PR_NUMBER]`
+4. Note scope of changes
 
-### Architecture Compliance
-- [ ] Commands layer has no side effects
+**Success**: Clear understanding of what changed and why
+
+---
+
+### 2. Verify Architecture
+**Agent/Skill**: Architecture Validator
+**Tools**: Read, Grep
+**Checklist**:
+- [ ] Commands layer has no side effects/I/O
 - [ ] Operations layer is pure (no I/O)
 - [ ] Runtime layer handles all I/O
-- [ ] No circular dependencies between layers
+- [ ] No circular dependencies
 - [ ] Correct layer for each change
 
-### Code Quality
-- [ ] Type hints on all functions
-- [ ] Docstrings on public APIs
-- [ ] No code smells or anti-patterns
-- [ ] Appropriate error handling
-- [ ] Clear variable and function names
+**Success**: No layer violations, clear separation of concerns
 
-### Security
-- [ ] No `shell=True` in subprocess
+---
+
+### 3. Review Code Quality
+**Agent/Skill**: Code Reviewer
+**Tools**: Read
+**Checklist**:
+- [ ] All functions have type hints
+- [ ] Public APIs have docstrings
+- [ ] No code smells or antipatterns
+- [ ] Error handling is appropriate
+- [ ] Names are clear and descriptive
+
+**Success**: Code follows quality standards
+
+---
+
+### 4. Check Security & Tests
+**Agent/Skill**: Code Reviewer, Test Runner
+**Tools**: Read, Bash (pytest)
+**Security**:
+- [ ] No `shell=True` in subprocess calls
 - [ ] No hardcoded secrets
 - [ ] Input validation present
-- [ ] Path traversal prevention
-- [ ] No command injection risks
+- [ ] No command injection/path traversal risks
 
-### Testing
+**Testing**:
 - [ ] Tests cover new functionality
 - [ ] Edge cases handled
-- [ ] Test names are descriptive
-- [ ] Mocks used appropriately
 - [ ] Coverage maintained or improved
+- [ ] Run tests: `uv run pytest tests/ -v`
 
-### RDF-First Compliance
+**Success**: Code is secure, tests pass, coverage acceptable
+
+---
+
+### 5. Verify RDF-First Compliance
+**Agent/Skill**: ggen Operator
+**Tools**: Grep, Bash
+**Checklist**:
 - [ ] Generated files not manually edited
-- [ ] RDF source updated if behavior changes
+- [ ] RDF source updated if behavior changed
 - [ ] SPARQL/templates updated if needed
-- [ ] `ggen sync` run if RDF changed
+- [ ] `ggen sync` run if RDF modified
 
-### Performance
-- [ ] No obvious performance issues
-- [ ] Appropriate data structures
-- [ ] No unnecessary loops
-- [ ] Resources properly cleaned up
+**Success**: No violations of constitutional equation
 
-## Review Process
+---
 
-### Step 1: Understand Context
-```bash
-# Get PR details
-gh pr view [PR_NUMBER] --json title,body,files
+### 6. Provide Feedback
 
-# See the diff
-gh pr diff [PR_NUMBER]
-```
-
-### Step 2: Architecture Review
-- Check which layers are modified
-- Verify layer boundaries respected
-- Look for dependency issues
-
-### Step 3: Code Review
-- Read each file changed
-- Check against quality checklist
-- Note any concerns
-
-### Step 4: Test Review
-- Verify tests exist for changes
-- Check test quality
-- Run tests locally if needed
-
-### Step 5: Provide Feedback
-
-Format:
+**Format**:
 ```markdown
 ## Summary
-Brief overview of the changes.
+Brief description of changes.
+
+## Status
+- Architecture: ✓/✗
+- Quality: ✓/✗
+- Security: ✓/✗
+- Tests: ✓/✗
+- RDF Compliance: ✓/✗
 
 ## Issues Found
-
-### Critical
-- [file:line] Issue description
-
-### Major
-- [file:line] Issue description
-
-### Minor
-- [file:line] Issue description
+- [file:line] Issue description (Critical/Major/Minor)
 
 ## Suggestions
 - Optional improvements
 
 ## Verdict
-Approve / Request Changes / Comment
+APPROVE | REQUEST CHANGES | COMMENT
 ```
+
+**Success**: Clear, actionable feedback provided

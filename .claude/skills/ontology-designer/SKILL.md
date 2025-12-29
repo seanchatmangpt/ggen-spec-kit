@@ -8,6 +8,25 @@ allowed-tools: Read, Write, Edit, Glob, Grep, Bash
 
 Design and extend ontology schemas with classes, properties, and SHACL shapes.
 
+## Trigger Conditions
+
+- Adding new RDF classes/properties
+- Creating SHACL validation shapes
+- Extending ontology/spec-kit-schema.ttl
+- Defining domain constraints
+
+## Key Capabilities
+
+- Class/property definition in Turtle
+- SHACL shape constraints
+- Namespace management (sk:, rdfs:, sh:)
+- Instance validation
+
+## Integration
+
+**ggen v5.0.2**: Ontology drives spec generation; shapes validate input to ggen
+**Architecture**: Ops layer (pure schema definition, no side effects)
+
 ## Instructions
 
 1. Define new RDF classes

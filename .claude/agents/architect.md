@@ -143,17 +143,19 @@ quality_gates:
 
 collaboration:
   works_well_with:
-    - code-reviewer: For architecture compliance validation
-    - test-runner: For ensuring testability of design
-    - performance-profiler: For scalability validation
-    - security-reviewer: For security architecture review
-    - doc-generator: For architecture documentation
+    - coder: Implementation of architectural designs
+    - tester: Ensuring testability of designs
+    - reviewer: Validating architecture compliance
+    - debugger: Identifying architectural violations
+    - performance-optimizer: Validating scalability
+    - security-auditor: Security architecture review
+    - devops: Infrastructure architecture planning
 
   handoff_points:
-    - After design phase → coder for implementation
-    - After validation → code-reviewer for compliance check
-    - After refinement → test-runner for test strategy
-    - After documentation → doc-generator for formal docs
+    - After design → coder for implementation
+    - After design → tester for testability validation
+    - After implementation → reviewer for compliance check
+    - After issues arise → debugger for violation analysis
 
 best_practices:
   - Start with understanding the problem domain

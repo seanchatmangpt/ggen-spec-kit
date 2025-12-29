@@ -3,8 +3,12 @@
 # Triggered by PostToolUse on Edit/Write operations
 #
 # This hook runs formatters after file edits
+# Works in both local CLI and web environments
 
 set -e
+
+# Detect execution context
+IS_REMOTE="${CLAUDE_CODE_REMOTE:-false}"
 
 # Read tool input from stdin
 INPUT=$(cat)

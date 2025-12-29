@@ -50,13 +50,21 @@ This directory contains comprehensive reference documentation for Claude Code fe
 
 ## Research Sources
 
-This documentation was compiled from:
+## Claude Code on Web
+
+Claude Code on web has feature parity with desktop CLI for most operations. Key limitations:
+- Slash commands: Available
+- Agents/Skills: Available but context-isolated
+- Hooks: Available
+- MCP servers: Limited to approved HTTP transports
+- Extended context: Use [1m] token notation
+
+## Sources
 
 - [Claude Code Official Documentation](https://code.claude.com/docs)
 - [Claude Agent SDK Reference](https://platform.claude.com/docs/en/agent-sdk)
-- [Anthropic Engineering Blog](https://www.anthropic.com/engineering)
 - [Model Context Protocol Specification](https://modelcontextprotocol.io)
 
 ---
 
-*Generated: 2025-12-28*
+*Updated: 2025-12-29*

@@ -334,11 +334,20 @@ Validation:
 
 ## Integration with Other Agents
 
-- **Works with `coder`**: Review code after implementation
-- **Works with `tester`**: Validate test quality and coverage
-- **Works with `architect`**: Ensure design compliance
-- **Works with `debugger`**: Identify root causes of issues
-- **Works with `security-manager`**: Deep security audits
+### Works With
+- **coder**: Review code after implementation, identify fixes needed
+- **tester**: Validate test quality and coverage completeness
+- **architect**: Ensure design and compliance with standards
+- **debugger**: Review issues and prevent future violations
+- **security-auditor**: Deep security scanning collaboration
+- **devops**: Review infrastructure code and deployments
+- **orchestrator**: Receive code review tasks
+
+### Handoff Protocol
+- FROM **coder** → Review implementation against standards
+- TO **coder** → Detailed feedback with specific violations to fix
+- FROM **tester** → Validate test quality and completeness
+- Provide structured review reports with priority levels
 
 ## Metrics Tracked
 

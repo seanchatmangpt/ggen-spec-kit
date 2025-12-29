@@ -1,103 +1,76 @@
 # Feature Development Workflow
 
-## Overview
-Complete workflow for implementing new features following RDF-first principles.
+## Process
 
-## Phases
+### 1. Research & Plan
+**Agent/Skill**: Code Reviewer, Debugger
+**Tools**: Read, Glob, Grep
+**Steps**:
+- Explore similar features for patterns
+- Map integration points
+- Identify file locations to modify
 
-### Phase 1: Research (Read-Only)
-```yaml
-mode: plan-mode
-tools: [Read, Glob, Grep]
-output: Understanding of existing patterns
-```
+**Success**: Clear understanding of scope and existing patterns
 
-Steps:
-1. Explore existing similar features
-2. Understand current architecture
-3. Identify integration points
-4. Document findings
+---
 
-### Phase 2: Specification
-```yaml
-mode: implementation
-tools: [Write, Edit]
-output: RDF specification in ontology/
-```
+### 2. Define Specification (RDF-First)
+**Agent/Skill**: Spec Writer
+**Tools**: Edit (ontology/cli-commands.ttl)
+**Steps**:
+- Add RDF definition to ontology/cli-commands.ttl
+- Define SHACL validation shapes if needed
+- Create SPARQL query (if data extraction required)
+- Create/update Tera template if needed
 
-Steps:
-1. Create RDF specification in `ontology/cli-commands.ttl`
-2. Define SHACL shapes for validation
-3. Create SPARQL query if needed
-4. Create Tera template if needed
+**Success**: Valid TTL file with complete specification
 
-### Phase 3: Generation
-```yaml
-mode: implementation
-tools: [Bash]
-output: Generated code
-```
+---
 
-Steps:
+### 3. Generate Code
+**Agent/Skill**: ggen Operator
+**Tools**: Bash (ggen sync)
+**Steps**:
 1. Run `ggen sync`
-2. Verify generated files
-3. Review output for correctness
+2. Review generated files in src/specify_cli/commands/
+3. Verify code structure matches specification
 
-### Phase 4: Implementation
-```yaml
-mode: implementation
-tools: [Write, Edit]
-output: Business logic in ops/runtime
-```
+**Success**: Generated files appear correctly, no syntax errors
 
-Steps:
-1. Implement operations in `src/specify_cli/ops/`
-2. Implement runtime in `src/specify_cli/runtime/`
-3. Follow three-tier architecture rules
+---
 
-### Phase 5: Testing
-```yaml
-mode: implementation
-tools: [Bash, Write]
-output: Passing tests
-```
+### 4. Implement Business Logic
+**Agent/Skill**: Code Reviewer
+**Tools**: Edit (ops/, runtime/)
+**Steps**:
+- Implement operations in `src/specify_cli/ops/` (pure logic)
+- Implement runtime in `src/specify_cli/runtime/` (I/O, subprocesses)
+- Respect three-tier architecture
 
-Steps:
+**Success**: Code compiles, type hints pass, follows architecture
+
+---
+
+### 5. Write & Run Tests
+**Agent/Skill**: Test Runner
+**Tools**: Bash (pytest), Write
+**Steps**:
 1. Write tests in `tests/`
 2. Run `uv run pytest tests/ -v`
-3. Ensure 80%+ coverage
-4. Fix any failures
+3. Verify 80%+ coverage
+4. Fix failures using Debugger skill if needed
 
-### Phase 6: Validation
-```yaml
-mode: verification
-tools: [Bash]
-output: Clean checks
-```
+**Success**: All tests pass, coverage meets threshold
 
-Steps:
+---
+
+### 6. Validate Quality
+**Agent/Skill**: Code Reviewer, Architecture Validator
+**Tools**: Bash
+**Steps**:
 1. Run `uv run ruff check src/`
 2. Run `uv run mypy src/`
 3. Run full test suite
-4. Verify architecture compliance
+4. Verify no architecture violations
 
-## Parallel Opportunities
-
-These can run in parallel:
-- Research different aspects simultaneously
-- Run lint + type check + tests in parallel
-- Multiple test files can be written in parallel
-
-## Error Recovery
-
-If tests fail:
-1. Analyze failure output
-2. Identify root cause
-3. Fix in appropriate layer
-4. Re-run tests
-
-If architecture violation:
-1. Identify the violation
-2. Move code to correct layer
-3. Update imports
-4. Re-verify
+**Success**: No lint errors, type-safe, all tests pass

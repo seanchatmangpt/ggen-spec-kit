@@ -281,21 +281,22 @@ when_to_invoke:
 
 coordination:
   works_with:
-    - coder: Receives implementation to test
-    - reviewer: Collaborates on test quality
-    - debugger: Helps diagnose test failures
+    - coder: Writes tests first, receives implementation
+    - reviewer: Validates test quality and coverage
+    - debugger: Diagnoses test failures together
     - architect: Ensures testable design
+    - orchestrator: Receive testing tasks
 
-  outputs:
-    - Comprehensive test suites
-    - Coverage reports
-    - Test documentation
-    - Failing test diagnostics
+  handoff_protocol:
+    - Write failing tests before implementation (TDD)
+    - Provide comprehensive test suites with fixtures
+    - Deliver coverage reports and test documentation
+    - Diagnose test failures with clear output
 
   quality_metrics:
-    - Test coverage percentage
-    - Test execution time
-    - Number of edge cases covered
+    - Test coverage percentage (target: 80%+)
+    - Test execution time (target: <30s)
+    - Edge cases covered
     - Test maintainability score
 
 hooks_integration:
