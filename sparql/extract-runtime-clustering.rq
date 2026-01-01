@@ -1,0 +1,60 @@
+PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
+PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
+PREFIX owl: <http://www.w3.org/2002/07/owl#>
+PREFIX xsd: <http://www.w3.org/2001/XMLSchema#>
+PREFIX rt: <http://github.com/github/spec-kit/runtime#>
+
+# ============================================================================
+# Extract Runtime Clustering Specification
+# ============================================================================
+# SPARQL query to extract module, class, enum, and dataclass definitions
+# from RDF for code generation via Tera template
+# ============================================================================
+
+CONSTRUCT {
+  ?module
+    rt:pyFile ?pyFile ;
+    rt:ttlFile ?ttlFile ;
+    rdfs:label ?label ;
+    rdfs:comment ?comment ;
+    rt:hasTimed ?timed ;
+    rt:hasSpans ?spans ;
+    rt:hasMetrics ?metrics ;
+    rt:requiresComponent ?component .
+
+  ?enum a rt:EnumDefinition ;
+    rdfs:label ?enumLabel ;
+    rt:enumValue ?enumValue .
+
+  ?dataclass a rt:DataclassDefinition ;
+    rdfs:label ?dataclassLabel ;
+    rt:hasField ?field .
+
+  ?class a rt:ClassDefinition ;
+    rdfs:label ?classLabel ;
+    rt:hasMethod ?method ;
+    rt:hasConstructor ?constructor .
+}
+WHERE {
+  # Extract module specifications
+  ?module a rt:DistributedSystem ;
+    rdfs:label ?label ;
+    rdfs:comment ?comment ;
+    rt:@timed ?timed ;
+    OPTIONAL { ?module rt:span ?spans . }
+    OPTIONAL { ?module rt:metrics ?metrics . }
+    OPTIONAL { ?module rt:requiresComponent ?component . }
+
+  # Placeholder values for code generation
+  BIND(
+    REPLACE(
+      LCASE(?label),
+      " ",
+      "_"
+    ) AS ?baseFile
+  )
+  BIND(CONCAT(?baseFile, ".py") AS ?pyFile)
+  BIND(CONCAT(?baseFile, ".ttl") AS ?ttlFile)
+}
+ORDER BY ?label
+LIMIT 100
