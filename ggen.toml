@@ -1,0 +1,170 @@
+# ============================================================================
+# ggen Configuration - Spec-Kit Root
+# ============================================================================
+# Ontology-driven code generation for the Spec-Kit project
+# Implements: spec.md = μ(specification.ttl)
+# Learn more: https://docs.ggen.io
+#
+# Usage: ggen sync
+# ============================================================================
+
+[project]
+name = "spec-kit"
+version = "0.1.0"
+description = "RDF-first specification development toolkit implementing ontology-driven code generation"
+authors = ["Spec-Kit Contributors"]
+license = "MIT"
+
+[metadata]
+name = "spec-kit-codegen"
+description = "RDF-to-Code and RDF-to-Documentation transformations"
+version = "1.0"
+
+# ============================================================================
+# RDF GENERATION SETTINGS
+# ============================================================================
+
+[generation]
+# Directory containing RDF ontology files (.ttl, .rdf, .owl)
+ontology_dir = "ontology/"
+
+# Directory containing Tera code generation templates
+templates_dir = "templates/"
+
+# Output directory for generated code and documentation
+output_dir = "src/generated/"
+
+# Enable incremental sync (preserve sections marked with // MANUAL)
+incremental = true
+
+# Don't overwrite existing files by default
+overwrite = false
+
+# ============================================================================
+# SYNC SETTINGS
+# ============================================================================
+
+[sync]
+# Enable automatic sync on save
+enabled = true
+
+# Trigger on: "save" (file changes) | "commit" (git) | "manual" (explicit)
+on_change = "manual"
+
+# Run validation after sync completes
+validate_after = true
+
+# How to handle conflicts: "fail" | "warn" | "ignore"
+conflict_mode = "warn"
+
+# ============================================================================
+# RDF SETTINGS
+# ============================================================================
+
+[rdf]
+# Supported RDF serialization formats
+formats = ["turtle", "rdf-xml", "n-triples"]
+
+# Default format for new ontologies
+default_format = "turtle"
+
+# Base URI for ontology (namespace)
+base_uri = "https://spec-kit.io/ontology#"
+
+# Validate RDF strictly against standards
+strict_validation = false
+
+# ============================================================================
+# TEMPLATE SETTINGS
+# ============================================================================
+
+[templates]
+# Cache compiled Tera templates for faster generation
+enable_caching = true
+
+# Auto-reload templates when they change
+auto_reload = true
+
+# ============================================================================
+# OUTPUT FORMATTING
+# ============================================================================
+
+[output]
+# Code formatter: "default" | "rustfmt" | "prettier" | "black" | "autopep8"
+formatting = "default"
+
+# Maximum line length for generated code
+line_length = 100
+
+# Indentation width (spaces)
+indent = 2
+
+# ============================================================================
+# PIPELINE CONFIGURATION (Five-Stage Transformation μ₁ through μ₅)
+# ============================================================================
+
+[pipeline]
+# Transformation stages executed in order
+stages = ["normalize", "extract", "emit", "canonicalize", "receipt"]
+
+# μ₁ NORMALIZE: Load RDF and validate against SHACL shapes
+[pipeline.normalize]
+enabled = true
+fail_on_validation_error = true
+
+# μ₂ EXTRACT: Execute SPARQL queries against RDF data
+[pipeline.extract]
+enabled = true
+timeout_seconds = 30
+
+# μ₃ EMIT: Render Tera templates with SPARQL results
+[pipeline.emit]
+enabled = true
+template_engine = "tera"
+
+# μ₄ CANONICALIZE: Format and normalize markdown/code output
+[pipeline.canonicalize]
+enabled = true
+line_ending = "lf"
+trim_trailing_whitespace = true
+ensure_final_newline = true
+
+# μ₅ RECEIPT: Generate SHA256 hash proof of transformation
+[pipeline.receipt]
+enabled = true
+hash_algorithm = "sha256"
+write_manifest = true
+
+# ============================================================================
+# OPTIONS
+# ============================================================================
+
+[options]
+# Continue on individual transformation failures instead of fail-fast
+continue_on_error = false
+
+# Validate all input RDF files upfront
+validate_inputs = true
+
+# Include source RDF comments in generated files
+include_source_comments = false
+
+# Maximum parallel transformation tasks
+max_parallel = 4
+
+# Verbose output for debugging (false = quiet, true = verbose)
+verbose = false
+
+# ============================================================================
+# MARKETPLACE SETTINGS
+# ============================================================================
+
+[marketplace]
+# Package registry URL for ggen marketplace
+registry_url = "https://registry.ggen.io"
+
+# Cache directory for downloaded packages
+cache_dir = ".ggen/cache/"
+
+# Verify package signatures (enable for production)
+verify_signatures = false
