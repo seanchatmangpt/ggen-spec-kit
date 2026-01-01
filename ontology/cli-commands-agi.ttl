@@ -1,0 +1,154 @@
+@prefix : <http://spec-kit.io/agi/cli#> .
+@prefix agi: <http://spec-kit.io/agi#> .
+@prefix cli: <http://github.com/github/spec-kit/cli#> .
+@prefix sk: <http://github.com/github/spec-kit#> .
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix owl: <http://www.w3.org/2002/07/owl#> .
+@prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
+
+# ============================================================================
+# AGI COMMAND SUITE - Autonomous Reasoning and Knowledge Synthesis
+# ============================================================================
+# Implements CLI bindings for AGI agents, reasoning engines, and task planning
+# These commands support multi-strategy reasoning (COT, MCTS, ARC) and
+# autonomous decision-making through RDF-based knowledge representation
+
+# ROOT COMMAND: agi - Autonomous reasoning and knowledge synthesis
+:agi a owl:Class ;
+    rdfs:subClassOf cli:Command ;
+    rdfs:label "agi" ;
+    rdfs:comment "Autonomous reasoning and knowledge synthesis command group" ;
+    sk:category "agi" ;
+    sk:description "Execute multi-strategy reasoning pipeline (COT, MCTS, ARC) over RDF knowledge bases" .
+
+# Arguments for agi command
+:agi_input_rdf a owl:DatatypeProperty ;
+    rdfs:domain :agi ;
+    rdfs:range xsd:string ;
+    rdfs:label "input_rdf" ;
+    rdfs:comment "[type:argument] [index:0] [required:true] [help:Input RDF/Turtle file for reasoning] RDF knowledge base to reason over" .
+
+# Options for agi command
+:agi_strategy a owl:DatatypeProperty ;
+    rdfs:domain :agi ;
+    rdfs:range xsd:string ;
+    rdfs:label "strategy" ;
+    rdfs:comment "[type:option] [flag:--strategy] [default:cot] [required:false] [help:Reasoning strategy: cot, mcts, arc, hybrid] Multi-strategy reasoning approach" .
+
+:agi_max_iterations a owl:DatatypeProperty ;
+    rdfs:domain :agi ;
+    rdfs:range xsd:integer ;
+    rdfs:label "max_iterations" ;
+    rdfs:comment "[type:option] [flag:--max-iterations] [short:-n] [default:5] [required:false] [help:Maximum reasoning iterations] Maximum number of reasoning steps" .
+
+:agi_temperature a owl:DatatypeProperty ;
+    rdfs:domain :agi ;
+    rdfs:range xsd:float ;
+    rdfs:label "temperature" ;
+    rdfs:comment "[type:option] [flag:--temperature] [default:0.7] [required:false] [help:Temperature for sampling (0.0-1.0)] Sampling temperature for model" .
+
+:agi_output_format a owl:DatatypeProperty ;
+    rdfs:domain :agi ;
+    rdfs:range xsd:string ;
+    rdfs:label "output_format" ;
+    rdfs:comment "[type:option] [flag:--output] [short:-o] [default:json] [required:false] [help:Output format: json, ttl, markdown] Result output format" .
+
+:agi_verbose a owl:DatatypeProperty ;
+    rdfs:domain :agi ;
+    rdfs:range xsd:boolean ;
+    rdfs:label "verbose" ;
+    rdfs:comment "[type:option] [flag:--verbose] [short:-v] [default:false] [required:false] [help:Show detailed reasoning steps] Enable detailed reasoning trace output" .
+
+# ============================================================================
+# COMMAND: agi_reasoner - Advanced RDF Reasoning Engine
+# ============================================================================
+# Dedicated reasoning engine supporting OWL, RDFS, SHACL, and custom rules
+
+:agi_reasoner a owl:Class ;
+    rdfs:subClassOf cli:Command ;
+    rdfs:label "agi_reasoner" ;
+    rdfs:comment "Advanced RDF reasoning engine with support for OWL, RDFS, and custom rules" ;
+    sk:category "agi" ;
+    sk:description "Execute semantic inference and reasoning over RDF knowledge graphs" .
+
+# Arguments for agi_reasoner
+:reasoner_input_rdf a owl:DatatypeProperty ;
+    rdfs:domain :agi_reasoner ;
+    rdfs:range xsd:string ;
+    rdfs:label "input_rdf" ;
+    rdfs:comment "[type:argument] [index:0] [required:true] [help:RDF file to reason over] RDF file containing knowledge graph" .
+
+# Options for agi_reasoner
+:reasoner_rules_file a owl:DatatypeProperty ;
+    rdfs:domain :agi_reasoner ;
+    rdfs:range xsd:string ;
+    rdfs:label "rules_file" ;
+    rdfs:comment "[type:option] [flag:--rules] [required:false] [help:Custom SWRL/SHACL rules file] Path to custom reasoning rules" .
+
+:reasoner_inference_type a owl:DatatypeProperty ;
+    rdfs:domain :agi_reasoner ;
+    rdfs:range xsd:string ;
+    rdfs:label "inference_type" ;
+    rdfs:comment "[type:option] [flag:--inference] [default:owl] [required:false] [help:Inference type: owl, rdfs, shacl, custom] Type of semantic inference to apply" .
+
+:reasoner_output_format a owl:DatatypeProperty ;
+    rdfs:domain :agi_reasoner ;
+    rdfs:range xsd:string ;
+    rdfs:label "output_format" ;
+    rdfs:comment "[type:option] [flag:--output] [short:-o] [default:ttl] [required:false] [help:Output format: ttl, rdf-xml, jsonld] Serialization format for inferred graph" .
+
+:reasoner_validate a owl:DatatypeProperty ;
+    rdfs:domain :agi_reasoner ;
+    rdfs:range xsd:boolean ;
+    rdfs:label "validate" ;
+    rdfs:comment "[type:option] [flag:--validate] [default:true] [required:false] [help:Validate result graph] Validate output against ontology constraints" .
+
+# ============================================================================
+# COMMAND: agi_task_planner - Task Planning and Decomposition
+# ============================================================================
+# Goal decomposition and execution planning with dependency analysis
+
+:agi_task_planner a owl:Class ;
+    rdfs:subClassOf cli:Command ;
+    rdfs:label "agi_task_planner" ;
+    rdfs:comment "Task planning and decomposition with dependency analysis and critical path computation" ;
+    sk:category "agi" ;
+    sk:description "Decompose high-level goals into executable tasks with dependency analysis" .
+
+# Arguments for agi_task_planner
+:planner_goal_spec a owl:DatatypeProperty ;
+    rdfs:domain :agi_task_planner ;
+    rdfs:range xsd:string ;
+    rdfs:label "goal_spec" ;
+    rdfs:comment "[type:argument] [index:0] [required:true] [help:Goal specification file (RDF or text)] Goal definition to decompose into tasks" .
+
+# Options for agi_task_planner
+:planner_decomposition_strategy a owl:DatatypeProperty ;
+    rdfs:domain :agi_task_planner ;
+    rdfs:range xsd:string ;
+    rdfs:label "decomposition_strategy" ;
+    rdfs:comment "[type:option] [flag:--strategy] [default:hierarchical] [required:false] [help:Strategy: hierarchical, functional, data-flow] Task decomposition strategy" .
+
+:planner_max_depth a owl:DatatypeProperty ;
+    rdfs:domain :agi_task_planner ;
+    rdfs:range xsd:integer ;
+    rdfs:label "max_depth" ;
+    rdfs:comment "[type:option] [flag:--max-depth] [default:5] [required:false] [help:Maximum decomposition depth] Maximum task hierarchy depth" .
+
+:planner_parallel_analysis a owl:DatatypeProperty ;
+    rdfs:domain :agi_task_planner ;
+    rdfs:range xsd:boolean ;
+    rdfs:label "parallel_analysis" ;
+    rdfs:comment "[type:option] [flag:--parallel] [default:true] [required:false] [help:Analyze parallelization potential] Compute critical path and parallelization" .
+
+:planner_cost_model a owl:DatatypeProperty ;
+    rdfs:domain :agi_task_planner ;
+    rdfs:range xsd:string ;
+    rdfs:label "cost_model" ;
+    rdfs:comment "[type:option] [flag:--cost-model] [default:uniform] [required:false] [help:Cost model: uniform, weighted, time-based] Cost function for task scheduling" .
+
+:planner_output_format a owl:DatatypeProperty ;
+    rdfs:domain :agi_task_planner ;
+    rdfs:range xsd:string ;
+    rdfs:label "output_format" ;
+    rdfs:comment "[type:option] [flag:--output] [short:-o] [default:json] [required:false] [help:Output format: json, ttl, dot, mermaid] Task plan output format" .

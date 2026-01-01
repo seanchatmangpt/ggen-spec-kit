@@ -1,0 +1,504 @@
+@prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix owl: <http://www.w3.org/2002/07/owl#> .
+@prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
+@prefix shacl: <http://www.w3.org/ns/shacl#> .
+@prefix rt: <http://github.com/github/spec-kit/runtime#> .
+
+# ============================================================================
+# Runtime Clustering and Distributed Execution Ontology
+# ============================================================================
+# Implements: runtime/consensus.py = μ(runtime-clustering.ttl)
+#             runtime/cluster.py = μ(runtime-clustering.ttl)
+#             runtime/distributed_execution.py = μ(runtime-clustering.ttl)
+#             runtime/fault_tolerance.py = μ(runtime-clustering.ttl)
+# ============================================================================
+
+# ============================================================================
+# Core Classes for Distributed Systems
+# ============================================================================
+
+rt:DistributedSystem a owl:Class ;
+    rdfs:label "Distributed System"@en ;
+    rdfs:comment "Top-level abstraction for coordinated multi-node execution"@en .
+
+rt:ConsensusAlgorithm a owl:Class ;
+    rdfs:subClassOf rt:DistributedSystem ;
+    rdfs:label "Consensus Algorithm"@en ;
+    rdfs:comment "Distributed consensus implementation (Raft, PBFT, etc)"@en .
+
+rt:ClusterManagement a owl:Class ;
+    rdfs:subClassOf rt:DistributedSystem ;
+    rdfs:label "Cluster Management"@en ;
+    rdfs:comment "Multi-node cluster orchestration and membership tracking"@en .
+
+rt:DistributedTaskExecution a owl:Class ;
+    rdfs:subClassOf rt:DistributedSystem ;
+    rdfs:label "Distributed Task Execution"@en ;
+    rdfs:comment "Task scheduling and execution across cluster nodes"@en .
+
+rt:FaultTolerance a owl:Class ;
+    rdfs:subClassOf rt:DistributedSystem ;
+    rdfs:label "Fault Tolerance"@en ;
+    rdfs:comment "Resilience mechanisms: health checks, failover, recovery"@en .
+
+# ============================================================================
+# Consensus Algorithm Components
+# ============================================================================
+
+rt:RaftConsensus a owl:Class ;
+    rdfs:subClassOf rt:ConsensusAlgorithm ;
+    rdfs:label "Raft Consensus"@en ;
+    rdfs:comment "Raft consensus for leader election and log replication"@en .
+
+rt:NodeState a owl:Class ;
+    rdfs:label "Node State"@en ;
+    rdfs:comment "State of node in Raft: FOLLOWER, CANDIDATE, LEADER"@en .
+
+rt:follower a rt:NodeState ;
+    rdfs:label "Follower"@en ;
+    rdfs:comment "Node that accepts commands from leader"@en .
+
+rt:candidate a rt:NodeState ;
+    rdfs:label "Candidate"@en ;
+    rdfs:comment "Node requesting votes in election"@en .
+
+rt:leader a rt:NodeState ;
+    rdfs:label "Leader"@en ;
+    rdfs:comment "Node responsible for replication and command execution"@en .
+
+rt:LogEntry a owl:Class ;
+    rdfs:label "Log Entry"@en ;
+    rdfs:comment "Single entry in distributed log with index, term, command, data"@en .
+
+rt:index a owl:DatatypeProperty ;
+    rdfs:domain rt:LogEntry ;
+    rdfs:range xsd:integer ;
+    rdfs:comment "Position of entry in log"@en .
+
+rt:term a owl:DatatypeProperty ;
+    rdfs:domain [ owl:unionOf ( rt:LogEntry rt:RaftConsensus ) ] ;
+    rdfs:range xsd:integer ;
+    rdfs:comment "Election term when entry was created"@en .
+
+rt:command a owl:DatatypeProperty ;
+    rdfs:domain rt:LogEntry ;
+    rdfs:range xsd:string ;
+    rdfs:comment "Command name to execute on state machine"@en .
+
+rt:data a owl:DatatypeProperty ;
+    rdfs:domain rt:LogEntry ;
+    rdfs:range xsd:string ;
+    rdfs:comment "JSON-serialized data for command"@en .
+
+rt:appendEntry a owl:Class ;
+    rdfs:label "Append Entry RPC"@en ;
+    rdfs:comment "RPC for log replication from leader to followers"@en .
+
+rt:requestVote a owl:Class ;
+    rdfs:label "Request Vote RPC"@en ;
+    rdfs:comment "RPC for leader election"@en .
+
+rt:logReplication a owl:DatatypeProperty ;
+    rdfs:label "Log Replication"@en ;
+    rdfs:comment "Mechanism: 'synchronous' or 'asynchronous'"@en ;
+    rdfs:range xsd:string .
+
+rt:electionTimeout a owl:DatatypeProperty ;
+    rdfs:label "Election Timeout"@en ;
+    rdfs:comment "Milliseconds before follower starts election (default 150)"@en ;
+    rdfs:range xsd:float .
+
+rt:heartbeatInterval a owl:DatatypeProperty ;
+    rdfs:label "Heartbeat Interval"@en ;
+    rdfs:comment "Milliseconds between leader heartbeats (default 50)"@en ;
+    rdfs:range xsd:float .
+
+# ============================================================================
+# Cluster Management Components
+# ============================================================================
+
+rt:ClusterNode a owl:Class ;
+    rdfs:label "Cluster Node"@en ;
+    rdfs:comment "Single node in distributed cluster"@en .
+
+rt:NodeRole a owl:Class ;
+    rdfs:label "Node Role"@en ;
+    rdfs:comment "Role assigned to node in cluster"@en .
+
+rt:master a rt:NodeRole ;
+    rdfs:label "Master"@en ;
+    rdfs:comment "Primary control node"@en .
+
+rt:worker a rt:NodeRole ;
+    rdfs:label "Worker"@en ;
+    rdfs:comment "Task execution node"@en .
+
+rt:standby a rt:NodeRole ;
+    rdfs:label "Standby"@en ;
+    rdfs:comment "Backup node ready for promotion"@en .
+
+rt:observer a rt:NodeRole ;
+    rdfs:label "Observer"@en ;
+    rdfs:comment "Non-voting observation node"@en .
+
+rt:NodeHealth a owl:Class ;
+    rdfs:label "Node Health"@en ;
+    rdfs:comment "Health status of node"@en .
+
+rt:healthy a rt:NodeHealth ;
+    rdfs:label "Healthy"@en ;
+    rdfs:comment "Node operating normally"@en .
+
+rt:degraded a rt:NodeHealth ;
+    rdfs:label "Degraded"@en ;
+    rdfs:comment "Node operating with reduced capacity"@en .
+
+rt:unreachable a rt:NodeHealth ;
+    rdfs:label "Unreachable"@en ;
+    rdfs:comment "Node not responding"@en .
+
+rt:dead a rt:NodeHealth ;
+    rdfs:label "Dead"@en ;
+    rdfs:comment "Node confirmed failed"@en .
+
+rt:hostname a owl:DatatypeProperty ;
+    rdfs:domain rt:ClusterNode ;
+    rdfs:range xsd:string ;
+    rdfs:comment "Hostname or IP address of node"@en .
+
+rt:port a owl:DatatypeProperty ;
+    rdfs:domain rt:ClusterNode ;
+    rdfs:range xsd:integer ;
+    rdfs:comment "Network port for node communication"@en .
+
+rt:role a owl:DatatypeProperty ;
+    rdfs:domain rt:ClusterNode ;
+    rdfs:range xsd:string ;
+    rdfs:comment "Role of node: master, worker, standby, observer"@en .
+
+rt:health a owl:DatatypeProperty ;
+    rdfs:domain rt:ClusterNode ;
+    rdfs:range xsd:string ;
+    rdfs:comment "Current health status of node"@en .
+
+rt:cpuUsage a owl:DatatypeProperty ;
+    rdfs:domain rt:ClusterNode ;
+    rdfs:range xsd:float ;
+    rdfs:comment "CPU usage percentage (0-100)"@en .
+
+rt:memoryUsage a owl:DatatypeProperty ;
+    rdfs:domain rt:ClusterNode ;
+    rdfs:range xsd:float ;
+    rdfs:comment "Memory usage percentage (0-100)"@en .
+
+rt:diskUsage a owl:DatatypeProperty ;
+    rdfs:domain rt:ClusterNode ;
+    rdfs:range xsd:float ;
+    rdfs:comment "Disk usage percentage (0-100)"@en .
+
+rt:lastHeartbeat a owl:DatatypeProperty ;
+    rdfs:domain rt:ClusterNode ;
+    rdfs:range xsd:dateTime ;
+    rdfs:comment "Timestamp of last received heartbeat"@en .
+
+rt:ClusterEvent a owl:Class ;
+    rdfs:label "Cluster Event"@en ;
+    rdfs:comment "Event in cluster lifecycle (joins, leaves, health changes)"@en .
+
+rt:eventType a owl:DatatypeProperty ;
+    rdfs:domain rt:ClusterEvent ;
+    rdfs:range xsd:string ;
+    rdfs:comment "Type: node_joined, node_left, node_dead, node_health_changed"@en .
+
+rt:eventTimestamp a owl:DatatypeProperty ;
+    rdfs:domain rt:ClusterEvent ;
+    rdfs:range xsd:dateTime ;
+    rdfs:comment "When event occurred"@en .
+
+rt:heartbeatTimeout a owl:DatatypeProperty ;
+    rdfs:label "Heartbeat Timeout"@en ;
+    rdfs:comment "Seconds before marking node dead (default 30)"@en ;
+    rdfs:range xsd:float .
+
+rt:healthCheckInterval a owl:DatatypeProperty ;
+    rdfs:label "Health Check Interval"@en ;
+    rdfs:comment "Seconds between cluster-wide health checks"@en ;
+    rdfs:range xsd:float .
+
+# ============================================================================
+# Distributed Task Execution Components
+# ============================================================================
+
+rt:TaskScheduler a owl:Class ;
+    rdfs:label "Task Scheduler"@en ;
+    rdfs:comment "Schedules tasks to appropriate cluster nodes"@en .
+
+rt:SchedulingStrategy a owl:Class ;
+    rdfs:label "Scheduling Strategy"@en ;
+    rdfs:comment "Algorithm for selecting target node for task"@en .
+
+rt:roundRobin a rt:SchedulingStrategy ;
+    rdfs:label "Round Robin"@en ;
+    rdfs:comment "Distribute tasks in rotating order"@en .
+
+rt:leastLoaded a rt:SchedulingStrategy ;
+    rdfs:label "Least Loaded"@en ;
+    rdfs:comment "Assign to node with fewest pending tasks"@en .
+
+rt:affinity a rt:SchedulingStrategy ;
+    rdfs:label "Affinity"@en ;
+    rdfs:comment "Assign to specific preferred node if available"@en .
+
+rt:workStealing a rt:SchedulingStrategy ;
+    rdfs:label "Work Stealing"@en ;
+    rdfs:comment "Pull work from overloaded nodes"@en .
+
+rt:fairShare a rt:SchedulingStrategy ;
+    rdfs:label "Fair Share"@en ;
+    rdfs:comment "Distribute based on resource allocation quotas"@en .
+
+rt:DistributedTask a owl:Class ;
+    rdfs:label "Distributed Task"@en ;
+    rdfs:comment "Task queued for execution across cluster"@en .
+
+rt:taskName a owl:DatatypeProperty ;
+    rdfs:domain rt:DistributedTask ;
+    rdfs:range xsd:string ;
+    rdfs:comment "Human-readable task name"@en .
+
+rt:taskPriority a owl:DatatypeProperty ;
+    rdfs:domain rt:DistributedTask ;
+    rdfs:range xsd:integer ;
+    rdfs:comment "Task priority (higher = earlier execution)"@en .
+
+rt:assignedNode a owl:DatatypeProperty ;
+    rdfs:domain rt:DistributedTask ;
+    rdfs:range xsd:string ;
+    rdfs:comment "Node assigned to execute this task"@en .
+
+rt:executionTime a owl:DatatypeProperty ;
+    rdfs:domain rt:DistributedTask ;
+    rdfs:range xsd:float ;
+    rdfs:comment "Execution time in milliseconds"@en .
+
+# ============================================================================
+# Fault Tolerance Components
+# ============================================================================
+
+rt:HealthCheck a owl:Class ;
+    rdfs:label "Health Check"@en ;
+    rdfs:comment "Mechanism for determining component health"@en .
+
+rt:HealthCheckType a owl:Class ;
+    rdfs:label "Health Check Type"@en ;
+    rdfs:comment "Category of health check"@en .
+
+rt:ping a rt:HealthCheckType ;
+    rdfs:label "Ping"@en ;
+    rdfs:comment "Simple connectivity check"@en .
+
+rt:custom a rt:HealthCheckType ;
+    rdfs:label "Custom"@en ;
+    rdfs:comment "Custom health check function"@en .
+
+rt:memory a rt:HealthCheckType ;
+    rdfs:label "Memory"@en ;
+    rdfs:comment "Memory utilization check"@en .
+
+rt:disk a rt:HealthCheckType ;
+    rdfs:label "Disk"@en ;
+    rdfs:comment "Disk space check"@en .
+
+rt:network a rt:HealthCheckType ;
+    rdfs:label "Network"@en ;
+    rdfs:comment "Network connectivity check"@en .
+
+rt:CircuitBreaker a owl:Class ;
+    rdfs:label "Circuit Breaker"@en ;
+    rdfs:comment "Pattern for preventing cascading failures"@en .
+
+rt:CircuitState a owl:Class ;
+    rdfs:label "Circuit State"@en ;
+    rdfs:comment "State of circuit breaker"@en .
+
+rt:closed a rt:CircuitState ;
+    rdfs:label "Closed"@en ;
+    rdfs:comment "Normal operation, requests pass through"@en .
+
+rt:open a rt:CircuitState ;
+    rdfs:label "Open"@en ;
+    rdfs:comment "Failure detected, requests rejected"@en .
+
+rt:halfOpen a rt:CircuitState ;
+    rdfs:label "Half Open"@en ;
+    rdfs:comment "Testing recovery, limited requests pass through"@en .
+
+rt:failureThreshold a owl:DatatypeProperty ;
+    rdfs:label "Failure Threshold"@en ;
+    rdfs:comment "Number of failures before circuit opens (default 5)"@en ;
+    rdfs:range xsd:integer .
+
+rt:successThreshold a owl:DatatypeProperty ;
+    rdfs:label "Success Threshold"@en ;
+    rdfs:comment "Number of successes to close circuit from half-open"@en ;
+    rdfs:range xsd:integer .
+
+rt:timeoutSeconds a owl:DatatypeProperty ;
+    rdfs:label "Timeout Seconds"@en ;
+    rdfs:comment "Seconds before transition from open to half-open"@en ;
+    rdfs:range xsd:float .
+
+rt:RecoveryStrategy a owl:Class ;
+    rdfs:label "Recovery Strategy"@en ;
+    rdfs:comment "Strategy for recovering from failures"@en .
+
+rt:immediateRetry a rt:RecoveryStrategy ;
+    rdfs:label "Immediate Retry"@en ;
+    rdfs:comment "Retry immediately without delay"@en .
+
+rt:exponentialBackoff a rt:RecoveryStrategy ;
+    rdfs:label "Exponential Backoff"@en ;
+    rdfs:comment "Retry with exponentially increasing delays"@en .
+
+rt:adaptiveRetry a rt:RecoveryStrategy ;
+    rdfs:label "Adaptive Retry"@en ;
+    rdfs:comment "Adjust retry strategy based on conditions"@en .
+
+rt:circuitBreakerStrategy a rt:RecoveryStrategy ;
+    rdfs:label "Circuit Breaker"@en ;
+    rdfs:comment "Use circuit breaker pattern"@en .
+
+rt:fallback a rt:RecoveryStrategy ;
+    rdfs:label "Fallback"@en ;
+    rdfs:comment "Execute fallback function on failure"@en .
+
+rt:RetryPolicy a owl:Class ;
+    rdfs:label "Retry Policy"@en ;
+    rdfs:comment "Configuration for retry behavior"@en .
+
+rt:maxAttempts a owl:DatatypeProperty ;
+    rdfs:domain rt:RetryPolicy ;
+    rdfs:range xsd:integer ;
+    rdfs:comment "Maximum number of retry attempts (default 3)"@en .
+
+rt:initialDelayMs a owl:DatatypeProperty ;
+    rdfs:domain rt:RetryPolicy ;
+    rdfs:range xsd:float ;
+    rdfs:comment "Initial delay in milliseconds (default 100)"@en .
+
+rt:maxDelayMs a owl:DatatypeProperty ;
+    rdfs:domain rt:RetryPolicy ;
+    rdfs:range xsd:float ;
+    rdfs:comment "Maximum delay in milliseconds (default 30000)"@en .
+
+rt:multiplier a owl:DatatypeProperty ;
+    rdfs:domain rt:RetryPolicy ;
+    rdfs:range xsd:float ;
+    rdfs:comment "Backoff multiplier for exponential delay (default 2.0)"@en .
+
+rt:jitterFactor a owl:DatatypeProperty ;
+    rdfs:domain rt:RetryPolicy ;
+    rdfs:range xsd:float ;
+    rdfs:comment "Jitter factor (0-1) to randomize delays (default 0.1)"@en .
+
+# ============================================================================
+# Telemetry and Observability
+# ============================================================================
+
+rt:Instrumentation a owl:Class ;
+    rdfs:label "Instrumentation"@en ;
+    rdfs:comment "OpenTelemetry instrumentation configuration"@en .
+
+rt:@timed a owl:DatatypeProperty ;
+    rdfs:label "@timed Decorator"@en ;
+    rdfs:comment "Automatic timing instrumentation"@en ;
+    rdfs:range xsd:boolean .
+
+rt:span a owl:DatatypeProperty ;
+    rdfs:label "Span"@en ;
+    rdfs:comment "Named span for operation tracking"@en ;
+    rdfs:range xsd:string .
+
+rt:metrics a owl:DatatypeProperty ;
+    rdfs:label "Metrics"@en ;
+    rdfs:comment "Metrics to collect: counter, histogram, gauge"@en ;
+    rdfs:range xsd:string .
+
+# ============================================================================
+# Implementation Requirements
+# ============================================================================
+
+rt:RaftImplementation a owl:Class ;
+    rdfs:subClassOf rt:RaftConsensus ;
+    rdfs:label "Raft Implementation"@en ;
+    rdfs:comment "Complete Raft algorithm with all components"@en .
+
+rt:requiresComponent a owl:ObjectProperty ;
+    rdfs:label "Requires Component"@en ;
+    rdfs:comment "This class requires another component"@en .
+
+rt:RaftImplementation rt:requiresComponent rt:LogEntry ;
+rt:RaftImplementation rt:requiresComponent rt:NodeState ;
+rt:RaftImplementation rt:requiresComponent rt:appendEntry ;
+rt:RaftImplementation rt:requiresComponent rt:requestVote ;
+
+rt:ClusterImplementation a owl:Class ;
+    rdfs:subClassOf rt:ClusterManagement ;
+    rdfs:label "Cluster Implementation"@en ;
+    rdfs:comment "Complete cluster management system"@en .
+
+rt:ClusterImplementation rt:requiresComponent rt:ClusterNode ;
+rt:ClusterImplementation rt:requiresComponent rt:NodeRole ;
+rt:ClusterImplementation rt:requiresComponent rt:NodeHealth ;
+rt:ClusterImplementation rt:requiresComponent rt:ClusterEvent ;
+
+rt:DistributedExecutionImplementation a owl:Class ;
+    rdfs:subClassOf rt:DistributedTaskExecution ;
+    rdfs:label "Distributed Execution Implementation"@en ;
+    rdfs:comment "Complete distributed task execution system"@en .
+
+rt:DistributedExecutionImplementation rt:requiresComponent rt:TaskScheduler ;
+rt:DistributedExecutionImplementation rt:requiresComponent rt:SchedulingStrategy ;
+rt:DistributedExecutionImplementation rt:requiresComponent rt:DistributedTask ;
+
+rt:FaultToleranceImplementation a owl:Class ;
+    rdfs:subClassOf rt:FaultTolerance ;
+    rdfs:label "Fault Tolerance Implementation"@en ;
+    rdfs:comment "Complete fault tolerance system"@en .
+
+rt:FaultToleranceImplementation rt:requiresComponent rt:HealthCheck ;
+rt:FaultToleranceImplementation rt:requiresComponent rt:CircuitBreaker ;
+rt:FaultToleranceImplementation rt:requiresComponent rt:RetryPolicy ;
+
+# ============================================================================
+# Module Specifications
+# ============================================================================
+
+rt:consensus a rt:RaftImplementation ;
+    rdfs:label "consensus.py Module"@en ;
+    rdfs:comment "Raft consensus implementation with leader election and log replication"@en ;
+    rt:@timed true ;
+    rt:span "consensus.append_entry, consensus.request_vote, consensus.start_election, consensus.submit_command"@en ;
+    rt:metrics "consensus.term_updated, consensus.append_entries_received, consensus.vote_granted, consensus.election_started, consensus.leader_elected, consensus.command_submitted"@en .
+
+rt:cluster a rt:ClusterImplementation ;
+    rdfs:label "cluster.py Module"@en ;
+    rdfs:comment "Multi-node cluster management with membership tracking and health monitoring"@en ;
+    rt:@timed true ;
+    rt:span "cluster.add_node, cluster.remove_node, cluster.heartbeat, cluster.check_health"@en ;
+    rt:metrics "cluster.node_added, cluster.node_removed, cluster.heartbeat_received, cluster.node_dead, cluster.healthy_nodes"@en .
+
+rt:distributedExecution a rt:DistributedExecutionImplementation ;
+    rdfs:label "distributed_execution.py Module"@en ;
+    rdfs:comment "Cross-cluster task scheduling with intelligent node selection"@en ;
+    rt:@timed true ;
+    rt:span "distributed_execution.submit_task, distributed_execution.schedule_task, distributed_execution.execute_batch"@en ;
+    rt:metrics "distributed_execution.task_submitted, distributed_execution.task_scheduled, distributed_execution.task_completed, distributed_execution.task_failed, distributed_execution.batch_size"@en .
+
+rt:faultTolerance a rt:FaultToleranceImplementation ;
+    rdfs:label "fault_tolerance.py Module"@en ;
+    rdfs:comment "Resilience mechanisms including health checks, circuit breakers, and recovery"@en ;
+    rt:@timed true ;
+    rt:span "fault_tolerance.check_health, fault_tolerance.check_all_targets, fault_tolerance.execute_with_fallback"@en ;
+    rt:metrics "fault_tolerance.health_check, fault_tolerance.operation_failed"@en .

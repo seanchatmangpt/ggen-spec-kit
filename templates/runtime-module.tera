@@ -1,0 +1,108 @@
+"""{{ module.label }} - {{ module.comment }}
+
+Constitutional equation: {{ module.py_file }} = μ({{ module.ttl_file }})
+"""
+
+from __future__ import annotations
+
+import time
+import uuid
+from dataclasses import dataclass, field
+from enum import Enum
+from typing import Any, Callable
+
+from specify_cli.core.shell import timed
+from specify_cli.core.telemetry import metric_counter, metric_histogram, span
+
+{% if module.enums %}
+# ============================================================================
+# Enumerations
+# ============================================================================
+{% for enum in module.enums %}
+
+class {{ enum.name }}(Enum):
+    """{{ enum.comment }}"""
+
+{% for value in enum.values %}
+    {{ value.name }} = "{{ value.label }}"
+{% endfor %}
+{% endfor %}
+{% endif %}
+
+{% if module.dataclasses %}
+# ============================================================================
+# Data Structures
+# ============================================================================
+{% for dataclass in module.dataclasses %}
+
+@dataclass
+class {{ dataclass.name }}:
+    """{{ dataclass.comment }}"""
+
+{% for field in dataclass.fields %}
+    {{ field.name }}: {{ field.type }} {% if field.default %}= {{ field.default }}{% elif field.factory %}= field(default_factory={{ field.factory }}){% endif %}
+    # {{ field.comment }}
+{% endfor %}
+
+    def to_dict(self) -> dict[str, Any]:
+        """Convert to dictionary."""
+        return {
+{% for field in dataclass.fields %}
+            "{{ field.name }}": self.{{ field.name }},
+{% endfor %}
+        }
+{% endfor %}
+{% endif %}
+
+{% if module.classes %}
+# ============================================================================
+# Main Classes
+# ============================================================================
+{% for class in module.classes %}
+
+class {{ class.name }}:
+    """{{ class.comment }}"""
+
+    def __init__(self{% for param in class.constructor_params %}, {{ param.name }}: {{ param.type }}{% endfor %}):
+{% for param in class.constructor_params %}
+        self.{{ param.name }} = {{ param.name }}
+{% endfor %}
+{% for attr in class.attributes %}
+        self.{{ attr.name }}: {{ attr.type }} = {{ attr.default }}
+{% endfor %}
+
+{% if class.methods %}
+{% for method in class.methods %}
+    @timed
+    def {{ method.name }}(self{% for param in method.params %}, {{ param.name }}: {{ param.type }}{% endfor %}){% if method.return_type %} -> {{ method.return_type }}{% endif %}:
+        """{{ method.comment }}"""
+        with span("{{ class.name | lower }}.{{ method.name }}", **{{ method.span_params }}):
+            # Implementation for {{ method.name }}
+            metric_counter(
+                "{{ class.name | lower }}.{{ method.name }}_called",
+                1,
+                {{ method.metrics }}
+            )
+            pass
+
+{% endfor %}
+{% endif %}
+{% endfor %}
+{% endif %}
+
+# ============================================================================
+# Factory Functions
+# ============================================================================
+
+{% if module.factories %}
+{% for factory in module.factories %}
+_global_{{ factory.singleton_name }}: {{ factory.class_name }} | None = None
+
+def {{ factory.function_name }}({% for param in factory.params %}{{ param.name }}: {{ param.type }} = {{ param.default }}{% if not loop.last %}, {% endif %}{% endfor %}) -> {{ factory.class_name }}:
+    """{{ factory.comment }}"""
+    global _global_{{ factory.singleton_name }}
+    if _global_{{ factory.singleton_name }} is None:
+        _global_{{ factory.singleton_name }} = {{ factory.class_name }}({% for param in factory.init_params %}{{ param }}{% if not loop.last %}, {% endif %}{% endfor %})
+    return _global_{{ factory.singleton_name }}
+{% endfor %}
+{% endif %}

@@ -1,0 +1,136 @@
+@prefix : <http://spec-kit.io/cloud/cli#> .
+@prefix cloud: <http://spec-kit.io/cloud#> .
+@prefix cli: <http://github.com/github/spec-kit/cli#> .
+@prefix sk: <http://github.com/github/spec-kit#> .
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix owl: <http://www.w3.org/2002/07/owl#> .
+@prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
+
+# ============================================================================
+# CLOUD OPERATIONS - Multi-Cloud Infrastructure Management
+# ============================================================================
+# Unified interface for AWS, GCP, Azure, and hybrid cloud operations
+# Supports deployment, scaling, monitoring, compliance, and cost analysis
+
+:cloud a owl:Class ;
+    rdfs:subClassOf cli:Command ;
+    rdfs:label "cloud" ;
+    rdfs:comment "Multi-cloud operations (AWS/GCP/Azure) with unified interface" ;
+    sk:category "cloud" ;
+    sk:description "Unified cloud infrastructure management across AWS, GCP, and Azure" .
+
+# Arguments for cloud command
+:cloud_config_file a owl:DatatypeProperty ;
+    rdfs:domain :cloud ;
+    rdfs:range xsd:string ;
+    rdfs:label "config_file" ;
+    rdfs:comment "[type:argument] [index:0] [required:true] [help:Cloud configuration file (YAML/JSON)] Infrastructure configuration file" .
+
+# Options for cloud command
+:cloud_provider a owl:DatatypeProperty ;
+    rdfs:domain :cloud ;
+    rdfs:range xsd:string ;
+    rdfs:label "provider" ;
+    rdfs:comment "[type:option] [flag:--provider] [required:true] [help:Cloud provider: aws, gcp, azure, multi] Target cloud provider" .
+
+:cloud_region a owl:DatatypeProperty ;
+    rdfs:domain :cloud ;
+    rdfs:range xsd:string ;
+    rdfs:label "region" ;
+    rdfs:comment "[type:option] [flag:--region] [required:true] [help:Target region (provider-specific)] Deployment region/zone" .
+
+:cloud_dry_run a owl:DatatypeProperty ;
+    rdfs:domain :cloud ;
+    rdfs:range xsd:boolean ;
+    rdfs:label "dry_run" ;
+    rdfs:comment "[type:option] [flag:--dry-run] [default:false] [required:false] [help:Simulate without applying changes] Preview changes without execution" .
+
+:cloud_auto_approve a owl:DatatypeProperty ;
+    rdfs:domain :cloud ;
+    rdfs:range xsd:boolean ;
+    rdfs:label "auto_approve" ;
+    rdfs:comment "[type:option] [flag:--auto-approve] [default:false] [required:false] [help:Skip interactive approval] Auto-approve all changes" .
+
+:cloud_timeout a owl:DatatypeProperty ;
+    rdfs:domain :cloud ;
+    rdfs:range xsd:integer ;
+    rdfs:label "timeout" ;
+    rdfs:comment "[type:option] [flag:--timeout] [default:3600] [required:false] [help:Operation timeout in seconds] Maximum operation duration" .
+
+:cloud_verbose a owl:DatatypeProperty ;
+    rdfs:domain :cloud ;
+    rdfs:range xsd:boolean ;
+    rdfs:label "verbose" ;
+    rdfs:comment "[type:option] [flag:--verbose] [short:-v] [default:false] [required:false] [help:Show detailed operation logs] Enable detailed logging" .
+
+# Subcommand: cloud deploy
+:cloud_deploy a owl:Class ;
+    rdfs:subClassOf :cloud ;
+    rdfs:label "deploy" ;
+    rdfs:comment "Deploy services to cloud providers" .
+
+:cloud_deploy_environment a owl:DatatypeProperty ;
+    rdfs:domain :cloud_deploy ;
+    rdfs:range xsd:string ;
+    rdfs:label "environment" ;
+    rdfs:comment "[type:option] [flag:--env] [default:staging] [required:false] [help:Deployment environment: dev, staging, prod] Target environment" .
+
+:cloud_deploy_version a owl:DatatypeProperty ;
+    rdfs:domain :cloud_deploy ;
+    rdfs:range xsd:string ;
+    rdfs:label "version" ;
+    rdfs:comment "[type:option] [flag:--version] [required:false] [help:Service version to deploy] Version tag or git ref" .
+
+# Subcommand: cloud scale
+:cloud_scale a owl:Class ;
+    rdfs:subClassOf :cloud ;
+    rdfs:label "scale" ;
+    rdfs:comment "Scale services across cloud providers" .
+
+:cloud_scale_replicas a owl:DatatypeProperty ;
+    rdfs:domain :cloud_scale ;
+    rdfs:range xsd:integer ;
+    rdfs:label "replicas" ;
+    rdfs:comment "[type:option] [flag:--replicas] [required:true] [help:Target number of replicas] Number of service instances" .
+
+:cloud_scale_strategy a owl:DatatypeProperty ;
+    rdfs:domain :cloud_scale ;
+    rdfs:range xsd:string ;
+    rdfs:label "strategy" ;
+    rdfs:comment "[type:option] [flag:--strategy] [default:rolling] [required:false] [help:Scaling strategy: rolling, blue-green, canary] Deployment strategy" .
+
+# Subcommand: cloud monitor
+:cloud_monitor a owl:Class ;
+    rdfs:subClassOf :cloud ;
+    rdfs:label "monitor" ;
+    rdfs:comment "Monitor cloud resources and costs" .
+
+:cloud_monitor_metric a owl:DatatypeProperty ;
+    rdfs:domain :cloud_monitor ;
+    rdfs:range xsd:string ;
+    rdfs:label "metric" ;
+    rdfs:comment "[type:option] [flag:--metric] [default:all] [required:false] [help:Metrics to monitor: cpu, memory, disk, network, cost, all] Metrics to display" .
+
+:cloud_monitor_duration a owl:DatatypeProperty ;
+    rdfs:domain :cloud_monitor ;
+    rdfs:range xsd:integer ;
+    rdfs:label "duration" ;
+    rdfs:comment "[type:option] [flag:--duration] [default:3600] [required:false] [help:Monitoring duration in seconds] Time window for metrics" .
+
+# Subcommand: cloud compliance
+:cloud_compliance a owl:Class ;
+    rdfs:subClassOf :cloud ;
+    rdfs:label "compliance" ;
+    rdfs:comment "Check compliance with cloud security standards" .
+
+:cloud_compliance_standard a owl:DatatypeProperty ;
+    rdfs:domain :cloud_compliance ;
+    rdfs:range xsd:string ;
+    rdfs:label "standard" ;
+    rdfs:comment "[type:option] [flag:--standard] [default:cis] [required:false] [help:Compliance standard: cis, pci-dss, hipaa, soc2, all] Security standard to check" .
+
+:cloud_compliance_report_format a owl:DatatypeProperty ;
+    rdfs:domain :cloud_compliance ;
+    rdfs:range xsd:string ;
+    rdfs:label "report_format" ;
+    rdfs:comment "[type:option] [flag:--report] [default:json] [required:false] [help:Report format: json, pdf, html] Output format for compliance report" .
