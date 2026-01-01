@@ -3,7 +3,6 @@
 # ============================================================================
 # Ontology-driven code generation for the Spec-Kit project
 # Implements: spec.md = μ(specification.ttl)
-# Learn more: https://docs.ggen.io
 #
 # Usage: ggen sync
 # ============================================================================
@@ -11,395 +10,192 @@
 [project]
 name = "spec-kit"
 version = "0.1.0"
-description = "RDF-first specification development toolkit implementing ontology-driven code generation"
-authors = ["Spec-Kit Contributors"]
-license = "MIT"
+description = "RDF-first specification development toolkit"
 
-[metadata]
-name = "spec-kit-codegen"
-description = "RDF-to-Code and RDF-to-Documentation transformations"
-version = "1.0"
-
-# ============================================================================
-# RDF GENERATION SETTINGS
-# ============================================================================
-
-[generation]
-# Directory containing RDF ontology files (.ttl, .rdf, .owl)
-ontology_dir = "ontology/"
-
-# Directory containing Tera code generation templates
-templates_dir = "templates/"
-
-# Output directory for generated code and documentation
-output_dir = "src/generated/"
-
-# Enable incremental sync (preserve sections marked with // MANUAL)
-incremental = true
-
-# Don't overwrite existing files by default
-overwrite = false
-
-# ============================================================================
-# SYNC SETTINGS
-# ============================================================================
-
-[sync]
-# Enable automatic sync on save
-enabled = true
-
-# Trigger on: "save" (file changes) | "commit" (git) | "manual" (explicit)
-on_change = "manual"
-
-# Run validation after sync completes
-validate_after = true
-
-# How to handle conflicts: "fail" | "warn" | "ignore"
-conflict_mode = "warn"
-
-# ============================================================================
-# RDF SETTINGS
-# ============================================================================
-
-[rdf]
-# Supported RDF serialization formats
-formats = ["turtle", "rdf-xml", "n-triples"]
-
-# Default format for new ontologies
-default_format = "turtle"
-
-# Base URI for ontology (namespace)
-base_uri = "https://spec-kit.io/ontology#"
-
-# Validate RDF strictly against standards
-strict_validation = false
-
-# ============================================================================
-# TEMPLATE SETTINGS
-# ============================================================================
+[ontology]
+# Directory containing RDF ontology files
+dir = "ontology/"
 
 [templates]
-# Cache compiled Tera templates for faster generation
-enable_caching = true
-
-# Auto-reload templates when they change
-auto_reload = true
-
-# ============================================================================
-# OUTPUT FORMATTING
-# ============================================================================
+# Directory containing Tera templates
+dir = "templates/"
 
 [output]
-# Code formatter: "default" | "rustfmt" | "prettier" | "black" | "autopep8"
-formatting = "default"
-
-# Maximum line length for generated code
-line_length = 100
-
-# Indentation width (spaces)
-indent = 2
-
-# ============================================================================
-# PIPELINE CONFIGURATION (Five-Stage Transformation μ₁ through μ₅)
-# ============================================================================
+# Output directory for generated files
+dir = "src/generated/"
 
 [pipeline]
-# Transformation stages executed in order
+# Five-stage transformation pipeline
 stages = ["normalize", "extract", "emit", "canonicalize", "receipt"]
 
-# μ₁ NORMALIZE: Load RDF and validate against SHACL shapes
-[pipeline.normalize]
-enabled = true
-fail_on_validation_error = true
-
-# μ₂ EXTRACT: Execute SPARQL queries against RDF data
-[pipeline.extract]
-enabled = true
-timeout_seconds = 30
-
-# μ₃ EMIT: Render Tera templates with SPARQL results
-[pipeline.emit]
-enabled = true
-template_engine = "tera"
-
-# μ₄ CANONICALIZE: Format and normalize markdown/code output
-[pipeline.canonicalize]
-enabled = true
-line_ending = "lf"
-trim_trailing_whitespace = true
-ensure_final_newline = true
-
-# μ₅ RECEIPT: Generate SHA256 hash proof of transformation
-[pipeline.receipt]
-enabled = true
-hash_algorithm = "sha256"
-write_manifest = true
-
 # ============================================================================
-# OPTIONS
+# TRANSFORMATION RULES - CLI Commands
 # ============================================================================
 
-[options]
-# Continue on individual transformation failures instead of fail-fast
-continue_on_error = false
-
-# Validate all input RDF files upfront
-validate_inputs = true
-
-# Include source RDF comments in generated files
-include_source_comments = false
-
-# Maximum parallel transformation tasks
-max_parallel = 4
-
-# Verbose output for debugging (false = quiet, true = verbose)
-verbose = false
-
-# ============================================================================
-# MARKETPLACE SETTINGS
-# ============================================================================
-
-[marketplace]
-# Package registry URL for ggen marketplace
-registry_url = "https://registry.ggen.io"
-
-# Cache directory for downloaded packages
-cache_dir = ".ggen/cache/"
-
-# Verify package signatures (enable for production)
-verify_signatures = false
-
-# ============================================================================
-# TRANSFORMATIONS - CLI Commands (Code Generation from RDF)
-# ============================================================================
-# Phase 1: AGI Command Suite (3 commands)
-
-[[transformations]]
+[[rules]]
 name = "agi-command-ops"
 description = "Generate agi ops module from RDF specification"
 ontology = ["ontology/cli-commands-agi.ttl"]
 sparql = "sparql/extract-agi-commands.rq"
 template = "templates/agi-ops.tera"
 output = "src/specify_cli/ops/agi_generated.py"
-depends_on = []
 
-[[transformations]]
+[[rules]]
 name = "agi-reasoner-ops"
 description = "Generate agi_reasoner ops module from RDF specification"
 ontology = ["ontology/cli-commands-agi.ttl"]
 sparql = "sparql/extract-agi-commands.rq"
 template = "templates/agi-reasoner.tera"
 output = "src/specify_cli/ops/agi_reasoner_generated.py"
-depends_on = []
 
-[[transformations]]
+[[rules]]
 name = "agi-task-planner-ops"
 description = "Generate agi_task_planner ops module from RDF specification"
 ontology = ["ontology/agi-task-planning.ttl"]
 sparql = "sparql/agi-task-extraction.rq"
 template = "templates/agi-planner.tera"
 output = "src/specify_cli/ops/agi_task_planner_generated.py"
-depends_on = []
 
-[[transformations]]
-name = "agi-command-wrapper"
-description = "Generate agi CLI command wrapper from ops"
-ontology = ["ontology/cli-commands-agi.ttl"]
-sparql = "sparql/extract-agi-commands.rq"
-template = "templates/cli-command.tera"
-output = "src/specify_cli/commands/agi_generated.py"
-depends_on = ["agi-command-ops"]
-
-# ============================================================================
-# TRANSFORMATIONS - Cloud Commands (Phase 2)
-# ============================================================================
-
-[[transformations]]
+[[rules]]
 name = "cloud-command-ops"
 description = "Generate cloud ops module from RDF specification"
 ontology = ["ontology/cli-commands-cloud.ttl"]
 sparql = "sparql/extract-cloud-commands.rq"
 template = "templates/agi-ops.tera"
 output = "src/specify_cli/ops/cloud_generated.py"
-depends_on = []
 
-[[transformations]]
-name = "cloud-command-wrapper"
-description = "Generate cloud CLI command wrapper from ops"
-ontology = ["ontology/cli-commands-cloud.ttl"]
-sparql = "sparql/extract-cloud-commands.rq"
-template = "templates/cli-command.tera"
-output = "src/specify_cli/commands/cloud_generated.py"
-depends_on = ["cloud-command-ops"]
-
-# ============================================================================
-# TRANSFORMATIONS - Analytics Commands (Phase 3)
-# ============================================================================
-
-[[transformations]]
+[[rules]]
 name = "dashboards-command-ops"
 description = "Generate dashboards ops module"
 ontology = ["ontology/cli-commands-analytics.ttl"]
 sparql = "sparql/extract-analytics-commands.rq"
 template = "templates/agi-ops.tera"
 output = "src/specify_cli/ops/dashboards_generated.py"
-depends_on = []
 
-[[transformations]]
+[[rules]]
 name = "hd-command-ops"
 description = "Generate hypothesis management ops module"
 ontology = ["ontology/cli-commands-analytics.ttl"]
 sparql = "sparql/extract-analytics-commands.rq"
 template = "templates/agi-ops.tera"
 output = "src/specify_cli/ops/hd_generated.py"
-depends_on = []
 
-[[transformations]]
+[[rules]]
 name = "hdql-command-ops"
 description = "Generate HDQL query ops module"
 ontology = ["ontology/cli-commands-analytics.ttl"]
 sparql = "sparql/extract-analytics-commands.rq"
 template = "templates/agi-ops.tera"
 output = "src/specify_cli/ops/hdql_generated.py"
-depends_on = []
 
-[[transformations]]
+[[rules]]
 name = "jtbd-command-ops"
 description = "Generate JTBD analysis ops module"
 ontology = ["ontology/jtbd-schema.ttl", "ontology/cli-commands-analytics.ttl"]
 sparql = "sparql/jtbd-extract-jobs.rq"
 template = "templates/agi-ops.tera"
 output = "src/specify_cli/ops/jtbd_generated.py"
-depends_on = []
 
-[[transformations]]
+[[rules]]
 name = "observability-command-ops"
 description = "Generate observability analysis ops module"
 ontology = ["ontology/cli-commands-analytics.ttl"]
 sparql = "sparql/extract-analytics-commands.rq"
 template = "templates/agi-ops.tera"
 output = "src/specify_cli/ops/observability_generated.py"
-depends_on = []
 
-# ============================================================================
-# TRANSFORMATIONS - Support Commands (Phase 4)
-# ============================================================================
-
-[[transformations]]
+[[rules]]
 name = "dspy-latex-command-ops"
 description = "Generate DSPy LaTeX ops module"
 ontology = ["ontology/cli-commands-support.ttl"]
 sparql = "sparql/extract-support-commands.rq"
 template = "templates/agi-ops.tera"
 output = "src/specify_cli/ops/dspy_latex_generated.py"
-depends_on = []
 
-[[transformations]]
+[[rules]]
 name = "plugin-command-ops"
 description = "Generate plugin management ops module"
 ontology = ["ontology/cli-commands-support.ttl"]
 sparql = "sparql/extract-support-commands.rq"
 template = "templates/agi-ops.tera"
 output = "src/specify_cli/ops/plugin_generated.py"
-depends_on = []
 
 # ============================================================================
-# TRANSFORMATIONS - Documentation Generation
+# TRANSFORMATION RULES - Documentation
 # ============================================================================
 
-[[transformations]]
+[[rules]]
 name = "changelog-generation"
 description = "Generate CHANGELOG.md from RDF specifications"
 ontology = ["ontology/spec-kit-schema.ttl"]
 sparql = "sparql/changelog-query.rq"
 template = "templates/changelog.tera"
 output = "CHANGELOG.md"
-depends_on = []
 
-[[transformations]]
+[[rules]]
 name = "command-guide-generation"
 description = "Generate command reference guide from RDF"
 ontology = ["ontology/cli-commands.ttl", "ontology/cli-commands-agi.ttl", "ontology/cli-commands-cloud.ttl", "ontology/cli-commands-analytics.ttl", "ontology/cli-commands-support.ttl"]
 sparql = "sparql/command-query.rq"
 template = "templates/agi-command.tera"
 output = "docs/COMMAND_REFERENCE.md"
-depends_on = []
 
 # ============================================================================
-# TRANSFORMATIONS - Test Generation
+# TRANSFORMATION RULES - Tests
 # ============================================================================
 
-[[transformations]]
+[[rules]]
 name = "command-test-generation"
 description = "Generate command tests from RDF specifications"
 ontology = ["ontology/cli-commands.ttl"]
 sparql = "sparql/command-test-query.rq"
 template = "templates/command-test.tera"
 output = "tests/e2e/test_commands_generated.py"
-depends_on = []
 
 # ============================================================================
-# TRANSFORMATIONS - Configuration Generation
+# TRANSFORMATION RULES - AGI Agents
 # ============================================================================
 
-[[transformations]]
-name = "runtime-config-generation"
-description = "Generate runtime configuration from RDF"
-ontology = ["ontology/spec-kit-schema.ttl"]
-sparql = "sparql/extract-runtime.rq"
-template = "templates/agi-runtime.tera"
-output = "src/specify_cli/runtime/generated.py"
-depends_on = []
-
-# ============================================================================
-# TRANSFORMATIONS - AGI Agent Generation
-# ============================================================================
-
-[[transformations]]
+[[rules]]
 name = "agi-agent-base"
 description = "Generate AGI agent base classes from RDF"
 ontology = ["ontology/agi-agent-schema.ttl"]
 sparql = "sparql/agi-agent-extraction.rq"
 template = "templates/agi-agent-base.tera"
 output = "src/specify_cli/agi/agents_base_generated.py"
-depends_on = []
 
-[[transformations]]
+[[rules]]
 name = "agi-agent-reasoner"
 description = "Generate AGI reasoning agent from RDF"
 ontology = ["ontology/agi-reasoning.ttl"]
 sparql = "sparql/agi-reasoning-extraction.rq"
 template = "templates/agi-agent-reasoner.tera"
 output = "src/specify_cli/agi/agents_reasoner_generated.py"
-depends_on = ["agi-agent-base"]
 
-[[transformations]]
+[[rules]]
 name = "agi-agent-orchestrator"
 description = "Generate AGI orchestrator from RDF"
 ontology = ["ontology/agi-agent-schema.ttl"]
 sparql = "sparql/agi-agent-extraction.rq"
 template = "templates/agi-orchestrator.tera"
 output = "src/specify_cli/agi/orchestration_generated.py"
-depends_on = []
 
 # ============================================================================
-# TRANSFORMATIONS - JTBD Analysis (Feature-focused)
+# TRANSFORMATION RULES - JTBD Analysis
 # ============================================================================
 
-[[transformations]]
+[[rules]]
 name = "jtbd-feature-effectiveness"
 description = "Analyze feature effectiveness from JTBD perspective"
 ontology = ["ontology/jtbd-schema.ttl"]
 sparql = "sparql/jtbd-feature-effectiveness.rq"
 template = "templates/agi-command.tera"
 output = "docs/analysis/feature-effectiveness.md"
-depends_on = []
 
-[[transformations]]
+[[rules]]
 name = "jtbd-persona-journey"
 description = "Generate persona journey maps from JTBD"
 ontology = ["ontology/jtbd-schema.ttl"]
 sparql = "sparql/jtbd-persona-journey.rq"
 template = "templates/agi-command.tera"
 output = "docs/analysis/persona-journeys.md"
-depends_on = []
