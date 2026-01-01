@@ -1,0 +1,186 @@
+@prefix : <http://spec-kit.io/analytics/cli#> .
+@prefix analytics: <http://spec-kit.io/analytics#> .
+@prefix jtbd: <http://github.com/github/spec-kit/jtbd#> .
+@prefix cli: <http://github.com/github/spec-kit/cli#> .
+@prefix sk: <http://github.com/github/spec-kit#> .
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix owl: <http://www.w3.org/2002/07/owl#> .
+@prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
+
+# ============================================================================
+# ANALYTICS & OBSERVABILITY COMMANDS
+# ============================================================================
+# Integrated analytics dashboard generation, hypothesis-driven development,
+# Jobs-To-Be-Done analysis, and observability metric extraction
+
+# COMMAND: dashboards - Analytics Dashboard Generation
+:dashboards a owl:Class ;
+    rdfs:subClassOf cli:Command ;
+    rdfs:label "dashboards" ;
+    rdfs:comment "Generate analytics dashboards from JTBD and observability data" ;
+    sk:category "analytics" ;
+    sk:description "Create interactive dashboards from customer jobs, metrics, and observability data" .
+
+:dashboard_input_file a owl:DatatypeProperty ;
+    rdfs:domain :dashboards ;
+    rdfs:range xsd:string ;
+    rdfs:label "input_file" ;
+    rdfs:comment "[type:argument] [index:0] [required:true] [help:JTBD or observability data file (TTL or JSON)] Input specification file" .
+
+:dashboard_metric a owl:DatatypeProperty ;
+    rdfs:domain :dashboards ;
+    rdfs:range xsd:string ;
+    rdfs:label "metric" ;
+    rdfs:comment "[type:option] [flag:--metric] [required:false] [help:Specific metric to display: completion, satisfaction, roi, time-to-value] Metric filter" .
+
+:dashboard_format a owl:DatatypeProperty ;
+    rdfs:domain :dashboards ;
+    rdfs:range xsd:string ;
+    rdfs:label "format" ;
+    rdfs:comment "[type:option] [flag:--format] [default:html] [required:false] [help:Output format: html, pdf, json, mermaid] Dashboard format" .
+
+:dashboard_output a owl:DatatypeProperty ;
+    rdfs:domain :dashboards ;
+    rdfs:range xsd:string ;
+    rdfs:label "output" ;
+    rdfs:comment "[type:option] [flag:--output] [short:-o] [required:false] [help:Output file path] Destination file" .
+
+# COMMAND: hd - Hypothesis-Driven Development
+:hd a owl:Class ;
+    rdfs:subClassOf cli:Command ;
+    rdfs:label "hd" ;
+    rdfs:comment "Hypothesis-driven development framework and hypothesis management" ;
+    sk:category "analytics" ;
+    sk:description "Create, manage, and evaluate hypotheses for evidence-based development" .
+
+:hd_action a owl:DatatypeProperty ;
+    rdfs:domain :hd ;
+    rdfs:range xsd:string ;
+    rdfs:label "action" ;
+    rdfs:comment "[type:argument] [index:0] [required:true] [help:Hypothesis operation: create, list, evaluate, update, delete] Action to perform" .
+
+:hd_hypothesis_file a owl:DatatypeProperty ;
+    rdfs:domain :hd ;
+    rdfs:range xsd:string ;
+    rdfs:label "hypothesis_file" ;
+    rdfs:comment "[type:option] [flag:--file] [required:false] [help:Hypothesis definition file (RDF or YAML)] Hypothesis specification" .
+
+:hd_priority a owl:DatatypeProperty ;
+    rdfs:domain :hd ;
+    rdfs:range xsd:string ;
+    rdfs:label "priority" ;
+    rdfs:comment "[type:option] [flag:--priority] [default:medium] [required:false] [help:Priority: critical, high, medium, low] Hypothesis priority" .
+
+:hd_evidence_file a owl:DatatypeProperty ;
+    rdfs:domain :hd ;
+    rdfs:range xsd:string ;
+    rdfs:label "evidence_file" ;
+    rdfs:comment "[type:option] [flag:--evidence] [required:false] [help:Evidence data file for evaluation] Supporting evidence" .
+
+# COMMAND: hdql - Hypothesis-Driven Query Language
+:hdql a owl:Class ;
+    rdfs:subClassOf cli:Command ;
+    rdfs:label "hdql" ;
+    rdfs:comment "Hypothesis-Driven Query Language for evidence extraction" ;
+    sk:category "analytics" ;
+    sk:description "Query and extract evidence using hypothesis-driven query language" .
+
+:hdql_query_file a owl:DatatypeProperty ;
+    rdfs:domain :hdql ;
+    rdfs:range xsd:string ;
+    rdfs:label "query_file" ;
+    rdfs:comment "[type:argument] [index:0] [required:true] [help:HDQL query file (.hdql)] Query specification" .
+
+:hdql_data_source a owl:DatatypeProperty ;
+    rdfs:domain :hdql ;
+    rdfs:range xsd:string ;
+    rdfs:label "data_source" ;
+    rdfs:comment "[type:option] [flag:--data-source] [required:false] [help:Data source: rdf, json, csv, otel] Input data source" .
+
+:hdql_output_format a owl:DatatypeProperty ;
+    rdfs:domain :hdql ;
+    rdfs:range xsd:string ;
+    rdfs:label "output_format" ;
+    rdfs:comment "[type:option] [flag:--output] [short:-o] [default:json] [required:false] [help:Output format: json, csv, rdf] Result format" .
+
+:hdql_explain a owl:DatatypeProperty ;
+    rdfs:domain :hdql ;
+    rdfs:range xsd:boolean ;
+    rdfs:label "explain" ;
+    rdfs:comment "[type:option] [flag:--explain] [default:false] [required:false] [help:Show query execution plan] Query explanation" .
+
+# COMMAND: jtbd - Jobs-To-Be-Done Analysis
+:jtbd a owl:Class ;
+    rdfs:subClassOf cli:Command ;
+    rdfs:label "jtbd" ;
+    rdfs:comment "Jobs-To-Be-Done customer analysis and job statement extraction" ;
+    sk:category "analytics" ;
+    sk:description "Analyze customer jobs-to-be-done and extract insights for product development" .
+
+:jtbd_spec_file a owl:DatatypeProperty ;
+    rdfs:domain :jtbd ;
+    rdfs:range xsd:string ;
+    rdfs:label "spec_file" ;
+    rdfs:comment "[type:argument] [index:0] [required:true] [help:JTBD specification file (RDF)] JTBD specification" .
+
+:jtbd_analysis_type a owl:DatatypeProperty ;
+    rdfs:domain :jtbd ;
+    rdfs:range xsd:string ;
+    rdfs:label "analysis_type" ;
+    rdfs:comment "[type:option] [flag:--analysis] [default:complete] [required:false] [help:Analysis type: jobs, outcomes, satisfaction, roi, all] Analysis scope" .
+
+:jtbd_persona a owl:DatatypeProperty ;
+    rdfs:domain :jtbd ;
+    rdfs:range xsd:string ;
+    rdfs:label "persona" ;
+    rdfs:comment "[type:option] [flag:--persona] [required:false] [help:Filter by persona name] Persona filter" .
+
+:jtbd_metrics_only a owl:DatatypeProperty ;
+    rdfs:domain :jtbd ;
+    rdfs:range xsd:boolean ;
+    rdfs:label "metrics_only" ;
+    rdfs:comment "[type:option] [flag:--metrics] [default:false] [required:false] [help:Show only quantitative metrics] Metrics-only output" .
+
+:jtbd_output_format a owl:DatatypeProperty ;
+    rdfs:domain :jtbd ;
+    rdfs:range xsd:string ;
+    rdfs:label "output_format" ;
+    rdfs:comment "[type:option] [flag:--output] [short:-o] [default:json] [required:false] [help:Output format: json, ttl, markdown, excel] Result format" .
+
+# COMMAND: observability - System Observability Analysis
+:observability a owl:Class ;
+    rdfs:subClassOf cli:Command ;
+    rdfs:label "observability" ;
+    rdfs:comment "System observability metrics, traces, and logs analysis" ;
+    sk:category "analytics" ;
+    sk:description "Analyze and visualize system observability data (traces, metrics, logs)" .
+
+:observability_metric_type a owl:DatatypeProperty ;
+    rdfs:domain :observability ;
+    rdfs:range xsd:string ;
+    rdfs:label "metric_type" ;
+    rdfs:comment "[type:option] [flag:--metric] [default:traces] [required:false] [help:Metric type: traces, metrics, logs, profiles] Observability data type" .
+
+:observability_otel_endpoint a owl:DatatypeProperty ;
+    rdfs:domain :observability ;
+    rdfs:range xsd:string ;
+    rdfs:label "otel_endpoint" ;
+    rdfs:comment "[type:option] [flag:--endpoint] [env:OTEL_EXPORTER_OTLP_ENDPOINT] [required:false] [help:OpenTelemetry collector endpoint] OTEL collector URL" .
+
+:observability_service_name a owl:DatatypeProperty ;
+    rdfs:domain :observability ;
+    rdfs:range xsd:string ;
+    rdfs:label "service_name" ;
+    rdfs:comment "[type:option] [flag:--service] [required:false] [help:Service name to analyze] Service filter" .
+
+:observability_time_range a owl:DatatypeProperty ;
+    rdfs:domain :observability ;
+    rdfs:range xsd:string ;
+    rdfs:label "time_range" ;
+    rdfs:comment "[type:option] [flag:--time-range] [default:1h] [required:false] [help:Time range: 1h, 24h, 7d, 30d] Analysis time window" .
+
+:observability_output_format a owl:DatatypeProperty ;
+    rdfs:domain :observability ;
+    rdfs:range xsd:string ;
+    rdfs:label "output_format" ;
+    rdfs:comment "[type:option] [flag:--output] [short:-o] [default:json] [required:false] [help:Output format: json, csv, prometheus, mermaid] Result format" .

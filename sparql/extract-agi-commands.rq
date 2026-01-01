@@ -1,0 +1,49 @@
+# SPARQL Query to extract AGI command metadata for ggen code generation
+# Purpose: Extract command names, descriptions, arguments, and options from RDF ontology
+
+PREFIX : <http://spec-kit.io/agi/cli#>
+PREFIX cli: <http://github.com/github/spec-kit/cli#>
+PREFIX sk: <http://github.com/github/spec-kit#>
+PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
+PREFIX owl: <http://www.w3.org/2002/07/owl#>
+PREFIX xsd: <http://www.w3.org/2001/XMLSchema#>
+
+SELECT DISTINCT
+  ?commandName
+  ?commandDescription
+  ?module
+  ?functionName
+  (GROUP_CONCAT(?argument; separator="|") AS ?arguments)
+  (GROUP_CONCAT(?option; separator="|") AS ?options)
+  (GROUP_CONCAT(?optionInfo; separator="|") AS ?optionsDetailed)
+WHERE {
+  # Select all AGI command classes
+  ?command rdfs:subClassOf cli:Command ;
+      rdfs:label ?commandName ;
+      rdfs:comment ?commandDescription .
+
+  # Module name derived from command name
+  BIND(CONCAT("specify_cli.ops.", LCASE(REPLACE(REPLACE(?commandName, "_", ""), "-", ""))) AS ?module)
+  BIND(CONCAT(LCASE(REPLACE(REPLACE(?commandName, "_", ""), "-", "")), "_main") AS ?functionName)
+
+  # Extract arguments (properties with [type:argument] in comment)
+  OPTIONAL {
+    ?command ?argProperty ?argObject .
+    ?argProperty rdfs:label ?argName ;
+        rdfs:comment ?argComment .
+    FILTER(CONTAINS(?argComment, "[type:argument]"))
+    BIND(CONCAT("arg|", ?argName) AS ?argument)
+  }
+
+  # Extract options (properties with [type:option] in comment)
+  OPTIONAL {
+    ?command ?optProperty ?optObject .
+    ?optProperty rdfs:label ?optName ;
+        rdfs:comment ?optComment .
+    FILTER(CONTAINS(?optComment, "[type:option]"))
+    BIND(CONCAT("opt|", ?optName) AS ?option)
+    BIND(CONCAT("opt_info|", ?optName, "|", ?optComment) AS ?optionInfo)
+  }
+}
+GROUP BY ?commandName ?commandDescription ?module ?functionName
+ORDER BY ?commandName

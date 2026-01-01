@@ -1,0 +1,45 @@
+# SPARQL Query to extract Support command metadata for ggen code generation
+
+PREFIX : <http://spec-kit.io/support/cli#>
+PREFIX support: <http://spec-kit.io/support#>
+PREFIX cli: <http://github.com/github/spec-kit/cli#>
+PREFIX sk: <http://github.com/github/spec-kit#>
+PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
+PREFIX owl: <http://www.w3.org/2002/07/owl#>
+PREFIX xsd: <http://www.w3.org/2001/XMLSchema#>
+
+SELECT DISTINCT
+  ?commandName
+  ?commandDescription
+  ?category
+  (GROUP_CONCAT(?argument; separator="|") AS ?arguments)
+  (GROUP_CONCAT(?option; separator="|") AS ?options)
+WHERE {
+  # Select all Support commands
+  ?command rdfs:subClassOf cli:Command ;
+      rdfs:label ?commandName ;
+      rdfs:comment ?commandDescription ;
+      sk:category ?category .
+
+  FILTER(?category = "support")
+
+  # Extract arguments
+  OPTIONAL {
+    ?command ?argProperty ?argObject .
+    ?argProperty rdfs:label ?argName ;
+        rdfs:comment ?argComment .
+    FILTER(CONTAINS(?argComment, "[type:argument]"))
+    BIND(?argName AS ?argument)
+  }
+
+  # Extract options
+  OPTIONAL {
+    ?command ?optProperty ?optObject .
+    ?optProperty rdfs:label ?optName ;
+        rdfs:comment ?optComment .
+    FILTER(CONTAINS(?optComment, "[type:option]"))
+    BIND(?optName AS ?option)
+  }
+}
+GROUP BY ?commandName ?commandDescription ?category
+ORDER BY ?commandName

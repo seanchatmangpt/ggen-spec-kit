@@ -1,0 +1,69 @@
+# SPARQL Query to extract Cloud command metadata for ggen code generation
+
+PREFIX : <http://spec-kit.io/cloud/cli#>
+PREFIX cloud: <http://spec-kit.io/cloud#>
+PREFIX cli: <http://github.com/github/spec-kit/cli#>
+PREFIX sk: <http://github.com/github/spec-kit#>
+PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
+PREFIX owl: <http://www.w3.org/2002/07/owl#>
+PREFIX xsd: <http://www.w3.org/2001/XMLSchema#>
+
+SELECT DISTINCT
+  ?commandName
+  ?commandDescription
+  ?subcommandName
+  ?subcommandDescription
+  (GROUP_CONCAT(?argument; separator="|") AS ?arguments)
+  (GROUP_CONCAT(?option; separator="|") AS ?options)
+WHERE {
+  # Main cloud command
+  ?command rdfs:subClassOf cli:Command ;
+      rdfs:label ?commandName ;
+      rdfs:comment ?commandDescription ;
+      sk:category "cloud" .
+
+  # Subcommands
+  OPTIONAL {
+    ?subcommand rdfs:subClassOf ?command ;
+        rdfs:label ?subcommandName ;
+        rdfs:comment ?subcommandDescription .
+
+    # Arguments for subcommands
+    OPTIONAL {
+      ?subcommand ?argProperty ?argObject .
+      ?argProperty rdfs:label ?argName ;
+          rdfs:comment ?argComment .
+      FILTER(CONTAINS(?argComment, "[type:argument]"))
+      BIND(?argName AS ?argument)
+    }
+
+    # Options for subcommands
+    OPTIONAL {
+      ?subcommand ?optProperty ?optObject .
+      ?optProperty rdfs:label ?optName ;
+          rdfs:comment ?optComment .
+      FILTER(CONTAINS(?optComment, "[type:option]"))
+      BIND(?optName AS ?option)
+    }
+  }
+
+  # Arguments for main command
+  OPTIONAL {
+    ?command ?argProperty ?argObject .
+    ?argProperty rdfs:label ?argName ;
+        rdfs:comment ?argComment .
+    FILTER(CONTAINS(?argComment, "[type:argument]"))
+    BIND(?argName AS ?argument)
+  }
+
+  # Options for main command
+  OPTIONAL {
+    ?command ?optProperty ?optObject .
+    ?optProperty rdfs:label ?optName ;
+        rdfs:comment ?optComment .
+    FILTER(CONTAINS(?optComment, "[type:option]"))
+    BIND(?optName AS ?option)
+  }
+}
+GROUP BY ?commandName ?commandDescription ?subcommandName ?subcommandDescription
+ORDER BY ?commandName ?subcommandName

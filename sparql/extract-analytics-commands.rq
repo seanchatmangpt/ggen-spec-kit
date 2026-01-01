@@ -1,0 +1,53 @@
+# SPARQL Query to extract Analytics command metadata for ggen code generation
+
+PREFIX : <http://spec-kit.io/analytics/cli#>
+PREFIX jtbd: <http://github.com/github/spec-kit/jtbd#>
+PREFIX analytics: <http://spec-kit.io/analytics#>
+PREFIX cli: <http://github.com/github/spec-kit/cli#>
+PREFIX sk: <http://github.com/github/spec-kit#>
+PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
+PREFIX owl: <http://www.w3.org/2002/07/owl#>
+PREFIX xsd: <http://www.w3.org/2001/XMLSchema#>
+
+SELECT DISTINCT
+  ?commandName
+  ?commandDescription
+  ?module
+  (GROUP_CONCAT(?argument; separator="|") AS ?arguments)
+  (GROUP_CONCAT(?option; separator="|") AS ?options)
+  (GROUP_CONCAT(?optionDefault; separator="|") AS ?optionDefaults)
+WHERE {
+  # Select all Analytics commands
+  ?command rdfs:subClassOf cli:Command ;
+      rdfs:label ?commandName ;
+      rdfs:comment ?commandDescription ;
+      sk:category "analytics" .
+
+  # Module name derived from command name
+  BIND(CONCAT("specify_cli.ops.", LCASE(REPLACE(?commandName, "_", ""))) AS ?module)
+
+  # Extract arguments
+  OPTIONAL {
+    ?command ?argProperty ?argObject .
+    ?argProperty rdfs:label ?argName ;
+        rdfs:comment ?argComment .
+    FILTER(CONTAINS(?argComment, "[type:argument]"))
+    BIND(?argName AS ?argument)
+  }
+
+  # Extract options with defaults
+  OPTIONAL {
+    ?command ?optProperty ?optObject .
+    ?optProperty rdfs:label ?optName ;
+        rdfs:comment ?optComment .
+    FILTER(CONTAINS(?optComment, "[type:option]"))
+    BIND(?optName AS ?option)
+
+    # Extract default value if present
+    BIND(IF(CONTAINS(?optComment, "[default:"),
+            CONCAT(?optName, "=", SUBSTR(?optComment, STRBEFORE(STRAFTER(?optComment, "[default:"), "]"))),
+            ?optName) AS ?optionDefault)
+  }
+}
+GROUP BY ?commandName ?commandDescription ?module
+ORDER BY ?commandName

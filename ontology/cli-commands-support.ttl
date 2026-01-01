@@ -1,0 +1,106 @@
+@prefix : <http://spec-kit.io/support/cli#> .
+@prefix support: <http://spec-kit.io/support#> .
+@prefix cli: <http://github.com/github/spec-kit/cli#> .
+@prefix sk: <http://github.com/github/spec-kit#> .
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix owl: <http://www.w3.org/2002/07/owl#> .
+@prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
+
+# ============================================================================
+# SUPPORT COMMANDS - Plugin System and Code Generation
+# ============================================================================
+# DSPy LaTeX code generation and plugin system management
+
+# COMMAND: dspy_latex - DSPy LaTeX Code Generation
+:dspy_latex a owl:Class ;
+    rdfs:subClassOf cli:Command ;
+    rdfs:label "dspy_latex" ;
+    rdfs:comment "DSPy LaTeX code generation and optimization with automatic formatting" ;
+    sk:category "support" ;
+    sk:description "Generate optimized LaTeX from DSPy programs with automatic code formatting" .
+
+:dspy_input_file a owl:DatatypeProperty ;
+    rdfs:domain :dspy_latex ;
+    rdfs:range xsd:string ;
+    rdfs:label "input_file" ;
+    rdfs:comment "[type:argument] [index:0] [required:true] [help:DSPy program file (.py)] Python DSPy program" .
+
+:dspy_output_format a owl:DatatypeProperty ;
+    rdfs:domain :dspy_latex ;
+    rdfs:range xsd:string ;
+    rdfs:label "output_format" ;
+    rdfs:comment "[type:option] [flag:--output] [short:-o] [default:pdf] [required:false] [help:Output format: pdf, tex, mermaid] Compilation output" .
+
+:dspy_optimize a owl:DatatypeProperty ;
+    rdfs:domain :dspy_latex ;
+    rdfs:range xsd:boolean ;
+    rdfs:label "optimize" ;
+    rdfs:comment "[type:option] [flag:--optimize] [default:true] [required:false] [help:Apply code optimization passes] Enable optimization" .
+
+:dspy_include_types a owl:DatatypeProperty ;
+    rdfs:domain :dspy_latex ;
+    rdfs:range xsd:boolean ;
+    rdfs:label "include_types" ;
+    rdfs:comment "[type:option] [flag:--types] [default:true] [required:false] [help:Include type annotations] Show type hints" .
+
+:dspy_theme a owl:DatatypeProperty ;
+    rdfs:domain :dspy_latex ;
+    rdfs:range xsd:string ;
+    rdfs:label "theme" ;
+    rdfs:comment "[type:option] [flag:--theme] [default:default] [required:false] [help:Formatting theme: default, dark, academic] LaTeX theme" .
+
+# COMMAND: plugin - Plugin System Management
+:plugin a owl:Class ;
+    rdfs:subClassOf cli:Command ;
+    rdfs:label "plugin" ;
+    rdfs:comment "Plugin system management: install, list, enable, disable, develop" ;
+    sk:category "support" ;
+    sk:description "Manage CLI plugins - install, enable, disable, develop, and uninstall" .
+
+:plugin_action a owl:DatatypeProperty ;
+    rdfs:domain :plugin ;
+    rdfs:range xsd:string ;
+    rdfs:label "action" ;
+    rdfs:comment "[type:argument] [index:0] [required:true] [help:Plugin action: install, list, enable, disable, develop, uninstall] Action to perform" .
+
+:plugin_name a owl:DatatypeProperty ;
+    rdfs:domain :plugin ;
+    rdfs:range xsd:string ;
+    rdfs:label "name" ;
+    rdfs:comment "[type:argument] [index:1] [required:false] [help:Plugin name (required for all actions except list)] Plugin identifier" .
+
+:plugin_source a owl:DatatypeProperty ;
+    rdfs:domain :plugin ;
+    rdfs:range xsd:string ;
+    rdfs:label "source" ;
+    rdfs:comment "[type:option] [flag:--source] [required:false] [help:Plugin source: registry, github, local] Plugin source location" .
+
+:plugin_version a owl:DatatypeProperty ;
+    rdfs:domain :plugin ;
+    rdfs:range xsd:string ;
+    rdfs:label "version" ;
+    rdfs:comment "[type:option] [flag:--version] [required:false] [help:Plugin version or git ref] Version specifier" .
+
+:plugin_path a owl:DatatypeProperty ;
+    rdfs:domain :plugin ;
+    rdfs:range xsd:string ;
+    rdfs:label "path" ;
+    rdfs:comment "[type:option] [flag:--path] [required:false] [help:Local plugin path (for develop action)] Development path" .
+
+:plugin_enable_deps a owl:DatatypeProperty ;
+    rdfs:domain :plugin ;
+    rdfs:range xsd:boolean ;
+    rdfs:label "enable_deps" ;
+    rdfs:comment "[type:option] [flag:--with-deps] [default:true] [required:false] [help:Install plugin dependencies] Auto-install dependencies" .
+
+:plugin_list_format a owl:DatatypeProperty ;
+    rdfs:domain :plugin ;
+    rdfs:range xsd:string ;
+    rdfs:label "list_format" ;
+    rdfs:comment "[type:option] [flag:--format] [default:table] [required:false] [help:List format: table, json, yaml] Output format for listing" .
+
+:plugin_registry_url a owl:DatatypeProperty ;
+    rdfs:domain :plugin ;
+    rdfs:range xsd:string ;
+    rdfs:label "registry_url" ;
+    rdfs:comment "[type:option] [flag:--registry] [env:PLUGIN_REGISTRY_URL] [required:false] [help:Custom plugin registry URL] Registry endpoint" .
