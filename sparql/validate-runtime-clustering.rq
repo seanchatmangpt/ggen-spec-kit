@@ -1,0 +1,26 @@
+PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
+PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
+PREFIX owl: <http://www.w3.org/2002/07/owl#>
+PREFIX xsd: <http://www.w3.org/2001/XMLSchema#>
+PREFIX rt: <http://github.com/github/spec-kit/runtime#>
+
+# ============================================================================
+# Validation Query: Runtime Clustering Modules
+# ============================================================================
+# Extracts module specifications to verify that Python implementation
+# matches RDF specification (constitutional equation validation)
+# ============================================================================
+
+SELECT ?module ?moduleLabel ?description ?instrumentation ?spans ?metrics
+WHERE {
+  # Find all distributed system modules
+  ?module a rt:DistributedSystem ;
+    rdfs:label ?moduleLabel ;
+    rdfs:comment ?description ;
+    rt:@timed ?instrumentation .
+
+  # Collect instrumentation details
+  OPTIONAL { ?module rt:span ?spans . }
+  OPTIONAL { ?module rt:metrics ?metrics . }
+}
+ORDER BY ?moduleLabel
