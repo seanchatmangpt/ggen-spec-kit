@@ -168,3 +168,238 @@ cache_dir = ".ggen/cache/"
 
 # Verify package signatures (enable for production)
 verify_signatures = false
+
+# ============================================================================
+# TRANSFORMATIONS - CLI Commands (Code Generation from RDF)
+# ============================================================================
+# Phase 1: AGI Command Suite (3 commands)
+
+[[transformations]]
+name = "agi-command-ops"
+description = "Generate agi ops module from RDF specification"
+ontology = ["ontology/cli-commands-agi.ttl"]
+sparql = "sparql/extract-agi-commands.rq"
+template = "templates/agi-ops.tera"
+output = "src/specify_cli/ops/agi_generated.py"
+depends_on = []
+
+[[transformations]]
+name = "agi-reasoner-ops"
+description = "Generate agi_reasoner ops module from RDF specification"
+ontology = ["ontology/cli-commands-agi.ttl"]
+sparql = "sparql/extract-agi-commands.rq"
+template = "templates/agi-reasoner.tera"
+output = "src/specify_cli/ops/agi_reasoner_generated.py"
+depends_on = []
+
+[[transformations]]
+name = "agi-task-planner-ops"
+description = "Generate agi_task_planner ops module from RDF specification"
+ontology = ["ontology/agi-task-planning.ttl"]
+sparql = "sparql/agi-task-extraction.rq"
+template = "templates/agi-planner.tera"
+output = "src/specify_cli/ops/agi_task_planner_generated.py"
+depends_on = []
+
+[[transformations]]
+name = "agi-command-wrapper"
+description = "Generate agi CLI command wrapper from ops"
+ontology = ["ontology/cli-commands-agi.ttl"]
+sparql = "sparql/extract-agi-commands.rq"
+template = "templates/cli-command.tera"
+output = "src/specify_cli/commands/agi_generated.py"
+depends_on = ["agi-command-ops"]
+
+# ============================================================================
+# TRANSFORMATIONS - Cloud Commands (Phase 2)
+# ============================================================================
+
+[[transformations]]
+name = "cloud-command-ops"
+description = "Generate cloud ops module from RDF specification"
+ontology = ["ontology/cli-commands-cloud.ttl"]
+sparql = "sparql/extract-cloud-commands.rq"
+template = "templates/agi-ops.tera"
+output = "src/specify_cli/ops/cloud_generated.py"
+depends_on = []
+
+[[transformations]]
+name = "cloud-command-wrapper"
+description = "Generate cloud CLI command wrapper from ops"
+ontology = ["ontology/cli-commands-cloud.ttl"]
+sparql = "sparql/extract-cloud-commands.rq"
+template = "templates/cli-command.tera"
+output = "src/specify_cli/commands/cloud_generated.py"
+depends_on = ["cloud-command-ops"]
+
+# ============================================================================
+# TRANSFORMATIONS - Analytics Commands (Phase 3)
+# ============================================================================
+
+[[transformations]]
+name = "dashboards-command-ops"
+description = "Generate dashboards ops module"
+ontology = ["ontology/cli-commands-analytics.ttl"]
+sparql = "sparql/extract-analytics-commands.rq"
+template = "templates/agi-ops.tera"
+output = "src/specify_cli/ops/dashboards_generated.py"
+depends_on = []
+
+[[transformations]]
+name = "hd-command-ops"
+description = "Generate hypothesis management ops module"
+ontology = ["ontology/cli-commands-analytics.ttl"]
+sparql = "sparql/extract-analytics-commands.rq"
+template = "templates/agi-ops.tera"
+output = "src/specify_cli/ops/hd_generated.py"
+depends_on = []
+
+[[transformations]]
+name = "hdql-command-ops"
+description = "Generate HDQL query ops module"
+ontology = ["ontology/cli-commands-analytics.ttl"]
+sparql = "sparql/extract-analytics-commands.rq"
+template = "templates/agi-ops.tera"
+output = "src/specify_cli/ops/hdql_generated.py"
+depends_on = []
+
+[[transformations]]
+name = "jtbd-command-ops"
+description = "Generate JTBD analysis ops module"
+ontology = ["ontology/jtbd-schema.ttl", "ontology/cli-commands-analytics.ttl"]
+sparql = "sparql/jtbd-extract-jobs.rq"
+template = "templates/agi-ops.tera"
+output = "src/specify_cli/ops/jtbd_generated.py"
+depends_on = []
+
+[[transformations]]
+name = "observability-command-ops"
+description = "Generate observability analysis ops module"
+ontology = ["ontology/cli-commands-analytics.ttl"]
+sparql = "sparql/extract-analytics-commands.rq"
+template = "templates/agi-ops.tera"
+output = "src/specify_cli/ops/observability_generated.py"
+depends_on = []
+
+# ============================================================================
+# TRANSFORMATIONS - Support Commands (Phase 4)
+# ============================================================================
+
+[[transformations]]
+name = "dspy-latex-command-ops"
+description = "Generate DSPy LaTeX ops module"
+ontology = ["ontology/cli-commands-support.ttl"]
+sparql = "sparql/extract-support-commands.rq"
+template = "templates/agi-ops.tera"
+output = "src/specify_cli/ops/dspy_latex_generated.py"
+depends_on = []
+
+[[transformations]]
+name = "plugin-command-ops"
+description = "Generate plugin management ops module"
+ontology = ["ontology/cli-commands-support.ttl"]
+sparql = "sparql/extract-support-commands.rq"
+template = "templates/agi-ops.tera"
+output = "src/specify_cli/ops/plugin_generated.py"
+depends_on = []
+
+# ============================================================================
+# TRANSFORMATIONS - Documentation Generation
+# ============================================================================
+
+[[transformations]]
+name = "changelog-generation"
+description = "Generate CHANGELOG.md from RDF specifications"
+ontology = ["ontology/spec-kit-schema.ttl"]
+sparql = "sparql/changelog-query.rq"
+template = "templates/changelog.tera"
+output = "CHANGELOG.md"
+depends_on = []
+
+[[transformations]]
+name = "command-guide-generation"
+description = "Generate command reference guide from RDF"
+ontology = ["ontology/cli-commands.ttl", "ontology/cli-commands-agi.ttl", "ontology/cli-commands-cloud.ttl", "ontology/cli-commands-analytics.ttl", "ontology/cli-commands-support.ttl"]
+sparql = "sparql/command-query.rq"
+template = "templates/agi-command.tera"
+output = "docs/COMMAND_REFERENCE.md"
+depends_on = []
+
+# ============================================================================
+# TRANSFORMATIONS - Test Generation
+# ============================================================================
+
+[[transformations]]
+name = "command-test-generation"
+description = "Generate command tests from RDF specifications"
+ontology = ["ontology/cli-commands.ttl"]
+sparql = "sparql/command-test-query.rq"
+template = "templates/command-test.tera"
+output = "tests/e2e/test_commands_generated.py"
+depends_on = []
+
+# ============================================================================
+# TRANSFORMATIONS - Configuration Generation
+# ============================================================================
+
+[[transformations]]
+name = "runtime-config-generation"
+description = "Generate runtime configuration from RDF"
+ontology = ["ontology/spec-kit-schema.ttl"]
+sparql = "sparql/extract-runtime.rq"
+template = "templates/agi-runtime.tera"
+output = "src/specify_cli/runtime/generated.py"
+depends_on = []
+
+# ============================================================================
+# TRANSFORMATIONS - AGI Agent Generation
+# ============================================================================
+
+[[transformations]]
+name = "agi-agent-base"
+description = "Generate AGI agent base classes from RDF"
+ontology = ["ontology/agi-agent-schema.ttl"]
+sparql = "sparql/agi-agent-extraction.rq"
+template = "templates/agi-agent-base.tera"
+output = "src/specify_cli/agi/agents_base_generated.py"
+depends_on = []
+
+[[transformations]]
+name = "agi-agent-reasoner"
+description = "Generate AGI reasoning agent from RDF"
+ontology = ["ontology/agi-reasoning.ttl"]
+sparql = "sparql/agi-reasoning-extraction.rq"
+template = "templates/agi-agent-reasoner.tera"
+output = "src/specify_cli/agi/agents_reasoner_generated.py"
+depends_on = ["agi-agent-base"]
+
+[[transformations]]
+name = "agi-agent-orchestrator"
+description = "Generate AGI orchestrator from RDF"
+ontology = ["ontology/agi-agent-schema.ttl"]
+sparql = "sparql/agi-agent-extraction.rq"
+template = "templates/agi-orchestrator.tera"
+output = "src/specify_cli/agi/orchestration_generated.py"
+depends_on = []
+
+# ============================================================================
+# TRANSFORMATIONS - JTBD Analysis (Feature-focused)
+# ============================================================================
+
+[[transformations]]
+name = "jtbd-feature-effectiveness"
+description = "Analyze feature effectiveness from JTBD perspective"
+ontology = ["ontology/jtbd-schema.ttl"]
+sparql = "sparql/jtbd-feature-effectiveness.rq"
+template = "templates/agi-command.tera"
+output = "docs/analysis/feature-effectiveness.md"
+depends_on = []
+
+[[transformations]]
+name = "jtbd-persona-journey"
+description = "Generate persona journey maps from JTBD"
+ontology = ["ontology/jtbd-schema.ttl"]
+sparql = "sparql/jtbd-persona-journey.rq"
+template = "templates/agi-command.tera"
+output = "docs/analysis/persona-journeys.md"
+depends_on = []
