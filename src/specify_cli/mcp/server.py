@@ -37,6 +37,13 @@ from specify_cli.runtime.billing import (
     get_mrr as runtime_get_mrr,
     get_revenue_by_tier as runtime_get_revenue_by_tier,
 )
+from specify_cli.runtime.billing_poka_yoke import (
+    validate_and_suggest_tier,
+    parse_billing_period,
+    validate_user_id,
+    validate_amount,
+    adapt_subscription_error,
+)
 from specify_cli.security.subscription_enforcement import (
     TierFeatures,
     SubscriptionEnforcer,
@@ -106,13 +113,35 @@ def create_revops_server(database_url: str = "sqlite:///:memory:") -> FastMCP:
         Returns
         -------
         dict
-            Created subscription details
+            Created subscription details or error dict with recovery hints
         """
         session = SessionLocal()
         try:
-            return runtime_create_subscription(
-                session, user_id, tier, stripe_customer_id
+            # Poka Yoke Level 1: Input validation
+            validated_user_id = validate_user_id(user_id)
+            validated_tier, suggestion = validate_and_suggest_tier(tier)
+
+            # If tier was suggested, include warning in response but use validated tier
+            result = runtime_create_subscription(
+                session, validated_user_id, validated_tier, stripe_customer_id
             )
+
+            if suggestion and suggestion != tier:
+                result["warning"] = f"Tier '{tier}' was corrected to '{suggestion}'"
+                result["correction_applied"] = True
+
+            return result
+        except ValueError as e:
+            # Poka Yoke Level 2: Input validation errors
+            return {
+                "success": False,
+                "error": str(e),
+                "error_code": "INVALID_INPUT",
+                "recovery": ["Ensure user_id is a positive integer", "Ensure tier is: free, professional, or enterprise"],
+            }
+        except Exception as e:
+            # Poka Yoke Level 2: Error adaptation for domain exceptions
+            return adapt_subscription_error(e, {"user_id": user_id, "tier": tier})
         finally:
             session.close()
 
@@ -152,11 +181,33 @@ def create_revops_server(database_url: str = "sqlite:///:memory:") -> FastMCP:
         Returns
         -------
         dict
-            Updated subscription details
+            Updated subscription details or error dict with recovery hints
         """
         session = SessionLocal()
         try:
-            return runtime_update_subscription_tier(session, user_id, new_tier)
+            # Poka Yoke Level 1: Input validation
+            validated_user_id = validate_user_id(user_id)
+            validated_tier, suggestion = validate_and_suggest_tier(new_tier)
+
+            # If tier was suggested, include warning in response but use validated tier
+            result = runtime_update_subscription_tier(session, validated_user_id, validated_tier)
+
+            if suggestion and suggestion != new_tier:
+                result["warning"] = f"Tier '{new_tier}' was corrected to '{suggestion}'"
+                result["correction_applied"] = True
+
+            return result
+        except ValueError as e:
+            # Poka Yoke Level 2: Input validation errors
+            return {
+                "success": False,
+                "error": str(e),
+                "error_code": "INVALID_INPUT",
+                "recovery": ["Ensure user_id is a positive integer", "Ensure new_tier is: free, professional, or enterprise"],
+            }
+        except Exception as e:
+            # Poka Yoke Level 2: Error adaptation for domain exceptions
+            return adapt_subscription_error(e, {"user_id": user_id, "new_tier": new_tier})
         finally:
             session.close()
 
@@ -206,11 +257,28 @@ def create_revops_server(database_url: str = "sqlite:///:memory:") -> FastMCP:
         Returns
         -------
         dict
-            Event confirmation with timestamp
+            Event confirmation with timestamp or error dict with recovery hints
         """
         session = SessionLocal()
         try:
-            return runtime_track_usage_event(session, user_id, metric_type, amount)
+            # Poka Yoke Level 1: Input validation
+            validated_user_id = validate_user_id(user_id)
+            validated_amount = validate_amount(amount)
+
+            return runtime_track_usage_event(
+                session, validated_user_id, metric_type, validated_amount
+            )
+        except ValueError as e:
+            # Poka Yoke Level 2: Input validation errors
+            return {
+                "success": False,
+                "error": str(e),
+                "error_code": "INVALID_INPUT",
+                "recovery": ["Ensure user_id is a positive integer", "Ensure amount is numeric (positive, zero, or negative for credits)"],
+            }
+        except Exception as e:
+            # Poka Yoke Level 2: Error adaptation for domain exceptions
+            return adapt_subscription_error(e, {"user_id": user_id, "metric_type": metric_type, "amount": amount})
         finally:
             session.close()
 
@@ -278,16 +346,36 @@ def create_revops_server(database_url: str = "sqlite:///:memory:") -> FastMCP:
         user_id : int
             Unique user identifier
         billing_period : str, optional
-            Billing period (YYYY-MM). Defaults to current month.
+            Billing period (YYYY-MM, Jan 2026, January 2026, etc). Defaults to current month.
 
         Returns
         -------
         dict
-            Invoice details with amount, status, line items, due date
+            Invoice details with amount, status, line items, due date or error dict with recovery hints
         """
         session = SessionLocal()
         try:
-            return runtime_generate_invoice(session, user_id, billing_period)
+            # Poka Yoke Level 1: Input validation
+            validated_user_id = validate_user_id(user_id)
+
+            # Parse billing period if provided (Poka Yoke: accepts multiple formats)
+            if billing_period:
+                parsed_period = parse_billing_period(billing_period)
+            else:
+                parsed_period = None
+
+            return runtime_generate_invoice(session, validated_user_id, parsed_period)
+        except ValueError as e:
+            # Poka Yoke Level 2: Input validation errors
+            return {
+                "success": False,
+                "error": str(e),
+                "error_code": "INVALID_INPUT",
+                "recovery": ["Ensure user_id is a positive integer"],
+            }
+        except Exception as e:
+            # Poka Yoke Level 2: Error adaptation for domain exceptions
+            return adapt_subscription_error(e, {"user_id": user_id, "billing_period": billing_period})
         finally:
             session.close()
 

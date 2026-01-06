@@ -31,6 +31,14 @@ from specify_cli.runtime.billing import (
     get_mrr,
     get_revenue_by_tier,
 )
+from specify_cli.runtime.billing_poka_yoke import (
+    validate_and_suggest_tier,
+    parse_billing_period,
+    validate_user_id,
+    validate_amount,
+    adapt_subscription_error,
+)
+from specify_cli.runtime.billing_exceptions import BillingException
 from specify_cli.security.subscription_enforcement import (
     TierFeatures,
     SubscriptionEnforcer,
@@ -69,12 +77,31 @@ def create_sub_command(
     try:
         add_span_event("billing.create_subscription.started", {"user_id": user_id, "tier": tier})
 
+        # Poka Yoke Level 1: Input validation
+        try:
+            validated_user_id = validate_user_id(user_id)
+            validated_tier, suggestion = validate_and_suggest_tier(tier)
+
+            # If tier was corrected, warn user
+            if suggestion and suggestion != tier:
+                colour(f"[yellow]⚠ Tier '{tier}' corrected to '{suggestion}'[/yellow]", "yellow")
+                validated_tier = suggestion
+        except ValueError as e:
+            colour(f"[red]✗ Validation Error:[/red] {e}", "red")
+            colour(f"[yellow]Hint: User ID must be positive, tier must be: free, professional, enterprise[/yellow]", "yellow")
+            raise typer.Exit(1)
+
         session = _get_session()
         try:
-            result = create_subscription(session, user_id, tier)
+            result = create_subscription(session, validated_user_id, validated_tier)
 
             if "error" in result:
+                # Poka Yoke Level 2: Error adaptation with recovery hints
                 colour(f"[red]✗ Error:[/red] {result['error']}", "red")
+                if "recovery" in result:
+                    colour("[yellow]Recovery steps:[/yellow]", "yellow")
+                    for hint in result["recovery"]:
+                        colour(f"  • {hint}", "yellow")
                 raise typer.Exit(1)
 
             console.print(f"[bold green]✓[/] Subscription created for user {user_id}")
@@ -86,6 +113,15 @@ def create_sub_command(
         finally:
             session.close()
 
+    except BillingException as e:
+        # Poka Yoke: Adapt domain exceptions with recovery hints
+        adapted = adapt_subscription_error(e)
+        colour(f"[red]✗ {adapted['error']}[/red]", "red")
+        if "recovery" in adapted:
+            colour("[yellow]Recovery steps:[/yellow]", "yellow")
+            for hint in adapted["recovery"]:
+                colour(f"  • {hint}", "yellow")
+        raise typer.Exit(1)
     except Exception as e:
         colour(f"[red]Error:[/red] {e}", "red")
         raise typer.Exit(1) from e
@@ -204,12 +240,26 @@ def track_usage_command(
             "amount": amount
         })
 
+        # Poka Yoke Level 1: Input validation
+        try:
+            validated_user_id = validate_user_id(user_id)
+            validated_amount = validate_amount(amount)
+        except ValueError as e:
+            colour(f"[red]✗ Validation Error:[/red] {e}", "red")
+            colour(f"[yellow]Hint: User ID must be positive, amount must be numeric[/yellow]", "yellow")
+            raise typer.Exit(1)
+
         session = _get_session()
         try:
-            result = track_usage_event(session, user_id, metric_type, amount)
+            result = track_usage_event(session, validated_user_id, metric_type, validated_amount)
 
             if "error" in result:
+                # Poka Yoke Level 2: Error adaptation with recovery hints
                 colour(f"[red]✗ Error:[/red] {result['error']}", "red")
+                if "recovery" in result:
+                    colour("[yellow]Recovery steps:[/yellow]", "yellow")
+                    for hint in result["recovery"]:
+                        colour(f"  • {hint}", "yellow")
                 raise typer.Exit(1)
 
             console.print(f"[bold green]✓[/] Usage tracked for user {user_id}")
@@ -220,6 +270,15 @@ def track_usage_command(
         finally:
             session.close()
 
+    except BillingException as e:
+        # Poka Yoke: Adapt domain exceptions with recovery hints
+        adapted = adapt_subscription_error(e)
+        colour(f"[red]✗ {adapted['error']}[/red]", "red")
+        if "recovery" in adapted:
+            colour("[yellow]Recovery steps:[/yellow]", "yellow")
+            for hint in adapted["recovery"]:
+                colour(f"  • {hint}", "yellow")
+        raise typer.Exit(1)
     except Exception as e:
         colour(f"[red]Error:[/red] {e}", "red")
         raise typer.Exit(1) from e
@@ -273,18 +332,61 @@ def get_usage_command(
 @instrument_command("billing.generate_invoice", track_args=True)
 def gen_invoice_command(
     user_id: int = typer.Argument(..., help="User ID"),
-    billing_period: Optional[str] = typer.Option(None, "--period", help="Billing period (YYYY-MM)"),
+    billing_period: Optional[str] = typer.Option(None, "--period", help="Billing period (YYYY-MM, Jan 2026, January 2026, etc)"),
 ) -> None:
     """Generate invoice for a user."""
     try:
-        add_span_event("billing.generate_invoice.started", {"user_id": user_id})
+        add_span_event("billing.generate_invoice.started", {"user_id": user_id, "billing_period": billing_period})
+
+        # Poka Yoke Level 1: Input validation
+        try:
+            validated_user_id = validate_user_id(user_id)
+
+            # Parse billing period if provided (Poka Yoke: accepts multiple formats)
+            parsed_period = None
+            if billing_period:
+                parsed_period = parse_billing_period(billing_period)
+                colour(f"[cyan]ℹ Period '{billing_period}' parsed as '{parsed_period}'[/cyan]", "cyan")
+        except ValueError as e:
+            colour(f"[red]✗ Validation Error:[/red] {e}", "red")
+            colour(f"[yellow]Hint: User ID must be positive[/yellow]", "yellow")
+            raise typer.Exit(1)
+        except Exception as e:
+            # Handle InvalidBillingPeriod exceptions
+            if isinstance(e, Exception) and hasattr(e, 'error_code'):
+                adapted = adapt_subscription_error(e)
+                colour(f"[red]✗ {adapted['error']}[/red]", "red")
+                if "accepted_formats" in adapted:
+                    colour("[yellow]Accepted formats:[/yellow]", "yellow")
+                    for fmt in adapted["accepted_formats"]:
+                        colour(f"  • {fmt}", "yellow")
+                if "examples" in adapted:
+                    colour("[yellow]Examples:[/yellow]", "yellow")
+                    for ex in adapted["examples"]:
+                        colour(f"  • {ex}", "yellow")
+                if "recovery" in adapted:
+                    colour("[yellow]Recovery steps:[/yellow]", "yellow")
+                    for hint in adapted["recovery"]:
+                        colour(f"  • {hint}", "yellow")
+            else:
+                colour(f"[red]✗ Billing period parsing error: {e}[/red]", "red")
+            raise typer.Exit(1)
 
         session = _get_session()
         try:
-            result = generate_invoice(session, user_id, billing_period)
+            result = generate_invoice(session, validated_user_id, parsed_period)
 
             if "error" in result:
-                colour(f"[yellow]⚠ {result['error']}[/yellow]", "yellow")
+                # Poka Yoke Level 2: Error adaptation with recovery hints
+                colour(f"[red]✗ Error:[/red] {result['error']}", "red")
+                if "recovery" in result:
+                    colour("[yellow]Recovery steps:[/yellow]", "yellow")
+                    for hint in result["recovery"]:
+                        colour(f"  • {hint}", "yellow")
+                if "accepted_formats" in result:
+                    colour("[yellow]Accepted formats:[/yellow]", "yellow")
+                    for fmt in result["accepted_formats"]:
+                        colour(f"  • {fmt}", "yellow")
                 return
 
             console.print(f"[bold green]✓[/] Invoice generated for user {user_id}")
@@ -309,6 +411,15 @@ def gen_invoice_command(
         finally:
             session.close()
 
+    except BillingException as e:
+        # Poka Yoke: Adapt domain exceptions with recovery hints
+        adapted = adapt_subscription_error(e)
+        colour(f"[red]✗ {adapted['error']}[/red]", "red")
+        if "recovery" in adapted:
+            colour("[yellow]Recovery steps:[/yellow]", "yellow")
+            for hint in adapted["recovery"]:
+                colour(f"  • {hint}", "yellow")
+        raise typer.Exit(1)
     except Exception as e:
         colour(f"[red]Error:[/red] {e}", "red")
         raise typer.Exit(1) from e
