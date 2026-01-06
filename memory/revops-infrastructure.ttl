@@ -1,0 +1,579 @@
+@prefix sk: <http://github.com/github/spec-kit#> .
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
+@prefix dcterms: <http://purl.org/dc/terms/> .
+
+# ============================================================================
+# Spec-Kit Revenue Operations Infrastructure
+# ============================================================================
+# Technical specification for monetization infrastructure implementation
+# This file documents the RevOps architecture supporting 7 revenue strategies
+# ============================================================================
+
+sk:RevOpsInfrastructure
+  a sk:Documentation ;
+  rdfs:label "Revenue Operations Infrastructure" ;
+  sk:documentTitle "Spec-Kit RevOps Infrastructure"@en ;
+  sk:documentDescription "Technical architecture and implementation for billing, subscriptions, usage tracking, and payment processing"@en ;
+  sk:documentVersion "1.0" ;
+  sk:createdDate "2026-01-06T00:00:00Z"^^xsd:dateTime ;
+  sk:lastUpdatedDate "2026-01-06T00:00:00Z"^^xsd:dateTime ;
+  sk:authorName "Spec-Kit Contributors" ;
+  sk:maintenanceStatus "Current" ;
+  sk:audience "Engineers implementing monetization features"@en ;
+  sk:category "Architecture" ;
+  .
+
+# ============================================================================
+# Database Layer Implementation
+# ============================================================================
+
+sk:BillingDataModels
+  a sk:ArchitectureComponent ;
+  rdfs:label "Billing Data Models" ;
+  sk:componentName "Database Models"@en ;
+  sk:description "SQLAlchemy ORM models for billing and subscriptions"@en ;
+  sk:location "/src/specify_cli/db/models.py"@en ;
+  sk:status "implemented" ;
+
+  # Models implemented
+  sk:includes sk:SubscriptionModel ;
+  sk:includes sk:UsageEventModel ;
+  sk:includes sk:InvoiceModel ;
+  sk:includes sk:SupportTicketModel ;
+  sk:includes sk:SLAModel ;
+
+  # Enumerations
+  sk:includes sk:SubscriptionTierEnum ;
+  sk:includes sk:InvoiceStatusEnum ;
+  sk:includes sk:SupportTicketStatusEnum ;
+  sk:includes sk:SLATierEnum ;
+
+  sk:implementation """
+SQLAlchemy models implementing multi-tenant billing:
+
+1. Subscription Model
+   - subscription_id: UUID primary key
+   - user_id: Foreign key to User
+   - tier: Enum (free, professional, enterprise)
+   - stripe_customer_id: Stripe integration
+   - status: Subscription status tracking
+   - api_quota: Monthly API call limit
+   - storage_quota: Storage limit in bytes
+   - max_users: Team member limit
+   - auto_renew: Automatic renewal flag
+
+2. UsageEvent Model
+   - event_id: UUID primary key
+   - subscription_id: Foreign key
+   - metric_type: Type of usage (api_calls, storage, etc)
+   - amount: Usage amount
+   - billing_period: YYYY-MM format
+   - Indexed for fast aggregation
+
+3. Invoice Model
+   - invoice_id: UUID primary key
+   - subscription_id: Foreign key
+   - stripe_invoice_id: Stripe sync
+   - status: Payment status tracking
+   - line_items: JSON for detailed charges
+   - Automatic due date calculation
+
+4. SupportTicket Model
+   - ticket_id: UUID primary key
+   - sla_id: Foreign key to SLA tier
+   - status: Ticket lifecycle tracking
+   - priority/severity: Classification
+   - response/resolution timestamps: SLA tracking
+
+5. SLA Model
+   - tier: Unique SLA tier identifier
+   - initial_response_minutes: Response SLA
+   - resolution_minutes: Resolution SLA
+   - availability_percentage: Uptime guarantee
+   - support_hours: Coverage hours
+  """ ;
+
+  sk:databaseIndices """
+Performance indices for billing queries:
+
+idx_subscription_user_tier: (user_id, tier)
+idx_subscription_status: (status)
+idx_subscription_stripe_customer: (stripe_customer_id)
+
+idx_usage_subscription_period: (subscription_id, billing_period)
+idx_usage_metric_timestamp: (metric_type, timestamp)
+idx_usage_user_period: (user_id, billing_period)
+
+idx_invoice_user_status: (user_id, status)
+idx_invoice_subscription_period: (subscription_id, issue_date)
+idx_invoice_due_date: (due_date)
+
+idx_ticket_user_status: (user_id, status)
+idx_ticket_priority: (priority)
+idx_ticket_created: (created_at)
+  """ ;
+  .
+
+sk:SubscriptionModel
+  a sk:DatabaseModel ;
+  rdfs:label "Subscription Model" ;
+  sk:tableName "subscriptions" ;
+  sk:purpose "Track subscription tiers and billing periods"@en ;
+  .
+
+sk:UsageEventModel
+  a sk:DatabaseModel ;
+  rdfs:label "Usage Event Model" ;
+  sk:tableName "usage_events" ;
+  sk:purpose "Track metered usage for billing aggregation"@en ;
+  .
+
+sk:InvoiceModel
+  a sk:DatabaseModel ;
+  rdfs:label "Invoice Model" ;
+  sk:tableName "invoices" ;
+  sk:purpose "Track invoices and payment status"@en ;
+  .
+
+sk:SupportTicketModel
+  a sk:DatabaseModel ;
+  rdfs:label "Support Ticket Model" ;
+  sk:tableName "support_tickets" ;
+  sk:purpose "Track support tickets with SLA compliance"@en ;
+  .
+
+sk:SLAModel
+  a sk:DatabaseModel ;
+  rdfs:label "SLA Model" ;
+  sk:tableName "slas" ;
+  sk:purpose "Define SLA tiers for support levels"@en ;
+  .
+
+# ============================================================================
+# Operations Layer Implementation
+# ============================================================================
+
+sk:BillingOperations
+  a sk:ArchitectureComponent ;
+  rdfs:label "Billing Operations Layer" ;
+  sk:componentName "Business Logic"@en ;
+  sk:description "Pure business logic for billing operations (no side effects)"@en ;
+  sk:location "/src/specify_cli/ops/billing.py"@en ;
+  sk:status "implemented" ;
+
+  sk:modules "
+SubscriptionConfig: Subscription tier configuration
+- get_tier_config(): Load tier specs (API quota, storage, features)
+- calculate_subscription_cost(): Compute monthly/annual cost
+- check_usage_quota(): Validate usage against limits
+
+UsageAggregation:
+- aggregate_usage_by_period(): Sum usage by metric type
+- get_current_billing_period(): Current YYYY-MM
+- get_next_billing_period(): Next period
+
+InvoiceGeneration:
+- generate_invoice_line_items(): Create line items with overages
+- calculate_invoice_due_date(): Compute due date
+- is_invoice_overdue(): Check payment status
+
+SLACompliance:
+- SLAConfig: Get tier specifications
+- check_sla_compliance(): Verify ticket meets SLA
+- calculate_days_until_renewal(): Track subscription renewal
+
+RevOpsMetrics:
+- calculate_mrr(): Monthly Recurring Revenue
+- calculate_arr(): Annual Recurring Revenue
+- calculate_churn_rate(): Subscription churn
+- calculate_ltv(): Customer Lifetime Value
+  " ;
+  .
+
+# ============================================================================
+# REST API Layer Implementation
+# ============================================================================
+
+sk:BillingRestAPI
+  a sk:ArchitectureComponent ;
+  rdfs:label "Billing REST API Layer" ;
+  sk:componentName "HTTP API"@en ;
+  sk:description "REST API endpoints for billing operations"@en ;
+  sk:location "/src/specify_cli/api/billing_api.py"@en ;
+  sk:status "implemented" ;
+
+  sk:endpoints """
+Subscription Endpoints:
+  GET  /subscriptions/me              - Get current subscription
+  POST /subscriptions/upgrade         - Upgrade tier
+  POST /subscriptions/downgrade       - Downgrade tier
+  POST /subscriptions/cancel          - Cancel subscription
+
+Usage Endpoints:
+  POST /usage/track                   - Report usage event
+  GET  /usage/current                 - Get current period usage
+  GET  /usage/quota-status            - Check quota status
+
+Invoice Endpoints:
+  GET  /invoices                      - List user invoices
+  POST /invoices/generate             - Generate invoice
+  GET  /invoices/{id}                 - Get invoice details
+
+SLA Endpoints:
+  GET  /sla/{tier}                    - Get SLA terms
+  GET  /tickets/{id}/sla-compliance   - Check SLA status
+
+Analytics Endpoints:
+  GET  /admin/metrics                 - Get billing metrics (MRR, ARR, churn)
+  " ;
+
+  sk:dtos "
+SubscriptionResponse: Current subscription with features
+UsageResponse: Usage aggregation with quota status
+InvoiceResponse: Invoice details with line items
+  " ;
+  .
+
+# ============================================================================
+# Payment Processing Implementation
+# ============================================================================
+
+sk:StripeIntegration
+  a sk:ArchitectureComponent ;
+  rdfs:label "Stripe Payment Integration" ;
+  sk:componentName "Payment Processing"@en ;
+  sk:description "Stripe API integration for payment processing"@en ;
+  sk:location "/src/specify_cli/billing/stripe_integration.py"@en ;
+  sk:status "implemented" ;
+
+  sk:features """
+Customer Management:
+  - create_customer(): Sync user to Stripe
+  - get_customer(): Retrieve customer details
+  - update_customer(): Update payment methods
+
+Subscription Management:
+  - create_subscription(): Start recurring billing
+  - update_subscription(): Change tier or plan
+  - cancel_subscription(): End subscription
+
+Payment Processing:
+  - create_payment_intent(): Prepare payment
+  - confirm_payment(): Complete payment
+  - create_refund(): Process refunds
+
+Invoicing:
+  - create_invoice(): Draft invoice
+  - finalize_invoice(): Prepare for sending
+  - send_invoice(): Email to customer
+  - get_invoices(): Retrieve payment history
+
+Webhook Management:
+  - verify_webhook_signature(): Validate Stripe events
+  - parse_webhook_event(): Process payment events
+  - Event types: payment_intent.succeeded, invoice.paid, subscription.updated
+  """ ;
+
+  sk:stripeProducts """
+Free Tier (price_free):
+  - Monthly: $0
+  - API Quota: 100 calls/month
+  - Storage: 2GB
+
+Professional Tier (price_professional_monthly/annual):
+  - Monthly: $49
+  - Annual: $490 (10% discount)
+  - API Quota: 10,000 calls/month
+  - Storage: 50GB
+  - Features: Custom domain, audit logs, webhooks
+
+Enterprise Tier (price_enterprise_monthly/annual):
+  - Monthly: $499
+  - Annual: $4,990 (10% discount)
+  - API Quota: 100,000+ calls/month
+  - Storage: 1TB
+  - Features: SSO, dedicated support, SLA 99.9%
+  """ ;
+  .
+
+# ============================================================================
+# Three-Tier Architecture Mapping
+# ============================================================================
+
+sk:RevOpsThreeTierArchitecture
+  a sk:ArchitecturePattern ;
+  rdfs:label "RevOps Three-Tier Architecture" ;
+
+  sk:commandsLayer """
+File: /src/specify_cli/commands/billing.py (to be implemented)
+Responsibilities:
+- Parse CLI arguments for subscription commands
+- Format output with Rich formatting
+- Delegate to ops layer immediately
+
+Commands:
+  specify billing status          - Show current subscription
+  specify billing upgrade         - Upgrade subscription tier
+  specify billing usage          - Show current usage
+  specify billing invoice        - Get invoices
+  specify billing payment        - Make payment
+  """ ;
+
+  sk:opsLayer """
+File: /src/specify_cli/ops/billing.py (implemented)
+Responsibilities:
+- Pure business logic (no side effects)
+- Subscription tier calculations
+- Usage aggregation and quota checks
+- Invoice generation logic
+- SLA compliance checking
+- RevOps metrics (MRR, ARR, churn, LTV)
+
+Examples:
+  - calculate_subscription_cost()
+  - check_usage_quota()
+  - generate_invoice_line_items()
+  - calculate_mrr()
+  """ ;
+
+  sk:runtimeLayer """
+File: /src/specify_cli/runtime/ (to be implemented)
+Responsibilities:
+- Database I/O for subscription operations
+- Stripe API calls for payments
+- Invoice PDF generation
+- Webhook handling
+- Audit logging for all transactions
+
+Examples:
+  - save_subscription() - Persist to DB
+  - create_stripe_customer() - Call Stripe API
+  - process_webhook() - Handle payment events
+  """ ;
+  .
+
+# ============================================================================
+# Integration Points
+# ============================================================================
+
+sk:RateLimitingIntegration
+  a sk:IntegrationPoint ;
+  rdfs:label "Rate Limiting Integration" ;
+  sk:description "Integrate subscription tier with existing rate limiting"@en ;
+  sk:connection "Existing rate limiting in /src/specify_cli/security/rate_limiting.py"@en ;
+
+  sk:implementation """
+Rate limiting already supports tier-aware quotas:
+- Token bucket algorithm
+- Per-user and per-IP throttling
+- Configurable rate limits
+- X-RateLimit headers
+
+Integration:
+1. Get user's subscription tier
+2. Load corresponding rate limit config (100, 10000, 100000+ calls)
+3. Apply tier-based limits in rate limiter
+4. Return 429 when quota exceeded
+5. Track overage for billing
+  """ ;
+  .
+
+sk:AuditLoggingIntegration
+  a sk:IntegrationPoint ;
+  rdfs:label "Audit Logging Integration" ;
+  sk:description "Log all billing and payment events for compliance"@en ;
+  sk:connection "Existing audit logging in /src/specify_cli/db/models.py"@en ;
+
+  sk:auditEvents """
+Billing audit events to log:
+- SUBSCRIPTION_CREATED
+- SUBSCRIPTION_UPGRADED
+- SUBSCRIPTION_DOWNGRADED
+- SUBSCRIPTION_CANCELLED
+- USAGE_EVENT_TRACKED
+- INVOICE_GENERATED
+- INVOICE_SENT
+- PAYMENT_RECEIVED
+- REFUND_ISSUED
+- TICKET_CREATED
+- SLA_BREACHED
+  """ ;
+  .
+
+sk:TelemetryIntegration
+  a sk:IntegrationPoint ;
+  rdfs:label "Telemetry Integration" ;
+  sk:description "OpenTelemetry instrumentation for billing operations"@en ;
+  sk:connection "Existing telemetry in /src/specify_cli/core/telemetry.py"@en ;
+
+  sk:metrics """
+Billing metrics to instrument:
+- subscription.created (counter)
+- subscription.active (gauge)
+- usage.tracked (counter with metric_type label)
+- invoice.generated (counter)
+- payment.received (counter)
+- sla.breached (counter)
+- mrr (gauge)
+- churn_rate (gauge)
+  """ ;
+  .
+
+# ============================================================================
+# Implementation Roadmap
+# ============================================================================
+
+sk:RevOpsImplementationRoadmap
+  a sk:Roadmap ;
+  rdfs:label "RevOps Implementation Roadmap" ;
+
+  sk:phase1 """
+Phase 1: Core Database & Operations (COMPLETE)
+- ✓ Add Subscription, UsageEvent, Invoice, SupportTicket, SLA models
+- ✓ Implement billing operations layer (ops/billing.py)
+- ✓ Create REST API endpoints framework (api/billing_api.py)
+- ✓ Implement Stripe integration layer (billing/stripe_integration.py)
+- Status: Ready for runtime implementation
+  """ ;
+
+  sk:phase2 """
+Phase 2: Runtime Implementation (2-3 weeks)
+- Database repositories for billing entities
+- Stripe API client with webhook handling
+- Payment processing workflow
+- Invoice generation and PDF rendering
+- Subscription renewal scheduler
+  """ ;
+
+  sk:phase3 """
+Phase 3: CLI Commands (1-2 weeks)
+- /src/specify_cli/commands/billing.py
+- subscription status/upgrade/downgrade/cancel
+- billing show/invoice commands
+- usage reporting
+- payment and refund operations
+  """ ;
+
+  sk:phase4 """
+Phase 4: Testing & Deployment (2-3 weeks)
+- Unit tests for ops layer
+- Integration tests with mock Stripe
+- End-to-end billing workflows
+- Database migration scripts
+- Webhook security and verification
+  """ ;
+  .
+
+# ============================================================================
+# Configuration & Secrets Management
+# ============================================================================
+
+sk:BillingConfiguration
+  a sk:Configuration ;
+  rdfs:label "Billing Configuration" ;
+
+  sk:environmentVariables """
+Required environment variables for Stripe:
+
+STRIPE_API_KEY (sk_...)
+  Stripe secret API key for server-side operations
+
+STRIPE_PUBLISHABLE_KEY (pk_...)
+  Stripe publishable key for client-side operations
+
+STRIPE_WEBHOOK_SECRET (whsec_...)
+  Stripe webhook signing secret for webhook verification
+
+DATABASE_URL
+  Connection string for billing database
+
+NOTIFICATION_EMAIL
+  Email address for billing notifications
+  """ ;
+
+  sk:secrets """
+Store in secure secret management:
+- Stripe API keys (encrypted)
+- Webhook secrets
+- Database credentials
+- Payment method tokens
+
+Never commit:
+- STRIPE_API_KEY
+- STRIPE_WEBHOOK_SECRET
+- Payment test data
+  """ ;
+  .
+
+# ============================================================================
+# Security Considerations
+# ============================================================================
+
+sk:BillingSecurityModel
+  a sk:SecurityArchitecture ;
+  rdfs:label "Billing Security Model" ;
+
+  sk:encryption """
+- Stripe customer IDs stored encrypted in database
+- Payment method tokens handled only by Stripe
+- Invoice PDFs served with authentication
+- Usage events only accessible to account owner
+  """ ;
+
+  sk:auditTrail """
+- All payment operations logged to AuditLog
+- GDPR compliance for invoice storage
+- SCA (Strong Customer Authentication) for large payments
+- Refund and dispute tracking
+  """ ;
+
+  sk:sca """
+Strong Customer Authentication (SCA):
+- 3D Secure for card payments
+- Biometric authentication for subscription changes
+- Email verification for payment method updates
+  """ ;
+  .
+
+# ============================================================================
+# Success Criteria
+# ============================================================================
+
+sk:RevOpsSuccessCriteria
+  a sk:SuccessMeasurement ;
+  rdfs:label "RevOps Implementation Success Criteria" ;
+
+  sk:functionalCriteria """
+- Subscription creation through Stripe API
+- Usage tracking and metering functional
+- Invoice generation with line items
+- Payment webhook processing
+- SLA compliance tracking
+- Support ticket lifecycle management
+  """ ;
+
+  sk:performanceCriteria """
+- Subscription queries: < 100ms
+- Usage aggregation: < 500ms for monthly data
+- Invoice generation: < 2s
+- Webhook processing: < 1s
+- Rate limit checks: < 50ms
+  """ ;
+
+  sk:securityCriteria """
+- All payment operations logged
+- PCI compliance (via Stripe)
+- GDPR compliance for data retention
+- Webhook signature verification
+- No sensitive data in logs
+  """ ;
+
+  sk:businessCriteria """
+- Zero revenue lost to failed payments
+- < 1% webhook failure rate
+- 99.9% uptime for billing services
+- Churn rate < 5% monthly
+- Customer satisfaction > 4.5/5
+  """ ;
+  .

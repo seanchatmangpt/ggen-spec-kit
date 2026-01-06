@@ -40,6 +40,7 @@ from __future__ import annotations
 
 import json
 from datetime import UTC, datetime
+from decimal import Decimal
 from enum import Enum
 from typing import Any
 from uuid import uuid4
@@ -54,6 +55,7 @@ from sqlalchemy import (
     Index,
     Integer,
     LargeBinary,
+    Numeric,
     String,
     Text,
     UniqueConstraint,
@@ -74,13 +76,22 @@ __all__ = [
     "Command",
     "Configuration",
     "ExecutionStatus",
+    "Invoice",
+    "InvoiceStatus",
     "MetricType",
     "PerformanceMetric",
     "Project",
     "RDFSpecification",
     "SessionToken",
+    "SLA",
+    "SLATier",
+    "Subscription",
+    "SubscriptionTier",
+    "SupportTicket",
+    "SupportTicketStatus",
     "TelemetryEvent",
     "User",
+    "UsageEvent",
 ]
 
 Base = declarative_base()
@@ -132,6 +143,46 @@ class MetricType(str, Enum):
     HISTOGRAM = "histogram"
     SUMMARY = "summary"
     TIMER = "timer"
+
+
+class SubscriptionTier(str, Enum):
+    """Subscription tier enumeration for SaaS licensing."""
+
+    FREE = "free"
+    PROFESSIONAL = "professional"
+    ENTERPRISE = "enterprise"
+
+
+class InvoiceStatus(str, Enum):
+    """Invoice payment status enumeration."""
+
+    DRAFT = "draft"
+    SENT = "sent"
+    VIEWED = "viewed"
+    PAID = "paid"
+    OVERDUE = "overdue"
+    CANCELLED = "cancelled"
+    DISPUTED = "disputed"
+
+
+class SupportTicketStatus(str, Enum):
+    """Support ticket status enumeration."""
+
+    OPEN = "open"
+    IN_PROGRESS = "in_progress"
+    WAITING_CUSTOMER = "waiting_customer"
+    RESOLVED = "resolved"
+    CLOSED = "closed"
+    REOPENED = "reopened"
+
+
+class SLATier(str, Enum):
+    """SLA tier enumeration for support response times."""
+
+    COMMUNITY = "community"
+    PROFESSIONAL = "professional"
+    ENTERPRISE = "enterprise"
+    PREMIUM_ENTERPRISE = "premium_enterprise"
 
 
 # ============================================================================
@@ -778,6 +829,361 @@ class SessionToken(Base):  # type: ignore[misc,valid-type]
         # Ensure expires_at is timezone-aware for SQLite compatibility
         expires = _ensure_aware(self.expires_at)
         return expires is not None and datetime.now(UTC) > expires  # type: ignore[bool]
+
+
+# ============================================================================
+# RevOps: Subscription & Billing Models
+# ============================================================================
+
+
+class Subscription(Base):  # type: ignore[misc,valid-type]
+    """
+    Subscription model for SaaS licensing and usage tracking.
+
+    Attributes
+    ----------
+    id : int
+        Primary key.
+    subscription_id : str
+        Unique subscription identifier (UUID).
+    user_id : int
+        Foreign key to User.
+    tier : SubscriptionTier
+        Subscription tier (free, professional, enterprise).
+    stripe_customer_id : str
+        Stripe customer ID for payment processing.
+    stripe_subscription_id : str
+        Stripe subscription ID.
+    status : str
+        Subscription status (active, cancelled, expired, suspended).
+    start_date : datetime
+        Subscription start date.
+    end_date : datetime
+        Subscription end date (None if indefinite).
+    renewal_date : datetime
+        Next renewal or billing date.
+    monthly_cost : Decimal
+        Monthly subscription cost.
+    annual_cost : Decimal
+        Annual subscription cost (if applicable).
+    api_quota : int
+        Monthly API call quota.
+    storage_quota : int
+        Storage quota in bytes.
+    max_users : int
+        Maximum team members allowed.
+    auto_renew : bool
+        Whether subscription auto-renews.
+    metadata : dict
+        Additional subscription metadata (JSON).
+    """
+
+    __tablename__ = "subscriptions"
+
+    id = Column(Integer, primary_key=True, autoincrement=True)
+    subscription_id = Column(String(36), unique=True, nullable=False, default=lambda: str(uuid4()), index=True)
+    user_id = Column(Integer, ForeignKey("users.id", ondelete="CASCADE"), nullable=False)
+    tier = Column(SQLEnum(SubscriptionTier), default=SubscriptionTier.FREE, nullable=False, index=True)  # type: ignore[var-annotated]
+    stripe_customer_id = Column(String(255), nullable=True, index=True)
+    stripe_subscription_id = Column(String(255), nullable=True, index=True)
+    status = Column(String(50), default="active", nullable=False, index=True)
+    start_date = Column(DateTime(timezone=True), default=lambda: datetime.now(UTC), nullable=False)
+    end_date = Column(DateTime(timezone=True), nullable=True)
+    renewal_date = Column(DateTime(timezone=True), nullable=True)
+    monthly_cost = Column(Numeric(10, 2), default=0, nullable=False)
+    annual_cost = Column(Numeric(10, 2), default=0, nullable=False)
+    api_quota = Column(Integer, default=100, nullable=False)  # API calls/month
+    storage_quota = Column(Integer, default=2147483648, nullable=False)  # 2GB default
+    max_users = Column(Integer, default=1, nullable=False)
+    auto_renew = Column(Boolean, default=True, nullable=False)
+    meta = Column(JSON, default=dict, nullable=False)
+    created_at = Column(DateTime(timezone=True), default=lambda: datetime.now(UTC), nullable=False)
+    updated_at = Column(DateTime(timezone=True), default=lambda: datetime.now(UTC), onupdate=lambda: datetime.now(UTC), nullable=False)
+
+    # Relationships
+    user = relationship("User", backref="subscriptions")
+    usage_events = relationship("UsageEvent", back_populates="subscription", cascade="all, delete-orphan")
+    invoices = relationship("Invoice", back_populates="subscription", cascade="all, delete-orphan")
+
+    # Indexes
+    __table_args__ = (
+        Index("idx_subscription_user_tier", "user_id", "tier"),
+        Index("idx_subscription_status", "status"),
+        Index("idx_subscription_stripe_customer", "stripe_customer_id"),
+    )
+
+    def __repr__(self) -> str:
+        return f"<Subscription(id={self.id}, user_id={self.user_id}, tier='{self.tier.value}', status='{self.status}')>"
+
+
+class UsageEvent(Base):  # type: ignore[misc,valid-type]
+    """
+    Usage event for metered billing and consumption tracking.
+
+    Attributes
+    ----------
+    id : int
+        Primary key.
+    event_id : str
+        Unique event identifier (UUID).
+    subscription_id : int
+        Foreign key to Subscription.
+    user_id : int
+        Foreign key to User.
+    metric_type : str
+        Type of usage (api_calls, storage, etc).
+    amount : float
+        Amount consumed.
+    unit : str
+        Unit of measurement (count, bytes, etc).
+    timestamp : datetime
+        Event timestamp.
+    billing_period : str
+        Billing period identifier (YYYY-MM).
+    metadata : dict
+        Additional event metadata (JSON).
+    """
+
+    __tablename__ = "usage_events"
+
+    id = Column(Integer, primary_key=True, autoincrement=True)
+    event_id = Column(String(36), unique=True, nullable=False, default=lambda: str(uuid4()), index=True)
+    subscription_id = Column(Integer, ForeignKey("subscriptions.id", ondelete="CASCADE"), nullable=False)
+    user_id = Column(Integer, ForeignKey("users.id", ondelete="CASCADE"), nullable=False)
+    metric_type = Column(String(100), nullable=False, index=True)
+    amount = Column(Float, nullable=False)
+    unit = Column(String(50), default="count", nullable=False)
+    timestamp = Column(DateTime(timezone=True), default=lambda: datetime.now(UTC), nullable=False, index=True)
+    billing_period = Column(String(7), nullable=False, index=True)  # YYYY-MM
+    meta = Column(JSON, default=dict, nullable=False)
+
+    # Relationships
+    subscription = relationship("Subscription", back_populates="usage_events")
+    user = relationship("User", backref="usage_events")
+
+    # Indexes
+    __table_args__ = (
+        Index("idx_usage_subscription_period", "subscription_id", "billing_period"),
+        Index("idx_usage_metric_timestamp", "metric_type", "timestamp"),
+        Index("idx_usage_user_period", "user_id", "billing_period"),
+    )
+
+    def __repr__(self) -> str:
+        return f"<UsageEvent(id={self.id}, metric_type='{self.metric_type}', amount={self.amount})>"
+
+
+class Invoice(Base):  # type: ignore[misc,valid-type]
+    """
+    Invoice for subscription billing and payment tracking.
+
+    Attributes
+    ----------
+    id : int
+        Primary key.
+    invoice_id : str
+        Unique invoice identifier (UUID).
+    subscription_id : int
+        Foreign key to Subscription.
+    user_id : int
+        Foreign key to User.
+    stripe_invoice_id : str
+        Stripe invoice ID.
+    status : InvoiceStatus
+        Invoice payment status.
+    amount : Decimal
+        Invoice total amount.
+    currency : str
+        Currency code (USD, EUR, etc).
+    billing_period_start : datetime
+        Billing period start date.
+    billing_period_end : datetime
+        Billing period end date.
+    issue_date : datetime
+        Invoice issue date.
+    due_date : datetime
+        Payment due date.
+    paid_date : datetime
+        Payment date (None if unpaid).
+    pdf_url : str
+        URL to invoice PDF.
+    line_items : dict
+        Invoice line items (JSON).
+    metadata : dict
+        Additional invoice metadata (JSON).
+    """
+
+    __tablename__ = "invoices"
+
+    id = Column(Integer, primary_key=True, autoincrement=True)
+    invoice_id = Column(String(36), unique=True, nullable=False, default=lambda: str(uuid4()), index=True)
+    subscription_id = Column(Integer, ForeignKey("subscriptions.id", ondelete="CASCADE"), nullable=False)
+    user_id = Column(Integer, ForeignKey("users.id", ondelete="CASCADE"), nullable=False)
+    stripe_invoice_id = Column(String(255), nullable=True, unique=True, index=True)
+    status = Column(SQLEnum(InvoiceStatus), default=InvoiceStatus.DRAFT, nullable=False, index=True)  # type: ignore[var-annotated]
+    amount = Column(Numeric(12, 2), nullable=False)
+    currency = Column(String(3), default="USD", nullable=False)
+    billing_period_start = Column(DateTime(timezone=True), nullable=False)
+    billing_period_end = Column(DateTime(timezone=True), nullable=False)
+    issue_date = Column(DateTime(timezone=True), default=lambda: datetime.now(UTC), nullable=False)
+    due_date = Column(DateTime(timezone=True), nullable=False)
+    paid_date = Column(DateTime(timezone=True), nullable=True)
+    pdf_url = Column(String(500), nullable=True)
+    line_items = Column(JSON, default=dict, nullable=False)
+    meta = Column(JSON, default=dict, nullable=False)
+    created_at = Column(DateTime(timezone=True), default=lambda: datetime.now(UTC), nullable=False)
+    updated_at = Column(DateTime(timezone=True), default=lambda: datetime.now(UTC), onupdate=lambda: datetime.now(UTC), nullable=False)
+
+    # Relationships
+    subscription = relationship("Subscription", back_populates="invoices")
+    user = relationship("User", backref="invoices")
+
+    # Indexes
+    __table_args__ = (
+        Index("idx_invoice_user_status", "user_id", "status"),
+        Index("idx_invoice_subscription_period", "subscription_id", "issue_date"),
+        Index("idx_invoice_due_date", "due_date"),
+    )
+
+    def __repr__(self) -> str:
+        return f"<Invoice(id={self.id}, invoice_id='{self.invoice_id}', amount={self.amount}, status='{self.status.value}')>"
+
+
+# ============================================================================
+# RevOps: Support Ticket & SLA Models
+# ============================================================================
+
+
+class SupportTicket(Base):  # type: ignore[misc,valid-type]
+    """
+    Support ticket for customer support tracking.
+
+    Attributes
+    ----------
+    id : int
+        Primary key.
+    ticket_id : str
+        Unique ticket identifier (UUID).
+    user_id : int
+        Foreign key to User.
+    sla_id : int
+        Foreign key to SLA tier.
+    title : str
+        Ticket title.
+    description : str
+        Ticket description.
+    status : SupportTicketStatus
+        Ticket status.
+    priority : str
+        Priority level (low, medium, high, critical).
+    severity : str
+        Severity level (low, medium, high, critical).
+    category : str
+        Ticket category.
+    assigned_to : str
+        Assigned support engineer.
+    created_at : datetime
+        Ticket creation timestamp.
+    updated_at : datetime
+        Last update timestamp.
+    first_response_at : datetime
+        First response timestamp.
+    resolved_at : datetime
+        Resolution timestamp.
+    closed_at : datetime
+        Ticket close timestamp.
+    resolution : str
+        Resolution description.
+    metadata : dict
+        Additional ticket metadata (JSON).
+    """
+
+    __tablename__ = "support_tickets"
+
+    id = Column(Integer, primary_key=True, autoincrement=True)
+    ticket_id = Column(String(36), unique=True, nullable=False, default=lambda: str(uuid4()), index=True)
+    user_id = Column(Integer, ForeignKey("users.id", ondelete="CASCADE"), nullable=False)
+    sla_id = Column(Integer, ForeignKey("slas.id", ondelete="SET NULL"), nullable=True)
+    title = Column(String(255), nullable=False)
+    description = Column(Text, nullable=False)
+    status = Column(SQLEnum(SupportTicketStatus), default=SupportTicketStatus.OPEN, nullable=False, index=True)  # type: ignore[var-annotated]
+    priority = Column(String(20), default="medium", nullable=False, index=True)
+    severity = Column(String(20), default="medium", nullable=False)
+    category = Column(String(100), nullable=True)
+    assigned_to = Column(String(255), nullable=True)
+    created_at = Column(DateTime(timezone=True), default=lambda: datetime.now(UTC), nullable=False)
+    updated_at = Column(DateTime(timezone=True), default=lambda: datetime.now(UTC), onupdate=lambda: datetime.now(UTC), nullable=False)
+    first_response_at = Column(DateTime(timezone=True), nullable=True)
+    resolved_at = Column(DateTime(timezone=True), nullable=True)
+    closed_at = Column(DateTime(timezone=True), nullable=True)
+    resolution = Column(Text, nullable=True)
+    meta = Column(JSON, default=dict, nullable=False)
+
+    # Relationships
+    user = relationship("User", backref="support_tickets")
+    sla = relationship("SLA", backref="tickets")
+
+    # Indexes
+    __table_args__ = (
+        Index("idx_ticket_user_status", "user_id", "status"),
+        Index("idx_ticket_priority", "priority"),
+        Index("idx_ticket_created", "created_at"),
+    )
+
+    def __repr__(self) -> str:
+        return f"<SupportTicket(ticket_id='{self.ticket_id}', status='{self.status.value}', priority='{self.priority}')>"
+
+
+class SLA(Base):  # type: ignore[misc,valid-type]
+    """
+    Service Level Agreement (SLA) for support tiers.
+
+    Attributes
+    ----------
+    id : int
+        Primary key.
+    sla_id : str
+        Unique SLA identifier (UUID).
+    tier : SLATier
+        SLA tier level.
+    name : str
+        SLA name.
+    description : str
+        SLA description.
+    initial_response_time_minutes : int
+        Initial response SLA in minutes.
+    resolution_time_minutes : int
+        Resolution SLA in minutes.
+    availability_percentage : float
+        Guaranteed uptime percentage.
+    support_hours : str
+        Support hours (24/7, business, etc).
+    max_concurrent_tickets : int
+        Max concurrent tickets allowed.
+    features : dict
+        SLA features and benefits (JSON).
+    metadata : dict
+        Additional SLA metadata (JSON).
+    """
+
+    __tablename__ = "slas"
+
+    id = Column(Integer, primary_key=True, autoincrement=True)
+    sla_id = Column(String(36), unique=True, nullable=False, default=lambda: str(uuid4()), index=True)
+    tier = Column(SQLEnum(SLATier), default=SLATier.COMMUNITY, nullable=False, unique=True)  # type: ignore[var-annotated]
+    name = Column(String(100), nullable=False, index=True)
+    description = Column(Text, nullable=True)
+    initial_response_time_minutes = Column(Integer, nullable=False)
+    resolution_time_minutes = Column(Integer, nullable=False)
+    availability_percentage = Column(Float, default=99.0, nullable=False)
+    support_hours = Column(String(50), default="business", nullable=False)
+    max_concurrent_tickets = Column(Integer, nullable=True)
+    features = Column(JSON, default=dict, nullable=False)
+    meta = Column(JSON, default=dict, nullable=False)
+    created_at = Column(DateTime(timezone=True), default=lambda: datetime.now(UTC), nullable=False)
+    updated_at = Column(DateTime(timezone=True), default=lambda: datetime.now(UTC), onupdate=lambda: datetime.now(UTC), nullable=False)
+
+    def __repr__(self) -> str:
+        return f"<SLA(tier='{self.tier.value}', name='{self.name}')>"
 
 
 # ============================================================================
