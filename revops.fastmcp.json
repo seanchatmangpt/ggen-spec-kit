@@ -1,0 +1,14 @@
+{
+  "mcpServers": {
+    "revops": {
+      "command": "python",
+      "args": [
+        "-m",
+        "specify_cli.mcp.server"
+      ],
+      "env": {
+        "PYTHONPATH": "src"
+      }
+    }
+  }
+}
