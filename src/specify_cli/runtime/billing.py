@@ -55,9 +55,12 @@ def create_subscription(
     dict
         Created subscription data.
     """
-    # Get tier configuration
-    tier_enum = SubscriptionTier(tier)
-    config = SubscriptionConfig.get_tier_config(tier_enum)
+    try:
+        # Validate tier
+        tier_enum = SubscriptionTier(tier)
+        config = SubscriptionConfig.get_tier_config(tier_enum)
+    except ValueError as e:
+        return {"error": f"Invalid subscription tier: {tier}"}
 
     subscription = Subscription(
         user_id=user_id,
@@ -90,8 +93,9 @@ def create_subscription(
 def get_subscription(
     session: Session,
     user_id: int,
+    include_cancelled: bool = False,
 ) -> dict[str, Any] | None:
-    """Get user's active subscription.
+    """Get user's subscription.
 
     Parameters
     ----------
@@ -99,16 +103,26 @@ def get_subscription(
         SQLAlchemy session.
     user_id : int
         User ID.
+    include_cancelled : bool
+        If True, return any subscription (active or cancelled).
+        If False (default), only return active subscriptions.
 
     Returns
     -------
     dict or None
         Subscription data if exists.
     """
-    sub = session.query(Subscription).filter(
-        Subscription.user_id == user_id,
-        Subscription.status == "active",
-    ).first()
+    if include_cancelled:
+        # Get any subscription, active or cancelled (most recent first)
+        sub = session.query(Subscription).filter(
+            Subscription.user_id == user_id
+        ).order_by(Subscription.start_date.desc()).first()
+    else:
+        # Get only active subscription
+        sub = session.query(Subscription).filter(
+            Subscription.user_id == user_id,
+            Subscription.status == "active",
+        ).first()
 
     if not sub:
         return None
@@ -261,7 +275,7 @@ def track_usage_event(
     ).first()
 
     if not sub:
-        raise ValueError(f"No active subscription found for user {user_id}")
+        return {"error": f"No active subscription found for user {user_id}"}
 
     billing_period = get_current_billing_period()
 
@@ -396,6 +410,21 @@ def generate_invoice(
     if not billing_period:
         billing_period = get_current_billing_period()
 
+    # Validate billing period format (YYYY-MM)
+    try:
+        parts = billing_period.split("-")
+        if len(parts) != 2:
+            return {"error": f"Invalid billing period format: {billing_period}. Expected YYYY-MM"}
+        year_str, month_str = parts
+        year = int(year_str)  # Validate it's numeric
+        month = int(month_str)  # Validate it's numeric
+
+        # Validate month range
+        if month < 1 or month > 12:
+            return {"error": f"Invalid billing period: month must be 1-12, got {month}"}
+    except ValueError:
+        return {"error": f"Invalid billing period format: {billing_period}. Expected YYYY-MM"}
+
     # Get subscription
     sub = session.query(Subscription).filter(
         Subscription.user_id == user_id,
@@ -403,7 +432,7 @@ def generate_invoice(
     ).first()
 
     if not sub:
-        raise ValueError(f"No active subscription found for user {user_id}")
+        return {"error": f"No active subscription found for user {user_id}"}
 
     # Check if invoice already exists
     existing = session.query(Invoice).filter(
