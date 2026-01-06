@@ -224,7 +224,7 @@ def apply_overage_charges(
 
 def aggregate_usage_by_period(
     usage_events: list[dict[str, Any]],
-    billing_period: str = None,
+    billing_period: str | None = None,
 ) -> dict[str, float]:
     """Aggregate usage events by metric type for a billing period.
 
@@ -501,7 +501,7 @@ def check_sla_compliance(
     dict
         Compliance status with keys: compliant, response_sla_met, resolution_sla_met
     """
-    compliance = {
+    compliance: dict[str, bool | float | None] = {
         "compliant": True,
         "response_sla_met": True,
         "resolution_sla_met": True,

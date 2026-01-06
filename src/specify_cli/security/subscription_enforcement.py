@@ -15,7 +15,9 @@ Features:
 from __future__ import annotations
 
 from dataclasses import dataclass
-from typing import Any, Callable
+from typing import Any, Callable, TypeVar
+
+F = TypeVar("F", bound=Callable[..., Any])
 
 
 @dataclass
@@ -246,7 +248,7 @@ class SubscriptionEnforcer:
         }
 
 
-def require_tier(required_tier: str) -> Callable:
+def require_tier(required_tier: str) -> Callable[[F], F]:
     """Decorator to require specific subscription tier for operation.
 
     Parameters
@@ -267,18 +269,18 @@ def require_tier(required_tier: str) -> Callable:
             pass
     """
 
-    def decorator(func: Callable) -> Callable:
+    def decorator(func: F) -> F:
         def wrapper(*args: Any, **kwargs: Any) -> Any:
             # Note: Actual tier checking would happen in runtime layer
             # This is a placeholder for the decorator pattern
             return func(*args, **kwargs)
 
-        return wrapper
+        return wrapper  # type: ignore[return-value]
 
     return decorator
 
 
-def require_feature(feature_name: str) -> Callable:
+def require_feature(feature_name: str) -> Callable[[F], F]:
     """Decorator to require specific feature for operation.
 
     Parameters
@@ -299,11 +301,11 @@ def require_feature(feature_name: str) -> Callable:
             pass
     """
 
-    def decorator(func: Callable) -> Callable:
+    def decorator(func: F) -> F:
         def wrapper(*args: Any, **kwargs: Any) -> Any:
             # Note: Actual feature checking would happen in runtime layer
             return func(*args, **kwargs)
 
-        return wrapper
+        return wrapper  # type: ignore[return-value]
 
     return decorator

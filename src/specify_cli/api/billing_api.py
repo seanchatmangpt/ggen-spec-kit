@@ -45,7 +45,7 @@ from specify_cli.ops.billing import (
     aggregate_usage_by_period,
     calculate_arr,
     calculate_invoice_due_date,
-    calculate_invoice_line_items,
+    generate_invoice_line_items,
     calculate_ltv,
     calculate_mrr,
     calculate_subscription_cost,
@@ -434,7 +434,7 @@ class BillingAPIHandler:
         usage_overage = aggregate_usage_by_period(usage_events, billing_period)
 
         # Generate line items
-        line_items, total_amount = calculate_invoice_line_items(
+        line_items, total_amount = generate_invoice_line_items(
             tier,
             base_cost,
             usage_overage,
