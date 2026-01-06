@@ -62,6 +62,7 @@ from rich.console import Console
 
 from specify_cli.cli import BannerGroup, show_banner
 from specify_cli.commands import (
+    billing_app,
     check_app,
     ggen_app,
     init_app,
@@ -105,6 +106,9 @@ app.add_typer(ggen_app, name="ggen", help="RDF-first code generation (ggen v5.0.
 
 # JTBD commands (Jobs-to-be-Done metrics)
 app.add_typer(jtbd_app, name="jtbd", help="Jobs-to-be-Done (JTBD) metrics tracking")
+
+# Billing/RevOps commands (Revenue Operations)
+app.add_typer(billing_app, name="billing", help="Revenue Operations and Billing Management")
 
 
 # Try to add process mining commands if pm4py is available
