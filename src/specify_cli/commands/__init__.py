@@ -45,6 +45,9 @@ from .check import app as check_app
 # Core commands
 from .init import app as init_app
 
+# Billing/RevOps commands
+from .billing import app as billing_app
+
 # JTBD commands
 from .jtbd import app as jtbd_app
 
@@ -105,6 +108,8 @@ __all__ = [
     "HD_COMMANDS_AVAILABLE",
     "PM_COMMANDS_AVAILABLE",
     "check_app",
+    # Billing/RevOps commands
+    "billing_app",
     # Dashboard commands
     "dashboards_app",
     # DSPy commands
