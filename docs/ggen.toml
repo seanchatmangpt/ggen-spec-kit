@@ -176,6 +176,16 @@ template = "templates/guide.tera"
 output_file = "SUPPORT.md"
 deterministic = true
 
+[[transformations.specs]]
+name = "revenue-strategies"
+description = "Generate REVENUE_STRATEGIES.md from revenue strategies guide RDF"
+input_files = ["memory/revenue-strategies.ttl"]
+schema_files = ["ontology/spec-kit-schema.ttl", "ontology/spec-kit-docs-extension.ttl"]
+sparql_query = "sparql/guide-query.rq"
+template = "templates/guide.tera"
+output_file = "REVENUE_STRATEGIES.md"
+deterministic = true
+
 # ============================================================================
 # TRANSFORMATIONS - Code Generation (CLI Commands)
 # ============================================================================
