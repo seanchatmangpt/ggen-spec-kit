@@ -51,6 +51,12 @@ from specify_cli.ops.billing import (
     calculate_arr,
 )
 from specify_cli.security.subscription_enforcement import SubscriptionEnforcer, TierFeatures
+from specify_cli.runtime.billing_exceptions import (
+    InvalidSubscriptionTier,
+    SubscriptionNotActive,
+    InvalidBillingPeriod,
+    InvoiceAlreadyExists,
+)
 
 
 @pytest.fixture
@@ -153,13 +159,15 @@ class TestSubscriptionLifecycleAdversarial:
         assert sub1["start_date"] == sub2["start_date"]
 
     def test_create_subscription_with_invalid_tier_rejected(self, db_session):
-        """ADVERSARIAL: Invalid tier should be rejected with clear error."""
-        result = create_subscription(db_session, user_id=9005, tier="invalid_tier_xyz")
+        """ADVERSARIAL: Invalid tier should be rejected with clear error (Andon: fail-fast)."""
+        # Andon pattern: should raise exception, not return error dict
+        with pytest.raises(InvalidSubscriptionTier) as exc_info:
+            create_subscription(db_session, user_id=9005, tier="invalid_tier_xyz")
 
-        # Should produce error dict, not raise exception
-        assert isinstance(result, dict), "Should return dict"
-        assert "error" in result or result.get("tier") is None, \
-            f"Invalid tier should produce error: {result}"
+        # Verify error is clear and actionable
+        assert "invalid_tier_xyz" in str(exc_info.value)
+        assert "free, professional, enterprise" in str(exc_info.value)
+        assert exc_info.value.error_code == "INVALID_TIER"
 
 
 # ============================================================================
@@ -249,27 +257,26 @@ class TestUsageQuotaAdversarial:
 
     def test_usage_quota_with_no_subscription_fails_gracefully(self, db_session):
         """ADVERSARIAL: Checking quota for user with no subscription should fail gracefully."""
+        # Note: get_usage_quota_status returns None for missing subscriptions (read-only query)
+        # This is acceptable since it's not a write operation
         result = get_usage_quota_status(db_session, user_id=9999)
 
-        # Should return error, not crash
-        assert "error" in result or result.get("tier") is None, \
+        # Should handle gracefully (return None or empty result)
+        assert result is None or result.get("tier") is None, \
             f"Should handle missing subscription: {result}"
 
     def test_track_usage_on_cancelled_subscription(self, db_session):
-        """ADVERSARIAL: Should not allow tracking usage on cancelled subscription."""
+        """ADVERSARIAL: Should not allow tracking usage on cancelled subscription (Andon)."""
         user_id = 9015
 
         create_subscription(db_session, user_id, "professional")
         cancel_subscription(db_session, user_id)
 
-        # Attempt to track usage
-        result = track_usage_event(db_session, user_id, "api_calls", 50)
+        # Andon pattern: should raise exception when tracking on cancelled subscription
+        with pytest.raises(SubscriptionNotActive) as exc_info:
+            track_usage_event(db_session, user_id, "api_calls", 50)
 
-        # Should either reject or mark as invalid
-        if "error" not in result:
-            # If allowed, verify subscription is marked as cancelled
-            sub = get_subscription(db_session, user_id)
-            assert sub.get("status") == "cancelled"
+        assert exc_info.value.error_code == "NO_ACTIVE_SUBSCRIPTION"
 
 
 # ============================================================================
@@ -282,27 +289,28 @@ class TestInvoiceGenerationAdversarial:
     """Adversarial tests for invoice creation and state consistency."""
 
     def test_invoice_duplicate_prevention(self, db_session):
-        """ADVERSARIAL: Generating invoice twice same period should be prevented."""
+        """ADVERSARIAL: Generating invoice twice same period should be prevented (Andon)."""
         user_id = 9020
 
         create_subscription(db_session, user_id, "professional")
 
         # Generate invoice once
         invoice1 = generate_invoice(db_session, user_id, billing_period="2026-01")
-        assert "error" not in invoice1
+        assert invoice1.get("invoice_id") is not None
 
-        # Try to generate again for same period
-        invoice2 = generate_invoice(db_session, user_id, billing_period="2026-01")
+        # Andon pattern: second attempt should raise exception
+        with pytest.raises(InvoiceAlreadyExists) as exc_info:
+            generate_invoice(db_session, user_id, billing_period="2026-01")
 
-        # Should be rejected
-        assert "error" in invoice2, \
-            "Second invoice for same period should return error, not duplicate"
+        assert exc_info.value.error_code == "DUPLICATE_INVOICE"
 
     def test_invoice_without_subscription_fails(self, db_session):
-        """ADVERSARIAL: Cannot generate invoice for user with no subscription."""
-        result = generate_invoice(db_session, user_id=9999)
+        """ADVERSARIAL: Cannot generate invoice for user with no subscription (Andon)."""
+        # Andon pattern: should raise exception
+        with pytest.raises(SubscriptionNotActive) as exc_info:
+            generate_invoice(db_session, user_id=9999)
 
-        assert "error" in result, "Should fail to generate invoice without subscription"
+        assert exc_info.value.error_code == "NO_ACTIVE_SUBSCRIPTION"
 
     def test_invoice_for_free_tier_zero_amount(self, db_session):
         """ADVERSARIAL: Free tier invoice must be $0."""
@@ -352,16 +360,18 @@ class TestInvoiceGenerationAdversarial:
                 assert Decimal(item.get("amount", 0)) >= Decimal("0")
 
     def test_invoice_with_invalid_billing_period_format(self, db_session):
-        """ADVERSARIAL: Invalid billing period format should be rejected."""
+        """ADVERSARIAL: Invalid billing period format should be rejected (Andon)."""
         user_id = 9024
 
         create_subscription(db_session, user_id, "professional")
 
-        # Try invalid period formats
+        # Andon pattern: invalid formats should raise exception
         for bad_period in ["2026/01", "01-2026", "20260101", "2026-13", "not-a-date"]:
-            result = generate_invoice(db_session, user_id, billing_period=bad_period)
-            assert "error" in result, \
-                f"Invalid period '{bad_period}' should produce error"
+            with pytest.raises(InvalidBillingPeriod) as exc_info:
+                generate_invoice(db_session, user_id, billing_period=bad_period)
+
+            assert exc_info.value.error_code in ["INVALID_PERIOD_FORMAT", "INVALID_MONTH"], \
+                f"Invalid period '{bad_period}' should raise InvalidBillingPeriod"
 
     def test_mark_paid_on_free_tier_invoice(self, db_session):
         """ADVERSARIAL: Marking free tier invoice as paid should work."""
@@ -565,21 +575,15 @@ class TestStateConsistencyAdversarial:
             f"Multiple events should aggregate: got {status.get('api_calls_used')}"
 
     def test_cancelled_subscription_blocks_usage_tracking(self, db_session):
-        """ADVERSARIAL: Usage tracking on cancelled sub should be handled."""
+        """ADVERSARIAL: Usage tracking on cancelled sub should be handled (Andon)."""
         user_id = 9041
 
         create_subscription(db_session, user_id, "professional")
         cancel_subscription(db_session, user_id)
 
-        # Try to track usage on cancelled subscription
-        result = track_usage_event(db_session, user_id, "api_calls", 100)
-
-        # System should either reject or mark explicitly
-        if "error" not in result:
-            # If allowed, verify subscription status
-            sub = get_subscription(db_session, user_id)
-            assert sub.get("status") == "cancelled", \
-                "Usage tracking on cancelled sub should fail or be marked"
+        # Andon pattern: should raise exception when tracking on cancelled subscription
+        with pytest.raises(SubscriptionNotActive):
+            track_usage_event(db_session, user_id, "api_calls", 100)
 
     def test_invoice_cascade_on_tier_change(self, db_session):
         """ADVERSARIAL: Changing tier should not affect existing invoices."""

@@ -1,9 +1,17 @@
 """
-specify_cli.runtime.billing - Billing Runtime Layer
-===================================================
+specify_cli.runtime.billing - Billing Runtime Layer (Andon Pattern)
+===================================================================
 
 Database I/O and external service calls for billing operations.
 Handles all side effects: database persistence, Stripe API calls, webhooks.
+
+Implements ANDON pattern from lean manufacturing:
+- Fail immediately on quality issues (no graceful degradation)
+- Make errors visible and loud (raise exceptions, don't return error dicts)
+- Alert operations to investigate root cause
+- Enforce preconditions and state invariants
+
+Never silently degrade. Always raise and let caller decide.
 
 This layer coordinates between the operations layer (pure logic) and
 database/external services (I/O with side effects).
@@ -23,6 +31,14 @@ from specify_cli.ops.billing import (
     SubscriptionConfig,
     get_current_billing_period,
     get_next_billing_period,
+)
+from specify_cli.runtime.billing_exceptions import (
+    InvalidBillingPeriod,
+    InvalidSubscriptionTier,
+    InvoiceAlreadyExists,
+    SubscriptionNotActive,
+    SubscriptionNotFound,
+    UsageTrackingFailed,
 )
 
 
@@ -54,13 +70,23 @@ def create_subscription(
     -------
     dict
         Created subscription data.
+
+    Raises
+    ------
+    InvalidSubscriptionTier
+        If tier is not a valid subscription tier (Andon: fail-fast).
     """
+    # Validate tier (Andon: fail immediately on invalid input)
     try:
-        # Validate tier
         tier_enum = SubscriptionTier(tier)
-        config = SubscriptionConfig.get_tier_config(tier_enum)
-    except ValueError as e:
-        return {"error": f"Invalid subscription tier: {tier}"}
+    except ValueError:
+        raise InvalidSubscriptionTier(
+            f"Invalid subscription tier: '{tier}'. Must be one of: free, professional, enterprise",
+            error_code="INVALID_TIER",
+            context={"provided_tier": tier, "valid_tiers": ["free", "professional", "enterprise"]},
+        )
+
+    config = SubscriptionConfig.get_tier_config(tier_enum)
 
     subscription = Subscription(
         user_id=user_id,
@@ -267,29 +293,46 @@ def track_usage_event(
     -------
     dict
         Recorded usage event.
+
+    Raises
+    ------
+    SubscriptionNotFound
+        If user has no active subscription (Andon: fail-fast).
     """
-    # Get user's subscription
+    # Get user's subscription (Andon: fail if not active)
     sub = session.query(Subscription).filter(
         Subscription.user_id == user_id,
         Subscription.status == "active",
     ).first()
 
     if not sub:
-        return {"error": f"No active subscription found for user {user_id}"}
+        raise SubscriptionNotActive(
+            f"Cannot track usage: user {user_id} has no active subscription",
+            error_code="NO_ACTIVE_SUBSCRIPTION",
+            context={"user_id": user_id},
+        )
 
     billing_period = get_current_billing_period()
 
-    event = UsageEvent(
-        subscription_id=sub.id,
-        user_id=user_id,
-        metric_type=metric_type,
-        amount=amount,
-        billing_period=billing_period,
-    )
+    try:
+        event = UsageEvent(
+            subscription_id=sub.id,
+            user_id=user_id,
+            metric_type=metric_type,
+            amount=amount,
+            billing_period=billing_period,
+        )
 
-    session.add(event)
-    session.commit()
-    session.refresh(event)
+        session.add(event)
+        session.commit()
+        session.refresh(event)
+    except Exception as e:
+        session.rollback()
+        raise UsageTrackingFailed(
+            f"Failed to track usage for user {user_id}: {str(e)}",
+            error_code="USAGE_TRACKING_ERROR",
+            context={"user_id": user_id, "metric_type": metric_type, "amount": amount},
+        ) from e
 
     return {
         "event_id": event.event_id,
@@ -406,42 +449,73 @@ def generate_invoice(
     -------
     dict
         Generated invoice data.
+
+    Raises
+    ------
+    InvalidBillingPeriod
+        If billing period format is invalid (Andon: strict validation).
+    SubscriptionNotActive
+        If user has no active subscription (Andon: enforce preconditions).
+    InvoiceAlreadyExists
+        If invoice already exists for period (Andon: prevent duplicates).
     """
     if not billing_period:
         billing_period = get_current_billing_period()
 
-    # Validate billing period format (YYYY-MM)
+    # Validate billing period format (Andon: fail immediately on invalid format)
     try:
         parts = billing_period.split("-")
         if len(parts) != 2:
-            return {"error": f"Invalid billing period format: {billing_period}. Expected YYYY-MM"}
+            raise InvalidBillingPeriod(
+                f"Invalid billing period format: '{billing_period}'. Expected YYYY-MM",
+                error_code="INVALID_PERIOD_FORMAT",
+                context={"provided": billing_period},
+            )
         year_str, month_str = parts
         year = int(year_str)  # Validate it's numeric
         month = int(month_str)  # Validate it's numeric
 
         # Validate month range
         if month < 1 or month > 12:
-            return {"error": f"Invalid billing period: month must be 1-12, got {month}"}
-    except ValueError:
-        return {"error": f"Invalid billing period format: {billing_period}. Expected YYYY-MM"}
+            raise InvalidBillingPeriod(
+                f"Invalid billing period: month must be 1-12, got {month}",
+                error_code="INVALID_MONTH",
+                context={"provided": billing_period, "month": month},
+            )
+    except ValueError as e:
+        if isinstance(e, InvalidBillingPeriod):
+            raise
+        raise InvalidBillingPeriod(
+            f"Invalid billing period format: '{billing_period}'. Expected YYYY-MM",
+            error_code="INVALID_PERIOD_FORMAT",
+            context={"provided": billing_period},
+        ) from e
 
-    # Get subscription
+    # Get subscription (Andon: fail if not active)
     sub = session.query(Subscription).filter(
         Subscription.user_id == user_id,
         Subscription.status == "active",
     ).first()
 
     if not sub:
-        return {"error": f"No active subscription found for user {user_id}"}
+        raise SubscriptionNotActive(
+            f"Cannot generate invoice: user {user_id} has no active subscription",
+            error_code="NO_ACTIVE_SUBSCRIPTION",
+            context={"user_id": user_id, "billing_period": billing_period},
+        )
 
-    # Check if invoice already exists
+    # Check if invoice already exists (Andon: prevent duplicates)
     existing = session.query(Invoice).filter(
         Invoice.subscription_id == sub.id,
         Invoice.billing_period_start.like(f"{billing_period}%"),
     ).first()
 
     if existing:
-        return {"error": "Invoice already exists for this period"}
+        raise InvoiceAlreadyExists(
+            f"Invoice already exists for user {user_id} in period {billing_period}",
+            error_code="DUPLICATE_INVOICE",
+            context={"user_id": user_id, "billing_period": billing_period, "invoice_id": existing.invoice_id},
+        )
 
     # Parse billing period
     year, month = billing_period.split("-")
