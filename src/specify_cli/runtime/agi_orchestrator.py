@@ -10,7 +10,8 @@ from __future__ import annotations
 import asyncio
 from typing import Any
 
-from specify_cli.core.telemetry import span, timed
+from specify_cli.core.shell import timed
+from specify_cli.core.telemetry import span
 from specify_cli.ops import agi_orchestration
 
 
@@ -53,7 +54,7 @@ class AgentOrchestrator:
         """
         with span(
             "agi_orchestrator.register_agent",
-            name=name,
+            agent_name=name,
             agent_type=agent_type,
         ):
             registration = agi_orchestration.register_agent(

@@ -14,7 +14,8 @@ from pathlib import Path
 from typing import Any
 
 from specify_cli.core.process import run_logged
-from specify_cli.core.telemetry import span, timed
+from specify_cli.core.shell import timed
+from specify_cli.core.telemetry import span
 from specify_cli.ops.agi_task_planning import ExecutionPlan, Task
 
 logger = logging.getLogger(__name__)

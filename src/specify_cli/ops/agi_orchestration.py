@@ -13,7 +13,8 @@ from __future__ import annotations
 from dataclasses import dataclass, field
 from typing import Any
 
-from specify_cli.core.telemetry import span, timed
+from specify_cli.core.shell import timed
+from specify_cli.core.telemetry import span
 
 
 @dataclass
@@ -76,7 +77,7 @@ def register_agent(
     """
     with span(
         "agi_orchestration.register_agent",
-        name=name,
+        agent_name=name,
         agent_type=agent_type,
         capabilities=len(capabilities),
     ):

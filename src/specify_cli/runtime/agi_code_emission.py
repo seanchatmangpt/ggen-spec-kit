@@ -10,7 +10,8 @@ from __future__ import annotations
 from pathlib import Path
 from typing import Any
 
-from specify_cli.core.telemetry import span, timed
+from specify_cli.core.shell import timed
+from specify_cli.core.telemetry import span
 from specify_cli.ops.agi_code_synthesizer import GeneratedCode
 
 

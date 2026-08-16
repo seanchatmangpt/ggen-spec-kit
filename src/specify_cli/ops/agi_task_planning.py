@@ -15,7 +15,8 @@ from typing import Any
 import numpy as np
 from numpy.typing import NDArray
 
-from specify_cli.core.telemetry import span, timed
+from specify_cli.core.shell import timed
+from specify_cli.core.telemetry import span
 
 Vector = NDArray[np.float64]
 
